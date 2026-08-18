@@ -298,6 +298,16 @@ namespace FSO.Server.Utils
                 AllLevels("oj-nc-controller.iff", ncLevels, 2, (i) => (short)(i * NcXpPerDay)); // DJ xp level
                 AllLevelsConst("oj-nc-controller.iff", ncLevels, 4, 0); // Dancer Friends requirement to 0
                 AllLevels("oj-nc-controller.iff", ncLevels, 5, (i) => (short)(i * NcXpPerDay)); // Dancer xp level
+
+                dynTuning.Add(new DbTuning()
+                {
+                    tuning_type = "momistation.iff",
+                    tuning_table = 0,
+                    tuning_index = 0,
+                    value = 1,
+                    owner_type = DbTuningType.DYNAMIC,
+                    owner_id = 2
+                });
             }
 
             da.DynPayouts.ReplaceDynTuning(dynTuning, 2);
