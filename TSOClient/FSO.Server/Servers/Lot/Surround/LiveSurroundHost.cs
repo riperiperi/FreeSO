@@ -10,6 +10,7 @@ namespace FSO.Server.Servers.Lot.Surround
         private Lock ConnectionsLock = new();
         private readonly Dictionary<uint, LiveSurroundLotConnection> ConnectionsById = [];
         private readonly Dictionary<uint, List<LiveSurroundLotConnection>> AdjacencyById = [];
+        private readonly List<uint> EmptyQueue = [];
         private long LastTick;
         private bool Active = true;
 
@@ -109,6 +110,30 @@ namespace FSO.Server.Servers.Lot.Surround
                         conn.Broadcast(puppets);
                     }
                 }
+
+                // Any lots that have just lost all their surroundings need to send out an empty tick to make sure any NPCs on the lot disappear.
+                if (EmptyQueue.Count > 0)
+                {
+                    foreach (var target in EmptyQueue)
+                    {
+                        if (ConnectionsById.TryGetValue(target, out var conn))
+                        {
+                            FSOVMSurroundPuppets puppets = new();
+
+                            puppets.Ticks = [
+                                new SurroundPuppetTick()
+                                {
+                                    TickID = TickID,
+                                    Lots = []
+                                }
+                            ];
+
+                            conn.Broadcast(puppets);
+                        }
+                    }
+
+                    EmptyQueue.Clear();
+                }
             }
 
             TickID++;
@@ -184,6 +209,7 @@ namespace FSO.Server.Servers.Lot.Surround
                                 if (adj2.Count == 0)
                                 {
                                     AdjacencyById.Remove(otherConn.LotLocation);
+                                    EmptyQueue.Add(otherConn.LotLocation);
                                 }
                             }
                         }
