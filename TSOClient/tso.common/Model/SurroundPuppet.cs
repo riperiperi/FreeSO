@@ -11,9 +11,10 @@ namespace FSO.Common.Model
         Appearances = 1 << 2,
         AnimationNames = 1 << 3,
         AnimationState = 1 << 4,
+        Message = 1 << 5,
 
         Animation = AnimationNames | AnimationState,
-        All = BodyInfo | Position | Appearances | Animation,
+        All = BodyInfo | Position | Appearances | Animation | Message,
 
         Required = BodyInfo | Position | Animation,
 
@@ -52,6 +53,15 @@ namespace FSO.Common.Model
         }
     }
 
+    public struct SurroundPuppetMessage(string text, int timeout, uint color, sbyte ttsPitch)
+    {
+        public string Text = text;
+        public int Timeout = timeout;
+        public uint Color = color;
+        public sbyte TTSPitch = ttsPitch;
+        public bool IsNew;
+    }
+
     public struct SurroundPuppet
     {
         public SurroundPuppetDelta Delta;
@@ -64,6 +74,7 @@ namespace FSO.Common.Model
         public Vector4 Velocity;
         public SurroundPuppetAnimation[] Animations;
         public string[] Appearances;
+        public SurroundPuppetMessage Message;
 
         public void CalculateDelta(in SurroundPuppet previous)
         {
@@ -105,6 +116,20 @@ namespace FSO.Common.Model
                         delta |= SurroundPuppetDelta.AnimationState;
                     }
                 }
+            }
+
+            bool hasMessage = Message.Text != null;
+            bool hadMessage = previous.Message.Text != null;
+
+            if (hasMessage != hadMessage || (hasMessage && Message.Timeout >= previous.Message.Timeout)) // This should only be going down. If it's the same or higher, there's a new message.
+            {
+                if (hasMessage)
+                {
+                    // For this tick, the message is new.
+                    Message.IsNew = true;
+                }
+
+                delta |= SurroundPuppetDelta.Message;
             }
 
             Delta = delta;
@@ -169,6 +194,11 @@ namespace FSO.Common.Model
             if (delta.HasFlag(SurroundPuppetDelta.Appearances))
             {
                 Appearances = puppet.Appearances;
+            }
+
+            if (delta.HasFlag(SurroundPuppetDelta.Message))
+            {
+                Message = puppet.Message;
             }
 
             Delta = delta;

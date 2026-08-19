@@ -117,7 +117,7 @@ namespace FSO.Server.Protocol.Electron.Packets
                 puppet.BodyOutfit = input.GetUInt64();
                 puppet.SkeletonName = input.GetPascalVLCString();
             }
-            
+
             if (delta.HasFlag(SurroundPuppetDelta.Position))
             {
                 puppet.VisualPositionStart = new Microsoft.Xna.Framework.Vector4(input.GetSingle(), input.GetSingle(), input.GetSingle(), input.GetSingle());
@@ -127,7 +127,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             if ((delta & SurroundPuppetDelta.Animation) != 0)
             {
                 int animationCount = input.GetInt32();
-                
+
                 if (animationCount > MAX_ANIMATIONS)
                 {
                     throw new Exception($"Invalid animation count {animationCount}");
@@ -169,7 +169,37 @@ namespace FSO.Server.Protocol.Electron.Packets
                 puppet.Appearances = appearances;
             }
 
+            if (delta.HasFlag(SurroundPuppetDelta.Message))
+            {
+                puppet.Message = ReadMessage(input);
+            }
+
             return puppet;
+        }
+
+        private static SurroundPuppetMessage ReadMessage(IoBuffer input)
+        {
+            var text = input.GetPascalVLCString();
+
+            int timeout = 0;
+            uint color = 0;
+            sbyte pitch = 0;
+            bool isNew = false;
+
+            if (text.Length > 0)
+            {
+                timeout = input.GetInt32();
+                color = input.GetUInt32();
+                pitch = (sbyte)input.Get();
+                isNew = input.GetBool();
+            }
+
+            var result = new SurroundPuppetMessage(text.Length == 0 ? null : text, timeout, color, pitch)
+            {
+                IsNew = isNew
+            };
+
+            return result;
         }
 
         public override ElectronPacketType GetPacketType()
@@ -215,6 +245,18 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutSingle(vec.Y);
             output.PutSingle(vec.Z);
             output.PutSingle(vec.W);
+        }
+
+        private void WriteMessage(IoBuffer output, ref SurroundPuppetMessage message)
+        {
+            output.PutPascalVLCString(message.Text ?? "");
+            if (!string.IsNullOrEmpty(message.Text))
+            {
+                output.PutInt32(message.Timeout);
+                output.PutUInt32(message.Color);
+                output.Put((byte)message.TTSPitch);
+                output.PutBool(message.IsNew);
+            }
         }
 
         private void WritePuppet(IoBuffer output, ref SurroundPuppet puppet, bool forceDirty)
@@ -266,6 +308,11 @@ namespace FSO.Server.Protocol.Electron.Packets
                 {
                     output.PutPascalVLCString(appearance);
                 }
+            }
+
+            if (delta.HasFlag(SurroundPuppetDelta.Message))
+            {
+                WriteMessage(output, ref puppet.Message);
             }
         }
     }

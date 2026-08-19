@@ -227,11 +227,13 @@ namespace FSO.Client.UI.Panels
             History.Add(evt);
 
             //play TTS for this event?
-            if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe) {
+            if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe || evt.Type == VMChatEventType.SurroundMessage) {
                 if (GlobalSettings.Default.ChatOnlyEmoji > 0)
                 {
                     evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1], GlobalSettings.Default.ChatOnlyEmoji);
                 }
+
+                float volume = evt.Type == VMChatEventType.SurroundMessage ? 0.5f : 1f;
 
                 var ttsmode = GlobalSettings.Default.TTSMode;
                 if (ttsmode > 0)
@@ -243,7 +245,7 @@ namespace FSO.Client.UI.Panels
                         {
                             var tts = GetOrCreateTTS();
                             var gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
-                            tts?.Speak(evt.Text[1].Replace('_', ' '), gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch, avatar.PersistID);
+                            tts?.Speak(evt.Text[1].Replace('_', ' '), gender, evt.TTSPitch, avatar.PersistID, volume);
                         }
                     }
                 }
@@ -404,6 +406,11 @@ namespace FSO.Client.UI.Panels
                     return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + ((evt.Channel == null) ? "" : ("(" + evt.Channel.Name + ") "))
                         + GameFacade.Strings.GetString("261", "9")
                         + colorAfter + CleanUserMessage(evt.Text[1], evt);
+                case VMChatEventType.SurroundMessage:
+                    colorBefore = "[color=gray]";
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + ((evt.Channel == null) ? "" : ("(" + evt.Channel.Name + ") "))
+                        + GameFacade.Strings.GetString("f128", "335").Replace("%", avatar)
+                        + colorAfter + CleanUserMessage(evt.Text[1], evt);
                 case VMChatEventType.Join:
                     return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + GameFacade.Strings.GetString("261", "6").Replace("%", avatar) + colorAfter;
                 case VMChatEventType.Leave:
@@ -415,6 +422,9 @@ namespace FSO.Client.UI.Panels
                     else return "";
                 case VMChatEventType.Generic:
                     return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + CleanUserMessage(evt.Text[0], evt) + colorAfter;
+                case VMChatEventType.SwitchLot:
+                    colorBefore = "[color=gray]";
+                    return colorBefore + GameFacade.Strings.GetString("f128", SanitizeBB(evt.Text[0])) + colorAfter;
                 default:
                     return "";
             }

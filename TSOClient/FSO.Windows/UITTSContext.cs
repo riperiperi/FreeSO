@@ -19,7 +19,7 @@ namespace FSO.Windows
         {
         }
 
-        public override void Speak(string text, bool gender, int ipitch, uint persistID)
+        public override void Speak(string text, bool gender, int ipitch, uint persistID, float volume = 1)
         {
             var voiceGender = (gender) ? System.Speech.Synthesis.VoiceGender.Female : System.Speech.Synthesis.VoiceGender.Male;
             var Synth = new System.Speech.Synthesis.SpeechSynthesizer();
@@ -50,6 +50,7 @@ namespace FSO.Windows
                     var sfx = SoundEffect.FromStream(stream);
                     var inst = sfx.CreateInstance();
                     inst.Pitch = pitch - 1f;
+                    inst.Volume = volume;
                     inst.Play();
 
                     GameThreadInterval interval = null;

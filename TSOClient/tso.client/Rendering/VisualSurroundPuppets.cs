@@ -4,6 +4,7 @@ using FSO.Common.Model;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.SimAntics.NetPlay.Model;
 using FSO.Vitaboy;
 using JWT.Builder;
 using Microsoft.Xna.Framework;
@@ -268,6 +269,17 @@ namespace FSO.Client.Rendering
             LastBp = bp;
         }
 
+        private void SignalMessage(SurroundPuppet puppet)
+        {
+            var chatPanel = Screen.LotControl?.ChatPanel;
+
+            if (puppet.Message.Text != null && chatPanel != null)
+            {
+                var message = puppet.Message;
+                chatPanel.ReceiveEvent(new VMChatEvent(puppet.PersistID, message.Color, message.TTSPitch, VMChatEventType.SurroundMessage, message.Text));
+            }
+        }
+
         private void RunTicks()
         {
             uint myID = Screen.VisualVM?.MyUID ?? 0;
@@ -362,6 +374,11 @@ namespace FSO.Client.Rendering
                     }
 
                     visualPuppet.SetPuppet(puppet, LastTimestamp);
+
+                    if (puppet.Message.IsNew)
+                    {
+                        SignalMessage(puppet);
+                    }
 
                     ExpectedAvatars.Remove(puppet.PersistID);
                 }

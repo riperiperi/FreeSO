@@ -40,6 +40,18 @@ namespace FSO.Server.Servers.Lot.Surround
             LotLocation = lotLocation;
         }
 
+        private static bool IsEntityOutside(VM vm, VMEntity obj)
+        {;
+            var context = vm.Context;
+            var roomID = obj.GetValue(SimAntics.Model.VMStackObjectVariable.Room) + 1;
+            if (roomID < 0 || roomID >= context.RoomInfo.Length)
+            {
+                roomID = 0;
+            }
+            var room = context.RoomInfo[roomID];
+            return room.Room.IsOutside;
+        }
+
         public void SubmitTick(VM vm, bool force)
         {
             if (AdjacencyCount <= 0 && !force)
@@ -50,9 +62,13 @@ namespace FSO.Server.Servers.Lot.Surround
             ExpectedAvatars.Clear();
             ExpectedAvatars.UnionWith(PuppetData.Keys);
 
+            bool withSurroundMessages = LotContainer.AllowSurroundMessages;
+
             foreach (var ava in vm.Context.ObjectQueries.Avatars)
             {
-                var puppet = ((VMAvatar)ava).GetSurroundPuppet();
+                bool withMessage = withSurroundMessages && IsEntityOutside(vm, ava);
+
+                var puppet = ((VMAvatar)ava).GetSurroundPuppet(withMessage);
 
                 if (PuppetData.TryGetValue(puppet.PersistID, out var existing))
                 {
@@ -76,7 +92,7 @@ namespace FSO.Server.Servers.Lot.Surround
             var tick = new SurroundPuppetLot()
             {
                 LotLocation = LotLocation,
-                Puppets = PuppetData.Values.ToArray()
+                Puppets = [.. PuppetData.Values]
             };
 
             QueueTick(tick);

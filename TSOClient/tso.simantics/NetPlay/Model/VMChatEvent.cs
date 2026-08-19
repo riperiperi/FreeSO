@@ -1,6 +1,5 @@
 ﻿using FSO.SimAntics.Model.TSOPlatform;
 using Microsoft.Xna.Framework;
-using System;
 
 namespace FSO.SimAntics.NetPlay.Model
 {
@@ -12,7 +11,9 @@ namespace FSO.SimAntics.NetPlay.Model
         Leave = 3,
         Arch = 4,
         Generic = 5,
-        Debug = 6
+        Debug = 6,
+        SurroundMessage = 7,
+        SwitchLot = 8
     }
 
     public class VMChatEvent
@@ -25,6 +26,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public byte ChannelID = 0;
         public string Timestamp;
         public VMTSOChatChannel Channel;
+        public sbyte TTSPitch;
 
         public VMChatEvent(VMAvatar ava, VMChatEventType type, byte channelID, params string[] text) : this(ava, type, text)
         {
@@ -37,7 +39,18 @@ namespace FSO.SimAntics.NetPlay.Model
             Type = type;
             Text = text;
             Timestamp = DateTime.Now.ToShortTimeString();
-            Color = (ava?.TSOState as VMTSOAvatarState)?.ChatColor ?? Color.LightGray;
+            var tsoState = ava?.TSOState as VMTSOAvatarState;
+            TTSPitch = tsoState?.ChatTTSPitch ?? 0;
+            Color = tsoState?.ChatColor ?? Color.LightGray;
+        }
+
+        public VMChatEvent(uint senderUid, uint senderColor, sbyte ttsPitch, VMChatEventType type, params string[] text)
+        {
+            SenderUID = senderUid;
+            Type = type;
+            Text = text;
+            Timestamp = DateTime.Now.ToShortTimeString();
+            Color = new Color(senderColor);
         }
     }
 }

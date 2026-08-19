@@ -106,6 +106,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private bool ArchiveFreeRoam => Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
         private bool IsSpectatorMode;
 
+        public bool AllowSurroundMessages => ArchiveFreeRoam; // Archive free roam ignores permissions limits, so no need to worry about broadcasting chat messages.
+
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {
             0x37EB32F3, //skill controller

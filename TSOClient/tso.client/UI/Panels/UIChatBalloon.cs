@@ -344,6 +344,6 @@ namespace FSO.Client.UI.Panels
     {
         public static Func<ITTSContext> Provider;
         public abstract void Dispose();
-        public abstract void Speak(string text, bool gender, int pitch, uint persistID);
+        public abstract void Speak(string text, bool gender, int pitch, uint persistID, float volume = 1f);
     }
 }

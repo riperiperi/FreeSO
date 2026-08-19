@@ -1211,8 +1211,10 @@ namespace FSO.SimAntics
             return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, (1<<(2-store)) * decimateMul, false):ico;
         }
 
-        public SurroundPuppet GetSurroundPuppet()
+        public SurroundPuppet GetSurroundPuppet(bool withMessage)
         {
+            var tsoState = TSOState as VMTSOAvatarState;
+
             return new SurroundPuppet()
             {
                 Delta = KillTimeout != -1 ? SurroundPuppetDelta.Leaving : 0,
@@ -1224,7 +1226,9 @@ namespace FSO.SimAntics
                 VisualPositionStart = new Vector4(VisualPositionStart ?? VisualPosition, (float)RadianDirection),
                 Velocity = new Vector4(VisualPositionStart == null ? new Vector3() : Velocity, (float)TurnVelocity),
                 Appearances = BoundAppearances.Count == 0 ? [] : [.. BoundAppearances],
-                Animations = [.. Animations.Select(x => new SurroundPuppetAnimation(x.Anim.Name, x.CurrentFrame, x.Speed, x.Weight, x.EndReached, x.PlayingBackwards, x.Loop))]
+                Animations = [.. Animations.Select(x => new SurroundPuppetAnimation(x.Anim.Name, x.CurrentFrame, x.Speed, x.Weight, x.EndReached, x.PlayingBackwards, x.Loop))],
+
+                Message = withMessage ? new SurroundPuppetMessage(Message, MessageTimeout, tsoState?.ChatColor.PackedValue ?? 0u, tsoState?.ChatTTSPitch ?? 0) : default
             };
         }
 
