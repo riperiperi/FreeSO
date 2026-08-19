@@ -72,6 +72,7 @@ namespace FSO.Client.UI.Screens
         // Simantics VMs can be kept around for a load transition.
         private VM TransitionVM;
         private World TransitionWorld;
+        private UILotControl TransitionLotControl;
         private CameraControllers TransitionCameras;
 
         public VM VisualVM => TransitionVM ?? vm;
@@ -632,6 +633,8 @@ namespace FSO.Client.UI.Screens
                 TransitionWorld.Dispose();
                 TransitionWorld = null;
 
+                TransitionLotControl = null;
+
                 CityRenderer.DisposeOnLot();
             }
         }
@@ -686,6 +689,7 @@ namespace FSO.Client.UI.Screens
             {
                 TransitionVM = vm;
                 TransitionWorld = World;
+                TransitionLotControl = LotControl;
 
                 TransitionWorld.State.SimSpeed = 0;
             }
@@ -816,6 +820,8 @@ namespace FSO.Client.UI.Screens
 
             if (vm != null && World != null)
             {
+                LotControl.ChatPanel.ReceiveEvent(new SimAntics.NetPlay.Model.VMChatEvent(null, SimAntics.NetPlay.Model.VMChatEventType.SwitchLot, vm.TSOState.Name));
+
                 var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
 
                 if (myAvatar == null)
@@ -978,7 +984,7 @@ namespace FSO.Client.UI.Screens
             vm.ListenBHAVChanges();
             vm.Init();
 
-            LotControl = new UILotControl(vm, World);
+            LotControl = new UILotControl(vm, World, TransitionLotControl);
             this.AddAt(1, LotControl);
 
             var time = DateTime.UtcNow;

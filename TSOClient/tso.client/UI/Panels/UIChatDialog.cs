@@ -100,6 +100,15 @@ namespace FSO.Client.UI.Panels
             ChangeSizeTo(new Vector2(GlobalSettings.Default.ChatSizeX, GlobalSettings.Default.ChatSizeY));
         }
 
+        public UIChatDialog TransferOwner(UILotControl owner)
+        {
+            Owner = owner;
+
+            Categories.Populate();
+
+            return this;
+        }
+
         private ITTSContext GetOrCreateTTS()
         {
             if (TTSContext == null && ITTSContext.Provider != null)
@@ -402,7 +411,7 @@ namespace FSO.Client.UI.Panels
                         + GameFacade.Strings.GetString("261", "9")
                         + colorAfter + CleanUserMessage(evt.Text[1], evt);
                 case VMChatEventType.SurroundMessage:
-                    colorBefore = "[color=gray]";
+                    colorBefore = "[color=#A0A0A0]";
                     return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + ((evt.Channel == null) ? "" : ("(" + evt.Channel.Name + ") "))
                         + GameFacade.Strings.GetString("f128", "335").Replace("%", avatar)
                         + colorAfter + CleanUserMessage(evt.Text[1], evt);
@@ -418,8 +427,8 @@ namespace FSO.Client.UI.Panels
                 case VMChatEventType.Generic:
                     return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + CleanUserMessage(evt.Text[0], evt) + colorAfter;
                 case VMChatEventType.SwitchLot:
-                    colorBefore = "[color=gray]";
-                    return colorBefore + GameFacade.Strings.GetString("f128", SanitizeBB(evt.Text[0])) + colorAfter;
+                    colorBefore = "[color=#A0A0A0]";
+                    return colorBefore + GameFacade.Strings.GetString("f128", "336", [SanitizeBB(evt.Text[0])]) + colorAfter;
                 default:
                     return "";
             }

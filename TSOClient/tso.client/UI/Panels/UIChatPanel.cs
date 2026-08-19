@@ -49,7 +49,7 @@ namespace FSO.Client.UI.Panels
 
         public int ActiveChannel = 0;
 
-        public UIChatPanel(VM vm, UILotControl owner)
+        public UIChatPanel(VM vm, UILotControl owner, UILotControl transitionFrom = null)
         {
             this.vm = vm;
             this.Owner = owner;
@@ -99,7 +99,7 @@ namespace FSO.Client.UI.Panels
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 20, 200000 +GlobalSettings.Default.GraphicsWidth, 100020)); //bottom
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
 
-            HistoryDialog = new UIChatDialog(owner);
+            HistoryDialog = transitionFrom != null ? transitionFrom.ChatPanel.HistoryDialog.TransferOwner(owner) : new UIChatDialog(owner);
             HistoryDialog.Position = new Vector2(GlobalSettings.Default.ChatLocationX, GlobalSettings.Default.ChatLocationY);
             HistoryDialog.Visible = HistoryVisiblePreference;
             HistoryDialog.Opacity = 0.8f;

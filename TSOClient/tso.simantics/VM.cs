@@ -606,7 +606,7 @@ namespace FSO.SimAntics
         /// <param name="info">The chat event to pass along.</param>
         public void SignalChatEvent(VMChatEvent evt)
         {
-            if (Driver.InResync) return;
+            if (Driver.InResync || Driver.RunningCatchup) return;
             OnChatEvent?.Invoke(evt);
         }
 

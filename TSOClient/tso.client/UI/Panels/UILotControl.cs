@@ -173,7 +173,8 @@ namespace FSO.Client.UI.Panels
         /// </summary>
         /// <param name="vm">A SimAntics VM instance.</param>
         /// <param name="World">A World instance.</param>
-        public UILotControl(FSO.SimAntics.VM vm, LotView.World World)
+        /// <param name="transitionFrom">A lot controller to inherit transition state from</param>
+        public UILotControl(FSO.SimAntics.VM vm, LotView.World World, UILotControl transitionFrom = null)
         {
             this.vm = vm;
             this.World = World;
@@ -190,7 +191,7 @@ namespace FSO.Client.UI.Panels
             Add(Touch);
             SetupQuery();
 
-            ChatPanel = new UIChatPanel(vm, this);
+            ChatPanel = new UIChatPanel(vm, this, transitionFrom);
             this.Add(ChatPanel);
 
             RMBCursor = GetTexture(0x24B00000001); //exploreanchor.bmp
