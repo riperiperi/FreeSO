@@ -233,7 +233,7 @@ namespace FSO.Client.UI.Panels
                     evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1], GlobalSettings.Default.ChatOnlyEmoji);
                 }
 
-                float volume = evt.Type == VMChatEventType.SurroundMessage ? 0.5f : 1f;
+                float volume = evt.Type == VMChatEventType.SurroundMessage ? 0.33f : 1f;
 
                 var ttsmode = GlobalSettings.Default.TTSMode;
                 if (ttsmode > 0)

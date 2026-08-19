@@ -6,7 +6,6 @@ using FSO.LotView.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.Vitaboy;
-using JWT.Builder;
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 
@@ -34,6 +33,9 @@ namespace FSO.Client.Rendering
 
         public bool IsLeaving => Puppet.Delta.HasFlag(SurroundPuppetDelta.Leaving);
 
+        public ref SurroundPuppet Current => ref Puppet;
+        public AvatarComponent CurrentComponent => TargetAvatarComponent;
+
         public VisualSurroundPuppet(VisualSurroundPuppets parent, uint lotLocation)
         {
             Parent = parent;
@@ -55,6 +57,11 @@ namespace FSO.Client.Rendering
 
         public void SetPuppet(SurroundPuppet puppet, long startTimestamp)
         {
+            if (Puppet.Message.Timeout > 0)
+            {
+                Puppet.Message.Timeout--;
+            }
+
             Puppet.ApplyDelta(puppet);
 
             if (puppet.Delta.HasFlag(SurroundPuppetDelta.BodyInfo))
@@ -192,6 +199,7 @@ namespace FSO.Client.Rendering
 
         private readonly CoreGameScreen Screen;
         private readonly Dictionary<uint, Dictionary<uint, VisualSurroundPuppet>> LotIdToPuppet = [];
+        private readonly List<VisualSurroundPuppet> All = [];
 
         private readonly HashSet<uint> ExpectedAvatars = [];
         private readonly HashSet<uint> ExpectedLots = [];
@@ -208,6 +216,11 @@ namespace FSO.Client.Rendering
         {
             Screen = screen;
             TickRate = Stopwatch.Frequency / 30;
+        }
+
+        internal List<VisualSurroundPuppet> GetAll()
+        {
+            return All;
         }
 
         private Point CalculateOffset(uint parentLocation, uint lotLocation)
@@ -328,6 +341,7 @@ namespace FSO.Client.Rendering
                 {
                     foreach (var puppet in puppets)
                     {
+                        All.Remove(puppet.Value);
                         puppet.Value.Dispose();
                     }
 
@@ -370,6 +384,7 @@ namespace FSO.Client.Rendering
                     if (!puppets.TryGetValue(puppet.PersistID, out var visualPuppet))
                     {
                         visualPuppet = new VisualSurroundPuppet(this, lot.LotLocation);
+                        All.Add(visualPuppet);
                         puppets[puppet.PersistID] = visualPuppet;
                     }
 
@@ -388,6 +403,7 @@ namespace FSO.Client.Rendering
                     if (puppets.TryGetValue(toRemove, out var visualPuppet))
                     {
                         visualPuppet.Dispose();
+                        All.Remove(visualPuppet);
                         puppets.Remove(toRemove);
                     }
                 }

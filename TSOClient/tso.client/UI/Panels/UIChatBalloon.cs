@@ -8,7 +8,7 @@ using FSO.Client.UI.Controls;
 using FSO.SimAntics;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common.Utils;
-//using System.Speech.Synthesis;
+using FSO.Common.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -96,6 +96,17 @@ namespace FSO.Client.UI.Panels
                 BgColor = new Color(8, 8, 128); // default blue color            
             Offscreen = false;
             if (Message == "") Name = "";
+            TextChanged();
+        }
+
+        public void SetNameMessage(in SurroundPuppet puppet)
+        {
+            Name = puppet.Message.Name ?? "";
+            Message = puppet.Message.Text ?? "";
+
+            BgColor = new Color(100, 100, 100, 128); // Surrounding chat colour
+
+            Offscreen = false;
             TextChanged();
         }
 

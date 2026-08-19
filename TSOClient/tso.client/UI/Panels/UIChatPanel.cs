@@ -12,6 +12,9 @@ using FSO.Common;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.SimAntics.Model;
+using FSO.Client.UI.Screens;
+using FSO.Client.Rendering;
+using FSO.LotView.Components;
 
 namespace FSO.Client.UI.Panels
 {
@@ -42,6 +45,7 @@ namespace FSO.Client.UI.Panels
         private UIChatDialog HistoryDialog;
         private UIPropertyLog PropertyLog;
         private InputManager Inputs;
+        private VisualSurroundPuppets SurroundPuppets;
 
         public int ActiveChannel = 0;
 
@@ -107,6 +111,8 @@ namespace FSO.Client.UI.Panels
             PropertyLog.Visible = false;
             PropertyLog.Opacity = 0.8f;
             this.Add(PropertyLog);
+
+            SurroundPuppets = (UIScreen.Current as CoreGameScreen)?.SurroundPuppets;
         }
 
         public void SetVisitorCount(int visitors)
@@ -215,13 +221,18 @@ namespace FSO.Client.UI.Panels
             InvalidAreas[3] = botRect;
 
             var avatars = vm.Context.ObjectQueries.Avatars;
-            while (avatars.Count < Labels.Count)
+            var puppets = SurroundPuppets?.GetAll();
+
+            var avatarCount = avatars.Count;
+            var requiredCount = avatarCount + puppets?.Count ?? 0;
+
+            while (requiredCount < Labels.Count)
             {
                 Remove(Labels[Labels.Count - 1]);
                 Labels[Labels.Count - 1].Dispose();
                 Labels.RemoveAt(Labels.Count - 1);
             }
-            while (avatars.Count > Labels.Count)
+            while (requiredCount > Labels.Count)
             {
                 var balloon = new UIChatBalloon(this);
                 AddAt(Children.Count - 2, balloon); //behind chat dialog and text box
@@ -234,23 +245,54 @@ namespace FSO.Client.UI.Panels
             for (int i = 0; i < Labels.Count; i++)
             {
                 var label = Labels[i];
-                var avatar = (VMAvatar)avatars[i];
-                var tstate = ((VMTSOAvatarState)avatar.TSOState);
+                uint persistID = 0;
+                int timeout = 0;
+                AvatarComponent worldUI = null;
 
-                if (label.Message != avatar.Message)
-                    label.SetNameMessage(avatar);
-                if (label.Color != tstate.ChatColor)
-                    label.Color = tstate.ChatColor;
-                if (myIgnoring.Contains(avatar.PersistID))
+                if (i < avatarCount)
+                {
+                    var avatar = (VMAvatar)avatars[i];
+                    var tstate = ((VMTSOAvatarState)avatar.TSOState);
+
+                    if (label.Message != avatar.Message)
+                        label.SetNameMessage(avatar);
+                    if (label.Color != tstate.ChatColor)
+                        label.Color = tstate.ChatColor;
+
+                    persistID = avatar.PersistID;
+                    timeout = avatar.MessageTimeout;
+                    worldUI = avatar.WorldUI as AvatarComponent;
+                }
+                else if (puppets != null)
+                {
+                    var visual = puppets[i - avatarCount];
+                    ref var puppet = ref visual.Current;
+
+                    if (label.Message != (puppet.Message.Text ?? string.Empty))
+                    {
+                        label.SetNameMessage(in puppet);
+                    }
+
+                    if (label.Color.PackedValue != puppet.Message.Color)
+                    {
+                        label.Color = new Color(puppet.Message.Color);
+                    }
+
+                    persistID = puppet.PersistID;
+                    timeout = puppet.Message.Timeout;
+                    worldUI = visual.CurrentComponent;
+                }
+
+                if (myIgnoring.Contains(persistID))
                 {
                     label.Alpha = 0;
                 }
                 else
                 {
-                    if (avatar.MessageTimeout < 30)
+                    if (timeout < 30)
                     {
-                        label.FadeTime = avatar.MessageTimeout / 3;
-                        label.Alpha = avatar.MessageTimeout / 30f;
+                        label.FadeTime = timeout / 3;
+                        label.Alpha = timeout / 30f;
                     }
                     else
                     {
@@ -259,13 +301,15 @@ namespace FSO.Client.UI.Panels
                     }
                 }
 
-                var world = vm.Context.World.State;
-                var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
-                off2 = (off2 / world.PreciseZoom - off2) / 2;
+                if (worldUI != null)
+                {
+                    var world = vm.Context.World.State;
+                    var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
+                    off2 = (off2 / world.PreciseZoom - off2) / 2;
 
-                label.TargetPt = ((ZoomCorrect(avatar.WorldUI.GetScreenPos(vm.Context.World.State)) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom)))
-                   + off2) * world.PreciseZoom / FSOEnvironment.DPIScaleFactor;
-
+                    label.TargetPt = ((ZoomCorrect(worldUI.GetScreenPos(vm.Context.World.State)) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom)))
+                       + off2) * world.PreciseZoom / FSOEnvironment.DPIScaleFactor;
+                }
             }
             base.Update(state);
 
