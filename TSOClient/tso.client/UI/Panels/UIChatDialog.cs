@@ -238,15 +238,10 @@ namespace FSO.Client.UI.Panels
                 var ttsmode = GlobalSettings.Default.TTSMode;
                 if (ttsmode > 0)
                 {
-                    if (ttsmode == 2 || (GetChannelInfo(evt.ChannelID).Flags & VMTSOChatChannelFlags.EnableTTS) > 0)
+                    if (ttsmode == 2 || (GetChannelInfo(evt.ChannelID).Flags & VMTSOChatChannelFlags.EnableTTS) > 0 && evt.SenderUID != 0)
                     {
-                        var avatar = Owner.vm.GetAvatarByPersist(evt.SenderUID);
-                        if (avatar != null)
-                        {
-                            var tts = GetOrCreateTTS();
-                            var gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
-                            tts?.Speak(evt.Text[1].Replace('_', ' '), gender, evt.TTSPitch, avatar.PersistID, volume);
-                        }
+                        var tts = GetOrCreateTTS();
+                        tts?.Speak(evt.Text[1].Replace('_', ' '), evt.Gender, evt.TTSPitch, evt.SenderUID, volume);
                     }
                 }
             }

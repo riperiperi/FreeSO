@@ -185,6 +185,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             int timeout = 0;
             uint color = 0;
             sbyte pitch = 0;
+            bool gender = false;
             bool isNew = false;
 
             if (text.Length > 0)
@@ -193,10 +194,11 @@ namespace FSO.Server.Protocol.Electron.Packets
                 timeout = input.GetInt32();
                 color = input.GetUInt32();
                 pitch = (sbyte)input.Get();
+                gender = input.GetBool();
                 isNew = input.GetBool();
             }
 
-            var result = new SurroundPuppetMessage(text.Length == 0 ? null : text, name, timeout, color, pitch)
+            var result = new SurroundPuppetMessage(text.Length == 0 ? null : text, name, timeout, color, pitch, gender)
             {
                 IsNew = isNew
             };
@@ -258,6 +260,7 @@ namespace FSO.Server.Protocol.Electron.Packets
                 output.PutInt32(message.Timeout);
                 output.PutUInt32(message.Color);
                 output.Put((byte)message.TTSPitch);
+                output.PutBool(message.Gender);
                 output.PutBool(message.IsNew);
             }
         }

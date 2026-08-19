@@ -27,6 +27,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public string Timestamp;
         public VMTSOChatChannel Channel;
         public sbyte TTSPitch;
+        public bool Gender;
 
         public VMChatEvent(VMAvatar ava, VMChatEventType type, byte channelID, params string[] text) : this(ava, type, text)
         {
@@ -42,14 +43,17 @@ namespace FSO.SimAntics.NetPlay.Model
             var tsoState = ava?.TSOState as VMTSOAvatarState;
             TTSPitch = tsoState?.ChatTTSPitch ?? 0;
             Color = tsoState?.ChatColor ?? Color.LightGray;
+            Gender = (ava?.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) ?? 0) > 0;
         }
 
-        public VMChatEvent(uint senderUid, uint senderColor, sbyte ttsPitch, VMChatEventType type, params string[] text)
+        public VMChatEvent(uint senderUid, uint senderColor, sbyte ttsPitch, bool gender, VMChatEventType type, params string[] text)
         {
             SenderUID = senderUid;
             Type = type;
             Text = text;
             Timestamp = DateTime.Now.ToShortTimeString();
+            TTSPitch = ttsPitch;
+            Gender = gender;
             Color = new Color(senderColor);
         }
     }
