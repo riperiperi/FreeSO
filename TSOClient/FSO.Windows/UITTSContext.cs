@@ -27,7 +27,16 @@ namespace FSO.Windows
 
             var voci = Synth.GetInstalledVoices();
             var genderVoices = voci.Where(x => x.VoiceInfo.Gender == voiceGender).ToArray();
-            if (genderVoices.Length == 0) return;
+            if (genderVoices.Length == 0)
+            {
+                if (voci.Count == 0)
+                {
+                    return;
+                }
+
+                // If we don't have voices for the correct gender, try to use anything.
+                genderVoices = [..voci];
+            }
 
             uint voiceInd = persistID % (uint)genderVoices.Length;
             Synth.SelectVoice(genderVoices[(int)voiceInd].VoiceInfo.Name);
