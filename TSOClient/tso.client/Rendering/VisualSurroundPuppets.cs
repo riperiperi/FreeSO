@@ -276,7 +276,7 @@ namespace FSO.Client.Rendering
             if (puppet.Message.Text != null && chatPanel != null)
             {
                 var message = puppet.Message;
-                chatPanel.ReceiveEvent(new VMChatEvent(puppet.PersistID, message.Color, message.TTSPitch, VMChatEventType.SurroundMessage, message.Text));
+                chatPanel.ReceiveEvent(new VMChatEvent(puppet.PersistID, message.Color, message.TTSPitch, VMChatEventType.SurroundMessage, message.Name, message.Text));
             }
         }
 

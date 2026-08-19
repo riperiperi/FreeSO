@@ -181,6 +181,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         {
             var text = input.GetPascalVLCString();
 
+            string name = "";
             int timeout = 0;
             uint color = 0;
             sbyte pitch = 0;
@@ -188,13 +189,14 @@ namespace FSO.Server.Protocol.Electron.Packets
 
             if (text.Length > 0)
             {
+                name = input.GetPascalVLCString();
                 timeout = input.GetInt32();
                 color = input.GetUInt32();
                 pitch = (sbyte)input.Get();
                 isNew = input.GetBool();
             }
 
-            var result = new SurroundPuppetMessage(text.Length == 0 ? null : text, timeout, color, pitch)
+            var result = new SurroundPuppetMessage(text.Length == 0 ? null : text, name, timeout, color, pitch)
             {
                 IsNew = isNew
             };
@@ -252,6 +254,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutPascalVLCString(message.Text ?? "");
             if (!string.IsNullOrEmpty(message.Text))
             {
+                output.PutPascalVLCString(message.Name);
                 output.PutInt32(message.Timeout);
                 output.PutUInt32(message.Color);
                 output.Put((byte)message.TTSPitch);

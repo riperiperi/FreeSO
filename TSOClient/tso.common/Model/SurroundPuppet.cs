@@ -53,9 +53,10 @@ namespace FSO.Common.Model
         }
     }
 
-    public struct SurroundPuppetMessage(string text, int timeout, uint color, sbyte ttsPitch)
+    public struct SurroundPuppetMessage(string text, string name, int timeout, uint color, sbyte ttsPitch)
     {
         public string Text = text;
+        public string Name = name;
         public int Timeout = timeout;
         public uint Color = color;
         public sbyte TTSPitch = ttsPitch;

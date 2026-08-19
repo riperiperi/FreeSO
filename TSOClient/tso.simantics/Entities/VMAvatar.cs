@@ -1228,7 +1228,7 @@ namespace FSO.SimAntics
                 Appearances = BoundAppearances.Count == 0 ? [] : [.. BoundAppearances],
                 Animations = [.. Animations.Select(x => new SurroundPuppetAnimation(x.Anim.Name, x.CurrentFrame, x.Speed, x.Weight, x.EndReached, x.PlayingBackwards, x.Loop))],
 
-                Message = withMessage ? new SurroundPuppetMessage(Message, MessageTimeout, tsoState?.ChatColor.PackedValue ?? 0u, tsoState?.ChatTTSPitch ?? 0) : default
+                Message = withMessage ? new SurroundPuppetMessage(Message, Name, MessageTimeout, tsoState?.ChatColor.PackedValue ?? 0u, tsoState?.ChatTTSPitch ?? 0) : default
             };
         }
 
