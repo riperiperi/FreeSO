@@ -7,10 +7,10 @@ namespace FSO.Common.Rendering
     {
         private static Color[] FinaleColors = new Color[]
         {
-            new Color(2, 2, 2),
-            new Color(2, 2, 2),
-            Color.Lerp(new Color(0, 0, 0), new Color(50, 70, 122)*1.25f, 0.5f),
-            new Color(70, 70, 70)*1.25f,
+            new Color(0, 0, 0),
+            new Color(0, 0, 0),
+            new Color(0, 0, 0),
+            new Color(70, 70, 70)*0.75f,//*1.25f,
             new Color(217, 109, 50), //sunrise
             new Color(255, 255, 255),
             new Color(255, 255, 255), //peak
@@ -71,8 +71,8 @@ namespace FSO.Common.Rendering
         public static bool IsFinale()
         {
             var time = DateTime.UtcNow;
-
-            return time.Year == 2024 && time.Month == 12 && ((time.Day == 8 && time.Hour == 23) || (time.Day == 9 && time.Hour == 0));
+            // NOTE: intentional
+            return time.Month == 12 && ((time.Day == 8 && time.Hour == 23) || (time.Day == 9 && time.Hour == 0));
         }
 
         public static float GetDarkness()

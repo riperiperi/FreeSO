@@ -1091,6 +1091,11 @@ namespace FSO.SimAntics.Engine
             );
         }
 
+        public bool IsQueueIdle()
+        {
+            return (ActiveAction?.Mode ?? VMQueueMode.Idle) == VMQueueMode.Idle;
+        }
+
         #region VM Marshalling Functions
         public virtual VMThreadMarshal Save()
         {
