@@ -6,7 +6,8 @@ namespace FSO.Common.Model
     {
         None,
         DirectControl,
-        Routing
+        Routing,
+        Teleport
     }
 
     public class LotTransitionInfo
@@ -55,6 +56,11 @@ namespace FSO.Common.Model
         {
             uint updateMask = 0b111111111;
             var cityOffset = RelativeChangeLotToCity(new Point(RelativeChangeX, RelativeChangeY));
+
+            if (Type == LotTransitionType.Teleport)
+            {
+                return updateMask;
+            }
 
             int i = 0;
             for (int y = -1; y < 2; y++)

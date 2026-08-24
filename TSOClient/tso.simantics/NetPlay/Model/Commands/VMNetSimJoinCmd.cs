@@ -9,6 +9,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 {
     public class VMNetSimJoinCmd : VMNetCommandBodyAbstract
     {
+        private const short CATEGORY_TELEPORT = 11111;
         public ushort Version = CurVer;
 
         public override bool AcceptFromClient { get { return false; } }
@@ -52,7 +53,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             bool toMailbox = true;
 
-            if (TransitionInfo != null)
+            if (TransitionInfo != null && TransitionInfo.Type != LotTransitionType.Teleport)
             {
                 // The edge tiles on a lot are blank and overlap with the surrounding lot...
                 // ...so when wrapping the position, they are subtracted.
@@ -182,7 +183,24 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Join, avatar.Name));
 
-            if (toMailbox)
+            if (TransitionInfo?.Type == LotTransitionType.Teleport)
+            {
+                var cat = vm.Context.ObjectQueries.GetObjectsByCategory(CATEGORY_TELEPORT);
+                if (cat != null)
+                {
+                    foreach (var obj in cat)
+                    {
+                        var result = obj.ExecuteNamedEntryPoint("CT - FSO Teleport Transition", vm.Context, true, obj, new([avatar.ObjectID, (short)TransitionInfo.BeforeLocation, (short)(TransitionInfo.BeforeLocation >> 16), 0]));
+
+                        if (result)
+                        {
+                            // If something handled the transition, don't check the others.
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (toMailbox)
             {
                 var oow = vm.Context.ObjectQueries.GetObjectsAt(LotTilePos.OUT_OF_WORLD);
                 if (oow != null)
@@ -247,6 +265,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (TransitionInfo != null)
             {
+                if (TransitionInfo.Type == LotTransitionType.Teleport)
+                {
+                    // Only the BeforeLocation matters, and it's not too important to validate
+                    // as it just compares against available teleporter destinations.
+                    return;
+                }
+
                 if (TransitionInfo.RelativeChangeX < -1 || TransitionInfo.RelativeChangeX > 1 ||
                     TransitionInfo.RelativeChangeY < -1 || TransitionInfo.RelativeChangeY > 1 ||
                     (TransitionInfo.RelativeChangeX == 0 && TransitionInfo.RelativeChangeY == 0))

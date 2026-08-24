@@ -16,6 +16,7 @@ using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Model;
 using FSO.Common.Rendering.Framework;
+using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
@@ -835,11 +836,35 @@ namespace FSO.Client.UI.Screens
                 if (info == null)
                 {
                     // Should be impossible...
+
+                    TransitionCameras = null;
                     return;
                 }
 
                 var lastWorld = TransitionWorld;
                 CameraControllers newCameras = World.State.Cameras;
+
+                if (info.Type == LotTransitionType.Teleport)
+                {
+                    newCameras.SetCameraType(World, lastWorld.State.Cameras.ActiveType, 0);
+                    var ava = (LotView.Components.AvatarComponent)myAvatar.WorldUI;
+                    World.CenterTo(ava);
+
+                    var directCam = newCameras.CameraDirect;
+                    var oldDirect = TransitionCameras.CameraDirect;
+
+                    if (directCam != null && oldDirect != null)
+                    {
+                        directCam.Inherit(oldDirect);
+                        directCam.FirstPersonAvatar = ava;
+                        directCam.RotationX = (float)(Math.PI / -2 - ava.RadianDirection);
+                        directCam.RotationY = MathF.PI / 2f;
+                    }
+
+                    TransitionCameras = null;
+                    return;
+                }
+
                 World.State.DisableSmoothRotation = true;
 
                 var position = MapCoordinates.Unpack(vm.TSOState.LotID);

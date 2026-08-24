@@ -1,4 +1,5 @@
-﻿using FSO.Files.Formats.IFF.Chunks;
+﻿using FSO.Common.Model;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Model;
@@ -426,9 +427,15 @@ namespace FSO.SimAntics.Primitives
 
                             uint id = idLow | idHigh;
 
-                            if (id != ((VMTSOLotState)context.VM.PlatformState).LotID)
+                            if (id != context.VM.TSOState.LotID)
                             {
-                                context.VM.SignalLotSwitch(id);
+                                var transition = new LotTransitionInfo()
+                                {
+                                    Type = LotTransitionType.Teleport,
+                                    BeforeLocation = context.VM.TSOState.LotID
+                                };
+
+                                context.VM.SignalLotSwitch(id, transition);
                             }
                         }
 
