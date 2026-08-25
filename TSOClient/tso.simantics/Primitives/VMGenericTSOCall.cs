@@ -439,6 +439,8 @@ namespace FSO.SimAntics.Primitives
                             }
                         }
 
+                        ((VMAvatar)context.Caller).UserLeaveLot();
+
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 case VMGenericTSOCallMode.FSOIsStackObjectTradable:

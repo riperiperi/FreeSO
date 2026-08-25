@@ -844,37 +844,19 @@ namespace FSO.Client.UI.Screens
                 var lastWorld = TransitionWorld;
                 CameraControllers newCameras = World.State.Cameras;
 
-                if (info.Type == LotTransitionType.Teleport)
-                {
-                    newCameras.SetCameraType(World, lastWorld.State.Cameras.ActiveType, 0);
-                    var ava = (LotView.Components.AvatarComponent)myAvatar.WorldUI;
-                    World.CenterTo(ava);
-
-                    var directCam = newCameras.CameraDirect;
-                    var oldDirect = TransitionCameras.CameraDirect;
-
-                    if (directCam != null && oldDirect != null)
-                    {
-                        directCam.Inherit(oldDirect);
-                        directCam.FirstPersonAvatar = ava;
-                        directCam.RotationX = (float)(Math.PI / -2 - ava.RadianDirection);
-                        directCam.RotationY = MathF.PI / 2f;
-                    }
-
-                    TransitionCameras = null;
-                    return;
-                }
-
                 World.State.DisableSmoothRotation = true;
 
-                var position = MapCoordinates.Unpack(vm.TSOState.LotID);
-                var previousElevation = CityRenderer.GetElevationAt(position.X + info.RelativeChangeY, position.Y - info.RelativeChangeX);
-                var currentElevation = CityRenderer.GetElevationAt(position.X, position.Y);
+                if (info.Type != LotTransitionType.Teleport)
+                {
+                    var position = MapCoordinates.Unpack(vm.TSOState.LotID);
+                    var previousElevation = CityRenderer.GetElevationAt(position.X + info.RelativeChangeY, position.Y - info.RelativeChangeX);
+                    var currentElevation = CityRenderer.GetElevationAt(position.X, position.Y);
 
-                var baseAltDiff = (currentElevation - previousElevation) * 100;
-                var heightDiff = baseAltDiff * World.Architecture.Blueprint.TerrainFactor * 3;
+                    var baseAltDiff = (currentElevation - previousElevation) * 100;
+                    var heightDiff = baseAltDiff * World.Architecture.Blueprint.TerrainFactor * 3;
 
-                TransitionCameras.Camera3D.CamHeight -= heightDiff;
+                    TransitionCameras.Camera3D.CamHeight -= heightDiff;
+                }
 
                 if (lastWorld != null)
                 {
@@ -974,6 +956,20 @@ namespace FSO.Client.UI.Screens
 
                 World.State.DisableSmoothRotation = false;
                 LotControl.ResetTargetZoom();
+
+                if (info.Type == LotTransitionType.Teleport)
+                {
+                    newCameras.SetCameraType(World, lastWorld.State.Cameras.ActiveType, 0);
+                    var ava = (LotView.Components.AvatarComponent)myAvatar.WorldUI;
+                    World.CenterTo(ava);
+
+                    var newDirect = newCameras.CameraDirect;
+                    newDirect.FirstPersonAvatar = ava;
+                    newDirect.RotationX = (float)(Math.PI / -2 - ava.RadianDirection);
+                    newDirect.RotationY = MathF.PI / 2f;
+
+                    newCameras.Camera3D.ResetCameraHeight(World);
+                }
             }
 
             TransitionCameras = null;

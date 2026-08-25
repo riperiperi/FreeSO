@@ -173,6 +173,13 @@ namespace FSO.LotView.Utils.Camera
             return tt.Item1;
         }
 
+        public float ResetCameraHeight(World world)
+        {
+            var tt = world.Get3DTTHeights();
+            CamHeight = tt.Item2;
+            return tt.Item1;
+        }
+
         public virtual void Update(UpdateState state, World world)
         {
             var md = state.MouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
