@@ -207,6 +207,162 @@ namespace FSO.VMHarness
             Console.WriteLine("OK: the probe tile is inside an enclosed room.");
         }
 
+        /// <summary>
+        /// Spawns a Sim at from-tile, routes to to-tile through the room map (doors as portals).
+        /// Asserts the Sim's room changes and the destination is indoors. Control: remove the
+        /// party-wall door and this must fail — otherwise the check is vacuous.
+        /// </summary>
+        static void WalkMain(string[] args)
+        {
+            if (args.Length < 4)
+                throw new Exception("usage: FSO.VMHarness --walk <blueprint.xml> <fromX,fromY> <toX,toY> [gameLocation]");
+
+            var housePath = Path.GetFullPath(args[1]);
+            var fromParts = args[2].Split(',');
+            var toParts = args[3].Split(',');
+            short fromX = short.Parse(fromParts[0]), fromY = short.Parse(fromParts[1]);
+            short toX = short.Parse(toParts[0]), toY = short.Parse(toParts[1]);
+            var gameLocation = args.Length > 4 ? args[4] :
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "Library/Application Support/The Sims Online/TSOClient");
+            if (!gameLocation.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                gameLocation += Path.DirectorySeparatorChar;
+
+            if (!File.Exists(housePath)) throw new Exception("Blueprint not found at " + housePath);
+            if (!Directory.Exists(gameLocation)) throw new Exception("TSO game content not found at " + gameLocation);
+
+            var repoRoot = RepoRoot();
+            var fsoContentDir = Path.Combine(repoRoot, "TSOClient", "FSO.Content.TSO", "Content");
+            var work = Path.Combine(Path.GetTempPath(), "fso-walkharness-work");
+            if (Directory.Exists(work)) Directory.Delete(work, true);
+            var workContent = Path.Combine(work, "Content");
+            Directory.CreateDirectory(workContent);
+            foreach (var entry in Directory.GetFileSystemEntries(fsoContentDir))
+            {
+                var link = Path.Combine(workContent, Path.GetFileName(entry));
+                if (Directory.Exists(entry)) Directory.CreateSymbolicLink(link, entry);
+                else File.CreateSymbolicLink(link, entry);
+            }
+            Directory.SetCurrentDirectory(work);
+
+            Console.Error.WriteLine("Booting headless VM for walk...");
+            VM.UseWorld = false;
+            VMContext.InitVMConfig(false);
+            Content.Content.Init(gameLocation, ContentMode.SERVER);
+
+            var vm = new VM(new VMContext(null), new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
+            vm.Init();
+            vm.SendCommand(new VMBlueprintRestoreCmd
+            {
+                JobLevel = -1,
+                XMLData = File.ReadAllBytes(housePath),
+                FloorClipX = 0, FloorClipY = 0, FloorClipWidth = 0, FloorClipHeight = 0,
+                OffsetX = 0, OffsetY = 0, TargetSize = 0
+            });
+            vm.Tick();
+
+            var fromPos = LotTilePos.FromBigTile(fromX, fromY, 1);
+            var toPos = LotTilePos.FromBigTile(toX, toY, 1);
+            var fromRoom = vm.Context.GetRoomAt(fromPos);
+            var toRoom = vm.Context.GetRoomAt(toPos);
+            Console.WriteLine("from: (" + fromX + "," + fromY + ") room " + fromRoom +
+                (vm.Context.RoomInfo[fromRoom].Room.IsOutside ? " (OUTSIDE)" : " (indoors)"));
+            Console.WriteLine("to:   (" + toX + "," + toY + ") room " + toRoom +
+                (vm.Context.RoomInfo[toRoom].Room.IsOutside ? " (OUTSIDE)" : " (indoors)"));
+            if (vm.Context.RoomInfo[fromRoom].Room.IsOutside)
+                throw new Exception("FAIL: from-tile is outdoors — pick an interior tile.");
+            if (vm.Context.RoomInfo[toRoom].Room.IsOutside)
+                throw new Exception("FAIL: to-tile is outdoors — pick an interior tile.");
+            if (fromRoom == toRoom)
+                throw new Exception("FAIL: from and to are the same room — pick tiles on opposite sides of a door.");
+
+            var avatarGroup = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, fromPos, Direction.NORTH);
+            var avatar = (VMAvatar)avatarGroup.Objects[0];
+            avatar.AvatarState.Permissions = FSO.SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin;
+            Console.WriteLine("avatar placed at room " + vm.Context.GetRoomAt(avatar.Position));
+
+            // Dummy parent frame so PushNewRoutingFrame has Caller/CodeOwner/Routine. Routing
+            // ticks itself; the routine body never runs. Pick any global BHAV — id 1 is not
+            // guaranteed to exist; chunk IDs in global.iff start wherever Edith put them.
+            var globalBhavs = vm.Context.Globals.Resource.List<FSO.Files.Formats.IFF.Chunks.BHAV>();
+            VMRoutine globalRoutine = null;
+            if (globalBhavs != null)
+            {
+                foreach (var bhav in globalBhavs)
+                {
+                    globalRoutine = (VMRoutine)vm.Context.Globals.Resource.GetRoutine(bhav.ChunkID);
+                    if (globalRoutine != null) break;
+                }
+            }
+            if (globalRoutine == null)
+                throw new Exception("FAIL: no global routine available — cannot push a routing frame.");
+            var parent = new FSO.SimAntics.Engine.VMStackFrame
+            {
+                Caller = avatar,
+                Callee = avatar,
+                StackObject = avatar,
+                CodeOwner = avatar.Object,
+                Routine = globalRoutine,
+                Thread = avatar.Thread,
+                ActionTree = true,
+            };
+            avatar.Thread.Stack.Add(parent);
+
+            var dest = new FSO.SimAntics.Engine.VMFindLocationResult
+            {
+                Position = toPos,
+                FaceAnywhere = true,
+                Score = 100,
+            };
+            var router = avatar.Thread.PushNewRoutingFrame(parent, false);
+            bool found = router.InitRoutes(new List<FSO.SimAntics.Engine.VMFindLocationResult> { dest });
+            Console.WriteLine("InitRoutes: " + (found ? "path found" : "NO PATH"));
+            if (!found)
+                throw new Exception("FAIL: no route from (" + fromX + "," + fromY + ") to (" + toX + "," + toY + ").");
+
+            const int maxTicks = 5000;
+            int tick;
+            for (tick = 0; tick < maxTicks; tick++)
+            {
+                var before = string.Join("|", avatar.Thread.Stack.Select(f => f.GetType().Name+(f is FSO.SimAntics.Engine.VMRoutingFrame r?(":"+r.State):"")));
+                vm.Update();
+                var after = string.Join("|", avatar.Thread.Stack.Select(f => f.GetType().Name+(f is FSO.SimAntics.Engine.VMRoutingFrame r2?(":"+r2.State):"")));
+                var rr = avatar.GetPersonData(VMPersonDataVariable.RouteResult);
+                if (tick < 5)
+                    Console.Error.WriteLine("tick "+tick+" stackBefore="+before+" stackAfter="+after+" routeResult="+rr+" room="+vm.Context.GetRoomAt(avatar.Position));
+                var here = vm.Context.GetRoomAt(avatar.Position);
+                if (here == toRoom)
+                    break;
+
+                // Portal BHAV frames sit above the routing frame while the door runs — do not
+                // treat "top is not VMRoutingFrame" as done. Done = no routing frame left on stack.
+                bool routingAlive = false;
+                foreach (var f in avatar.Thread.Stack)
+                {
+                    if (f is FSO.SimAntics.Engine.VMRoutingFrame rf)
+                    {
+                        if (rf.State == FSO.SimAntics.Engine.VMRoutingFrameState.FAILED)
+                            throw new Exception("FAIL: routing failed at tick " + tick + " (still in room " + here + ").");
+                        routingAlive = true;
+                    }
+                }
+                if (!routingAlive)
+                    throw new Exception("FAIL: routing ended at tick " + tick + " still in room " + here +
+                        " (expected " + toRoom + ").");
+            }
+            if (tick >= maxTicks)
+                throw new Exception("FAIL: still routing after " + maxTicks + " ticks.");
+
+            var endRoom = vm.Context.GetRoomAt(avatar.Position);
+            Console.WriteLine("arrived: room " + endRoom + " after " + tick + " ticks" +
+                (vm.Context.RoomInfo[endRoom].Room.IsOutside ? " (OUTSIDE)" : " (indoors)"));
+            if (endRoom != toRoom)
+                throw new Exception("FAIL: expected room " + toRoom + " but Sim is in room " + endRoom + ".");
+            if (vm.Context.RoomInfo[endRoom].Room.IsOutside)
+                throw new Exception("FAIL: Sim ended outdoors.");
+            Console.WriteLine("OK: Sim walked through a door into the destination room.");
+        }
+
         static string RepoRoot()
         {
             var dir = AppContext.BaseDirectory;
@@ -226,6 +382,14 @@ namespace FSO.VMHarness
             if (args.Length > 0 && args[0] == "--house")
             {
                 HouseMain(args);
+                return;
+            }
+
+            // --walk <blueprint.xml> <fromX,fromY> <toX,toY> [gameLocation]:
+            // spawn a Sim in a generated house and route through a door. Closes A1 occupancy.
+            if (args.Length > 0 && args[0] == "--walk")
+            {
+                WalkMain(args);
                 return;
             }
 
