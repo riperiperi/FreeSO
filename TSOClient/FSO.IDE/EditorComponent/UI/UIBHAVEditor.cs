@@ -266,7 +266,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         public Vector2 GetCentralLocation(PrimitiveBox box)
         {
-            return new Vector2(((UIExternalContainer)Parent).Width / 2 - (box.X + box.Width / 2), ((UIExternalContainer)Parent).Height / 2 - (box.Y + box.Height / 2));
+            return new Vector2(((UIExternalContainer)Parent).TrueWidth / 2 - (box.X + box.Width / 2), ((UIExternalContainer)Parent).Height / 2 - (box.Y + box.Height / 2));
         }
 
         public void UpdateDebugPointer(VMStackFrame frame)

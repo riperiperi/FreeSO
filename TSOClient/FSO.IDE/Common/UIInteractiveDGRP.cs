@@ -183,7 +183,8 @@ namespace FSO.IDE.Common
         {
             base.Draw(batch);
             var bg = EditorComponent.EditorResource.Get().ViewBG;
-            var viewport = GameFacade.GraphicsDevice.Viewport;
+
+            var viewport = Parent as UIExternalContainer;
             var scale = 1.0f;
 
             switch (TempVM.Context.World.State.Zoom)
@@ -194,7 +195,7 @@ namespace FSO.IDE.Common
                     scale = 0.5f; break;
             }
 
-            DrawLocalTexture(batch, bg, null, new Vector2(viewport.Width / 2 - 400*scale, viewport.Height / 2 - 300*scale), new Vector2(scale, scale));
+            DrawLocalTexture(batch, bg, null, new Vector2(viewport.TrueWidth / 2 - 400*scale, viewport.Height / 2 - 300*scale), new Vector2(scale, scale));
             batch.Pause();
             GameFacade.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
@@ -215,7 +216,7 @@ namespace FSO.IDE.Common
             }
 
             var world = TempVM.Context.World;
-            world.State.SetDimensions(new Vector2(viewport.Width, viewport.Height));
+            world.State.SetDimensions(new Vector2(viewport.TrueWidth, viewport.Height));
             world.PreDraw(GameFacade.GraphicsDevice);
             world.Draw(GameFacade.GraphicsDevice);
             GameFacade.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;

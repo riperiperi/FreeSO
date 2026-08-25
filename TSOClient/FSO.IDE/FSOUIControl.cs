@@ -15,6 +15,7 @@ namespace FSO.IDE
         public UIExternalContainer FSOUI;
         private object FrameLock;
         private Bitmap Framebuffer;
+        private Rectangle SourceRect;
 
         private MouseState mouse;
 
@@ -104,6 +105,8 @@ namespace FSO.IDE
                 Marshal.Copy(FSOUI.RawImage, 0, ptr, bmpData.Stride * bmpData.Height);
                 Framebuffer.UnlockBits(bmpData);
 
+                SourceRect = new Rectangle(0, 0, FSOUI.TrueWidth, Framebuffer.Height);
+
                 Invalidate();
             }
         }
@@ -187,7 +190,7 @@ namespace FSO.IDE
             {
                 lock (FrameLock)
                 {
-                    if (Framebuffer != null) e.Graphics.DrawImage(Framebuffer, new System.Drawing.Point());
+                    if (Framebuffer != null) e.Graphics.DrawImage(Framebuffer, 0, 0, SourceRect, GraphicsUnit.Pixel);
                 }
             }
             if (FSOUI != null) FSOUI.NeedFrames = 5;

@@ -1,6 +1,7 @@
 ﻿using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace FSO.Client.UI.Framework
 {
     public class UIExternalContainer : UICachedContainer
     {
+        public const int WidthAlignment = 64; // Monogame can GetData on textures with an aligned width much faster.
+
         UISpriteBatch Batch;
 
         public event UIExternalFrameDone OnFrame;
@@ -28,6 +31,7 @@ namespace FSO.Client.UI.Framework
         public bool HasFocus = true;
         public bool HasUpdated;
         public int NeedFrames = 5;
+        public int RecentDraw = 5;
 
         public Dictionary<char, Keys> NonPrintingKeys = new Dictionary<char, Keys>()
         {
@@ -38,6 +42,11 @@ namespace FSO.Client.UI.Framework
 
         public List<char> KeysPressed = new List<char>();
 
+        public int TrueWidth
+        {
+            get; private set;
+        }
+
         public int Width
         {
             get
@@ -46,7 +55,11 @@ namespace FSO.Client.UI.Framework
             }
             set
             {
-                Size = new Vector2(value, Size.Y);
+                TrueWidth = value;
+
+                int alignedWidth = TextureUtils.AlignUp(value, WidthAlignment);
+
+                Size = new Vector2(alignedWidth, Size.Y);
                 BatchDirty = true;
             }
         }
@@ -93,22 +106,24 @@ namespace FSO.Client.UI.Framework
         {
             var invalid = Invalidated;
             base.PreDraw(batch);
+
+            if (RecentDraw > 0)
+            {
+                RecentDraw--;
+            }
+
             if (invalid && Target != null && NeedFrames-- > 0)
             {
+                RecentDraw = 5;
+
                 var expectedSize = Target.Width * Target.Height * 4;
                 if (RawImage == null || RawImage.Length != expectedSize)
                 {
                     RawImage = new byte[expectedSize];
                 }
-                Target.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length);
+                Target.GetData(RawImage, 0, RawImage.Length);
 
-                
-                for (int i = 0; i < RawImage.Length; i += 4)
-                {
-                    var swap = RawImage[i];
-                    RawImage[i] = RawImage[i + 2];
-                    RawImage[i + 2] = swap;
-                }
+                RGBtoBGR.Convert(RawImage);
 
                 if (OnFrame != null) OnFrame();
             }

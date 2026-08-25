@@ -549,6 +549,7 @@ namespace FSO.Client.UI
 
         public void PreDraw(GraphicsDevice device)
         {
+            bool fastRender = false;
             lock (m_ExtContainers)
             {
                 if (m_ExtContainers.Count > 0)
@@ -561,11 +562,15 @@ namespace FSO.Client.UI
                             if (!ext.HasUpdated) ext.Update(null);
                             ext.PreDraw(SpriteBatch);
                             ext.Draw(SpriteBatch);
+                            fastRender |= ext.RecentDraw > 0;
                         }
                     }
+
                     SpriteBatch.End();
                 }
             }
+
+            GameFacade.Game.InactiveSleepTime = fastRender ? TimeSpan.Zero : TimeSpan.FromMilliseconds(20);
 
             SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
             this.PreDraw(SpriteBatch);

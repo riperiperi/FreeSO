@@ -185,13 +185,7 @@ namespace FSO.Content.Model
             var tex = ImageLoader.FromStream(FetchDevice, stream);
             var data = new byte[tex.Width * tex.Height * 4];
             tex.GetData(data);
-            for (int i = 0; i < data.Length; i += 4)
-            {
-                //output expects bgra.
-                var temp = data[i + 2];
-                data[i + 2] = data[i];
-                data[i] = temp;
-            }
+            RGBtoBGR.Convert(data);
             tex.Dispose();
 
             return new TexBitmap

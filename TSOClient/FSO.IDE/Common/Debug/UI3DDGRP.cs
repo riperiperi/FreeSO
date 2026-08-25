@@ -112,7 +112,10 @@ namespace FSO.IDE.Common.Debug
         {
             batch.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             batch.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-            Camera.ProjectionOrigin = new Vector2(batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height) / 2;
+
+            var viewport = Parent as UIExternalContainer;
+
+            Camera.ProjectionOrigin = new Vector2(viewport.TrueWidth, viewport.Height) / 2;
             Scene.Draw(batch.GraphicsDevice);
 
             var text = (Comp3D?.Sum(x => x.Mesh?.Geoms?.FirstOrDefault()?.Sum(y => y.Value.PrimCount) ?? 0) ?? 0) + " tris";

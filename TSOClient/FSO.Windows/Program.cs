@@ -1,6 +1,7 @@
 ﻿using FSO.Client;
 using FSO.Client.UI.Panels;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Utils;
 using FSO.Windows.Platform;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -163,9 +164,6 @@ namespace FSO.Windows
             Bitmap image = (Bitmap)Bitmap.FromStream(str);
             try
             {
-                // Fix up the Image to match the expected format
-                //image = (Bitmap)image.RGBToBGR();
-
                 var data = new byte[image.Width * image.Height * 4];
 
                 BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
@@ -176,7 +174,7 @@ namespace FSO.Windows
                 Marshal.Copy(bitmapData.Scan0, data, 0, data.Length);
                 image.UnlockBits(bitmapData);
 
-                RGBToBGRSoft(data);
+                RGBtoBGR.Convert(data);
 
                 return new Tuple<byte[], int, int>(data, image.Width, image.Height);
             }
@@ -184,95 +182,6 @@ namespace FSO.Windows
             {
                 image.Dispose();
             }
-        }
-
-        private static void RGBToBGROld(byte[] data)
-        {
-            for (int i = 0; i < data.Length; i += 4)
-            {
-                var temp = data[i];
-                data[i] = data[i + 2];
-                data[i + 2] = temp;
-            }
-        }
-
-        private const ulong MaskR = 0x000000FF000000FF;
-        private const ulong MaskB = 0x00FF000000FF0000;
-        private const ulong MaskElse = 0xFF00FF00FF00FF00;
-
-        private unsafe static void RGBToBGRSoft(byte[] data)
-        {
-            // Do 8 bytes at a time with ulong.
-            // Could do this with an SSE shuffle, but .NET 4 doesn't have intrinsics.
-
-            fixed (void* dataPtr = data)
-            {
-                ulong* longPtr = (ulong*)dataPtr;
-
-                int longCount = data.Length / 8;
-
-                for (int i = 0; i < longCount; i++)
-                {
-                    ulong px = longPtr[i];
-                    longPtr[i] = ((px >> 16) & MaskR) | ((px << 16) & MaskB) | (px & MaskElse);
-                }
-            }
-
-            if (data.Length % 8 != 0)
-            {
-                // Deal with the remainder.
-                int i = data.Length - 4;
-                var temp = data[i];
-                data[i] = data[i + 2];
-                data[i + 2] = temp;
-            }
-        }
-
-        // RGB to BGR convert Matrix
-        private static float[][] rgbtobgr = new float[][]
-          {
-             new float[] {0, 0, 1, 0, 0},
-             new float[] {0, 1, 0, 0, 0},
-             new float[] {1, 0, 0, 0, 0},
-             new float[] {0, 0, 0, 1, 0},
-             new float[] {0, 0, 0, 0, 1}
-          };
-
-
-        internal static Image RGBToBGR(this Image bmp)
-        {
-            Image newBmp;
-            if ((bmp.PixelFormat & System.Drawing.Imaging.PixelFormat.Indexed) != 0)
-            {
-                newBmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            }
-            else
-            {
-                // Need to clone so the call to Clear() below doesn't clear the source before trying to draw it to the target.
-                newBmp = (Image)bmp.Clone();
-            }
-
-            try
-            {
-                System.Drawing.Imaging.ImageAttributes ia = new System.Drawing.Imaging.ImageAttributes();
-                System.Drawing.Imaging.ColorMatrix cm = new System.Drawing.Imaging.ColorMatrix(rgbtobgr);
-
-                ia.SetColorMatrix(cm);
-                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(newBmp))
-                {
-                    g.Clear(Color.Transparent);
-                    g.DrawImage(bmp, new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, bmp.Width, bmp.Height, System.Drawing.GraphicsUnit.Pixel, ia);
-                }
-            }
-            finally
-            {
-                if (newBmp != bmp)
-                {
-                    bmp.Dispose();
-                }
-            }
-
-            return newBmp;
         }
     }
 }
