@@ -25,13 +25,37 @@ namespace TargaImagePCL
             {
                 bool useAlpha = Format == TGAPixelFormat.ARGB_32bpp;
                 result = new byte[Data.Length];
-                for (int i = 0; i < Data.Length; i += 4)
-                { //flip red and blue and premultiply alpha
-                    result[i + 3] = (useAlpha)?Data[i + 3]:(byte)255;
-                    float a = (premultiply) ? (Data[i + 3] / 255f) : 1;
-                    result[i + 2] = (byte)(Data[i] * a);
-                    result[i + 1] = (byte)(Data[i + 1] * a);
-                    result[i] = (byte)(Data[i + 2] * a);
+
+                if (useAlpha)
+                {
+                    for (int i = 0; i < Data.Length; i += 4)
+                    { //flip red and blue and premultiply alpha
+                        int r = Data[i];
+                        int g = Data[i + 1];
+                        int b = Data[i + 2];
+                        int a = Data[i + 3];
+
+                        a = premultiply ? a : 255;
+                        result[i] = (byte)((b * a) / 255);
+                        result[i + 1] = (byte)((g * a) / 255);
+                        result[i + 2] = (byte)((r * a) / 255);
+                        result[i + 3] = (byte)a;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < Data.Length; i += 4)
+                    { //flip red and blue and premultiply alpha
+                        byte r = Data[i];
+                        byte g = Data[i + 1];
+                        byte b = Data[i + 2];
+                        byte a = 255;
+
+                        result[i] = b;
+                        result[i + 1] = g;
+                        result[i + 2] = r;
+                        result[i + 3] = a;
+                    }
                 }
             }
             else if (Format == TGAPixelFormat.RGB_24bpp)
@@ -40,12 +64,15 @@ namespace TargaImagePCL
                 var j = 0;
                 for (int i = 0; i < Data.Length; i += 3)
                 { //flip red and blue and remove key colour
-                    var a = (byte)((Data[i] > 0xFD && Data[i + 1] < 3 && Data[i + 2] > 0xFD)?0:255);
-                    result[j + 3] = a;
-                    result[j + 2] = (byte)(Data[i] & a);
-                    result[j + 1] = (byte)(Data[i + 1] & a);
-                    result[j] = (byte)(Data[i + 2] & a);
-                    j += 4;
+                    var r = Data[i];
+                    var g = Data[i + 1];
+                    var b = Data[i + 2];
+                    var a = (byte)((r > 0xFD && g < 3 && b > 0xFD)?0:255);
+
+                    result[j++] = (byte)(b & a);
+                    result[j++] = (byte)(g & a);
+                    result[j++] = (byte)(r & a);
+                    result[j++] = a;
                 }
             }
             else if (Format == TGAPixelFormat.ARGB1555_16bpp || Format == TGAPixelFormat.RGB555_16bpp)
