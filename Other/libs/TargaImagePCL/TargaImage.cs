@@ -248,7 +248,7 @@ namespace TargaImagePCL
         private string strFileName = string.Empty;
         private int intStride = 0;
         private int intPadding = 0;
-        private System.Collections.Generic.List<System.Collections.Generic.List<byte>> rows = new System.Collections.Generic.List<System.Collections.Generic.List<byte>>();
+        private System.Collections.Generic.List<byte[]> rows = new System.Collections.Generic.List<byte[]>();
         private System.Collections.Generic.List<byte> row = new System.Collections.Generic.List<byte>();
 
 
@@ -771,6 +771,9 @@ namespace TargaImagePCL
                     // get the size in bytes of the whole image
                     int intImageByteSize = intImageRowByteSize * (int)this.objTargaHeader.Height;
 
+                    byte[] row = new byte[intImageRowByteSize];
+                    int rowI = 0;
+
                     // is this a RLE compressed image type
                     if (this.objTargaHeader.ImageType == ImageType.RUN_LENGTH_ENCODED_BLACK_AND_WHITE ||
                        this.objTargaHeader.ImageType == ImageType.RUN_LENGTH_ENCODED_COLOR_MAPPED ||
@@ -807,7 +810,7 @@ namespace TargaImagePCL
                                 for (int i = 0; i < intRLEPixelCount; i++)
                                 {
                                     foreach (byte b in bRunLengthPixel)
-                                        row.Add(b);
+                                        row[rowI++] = b;
 
                                     // increment the byte counts
                                     intImageRowBytesRead += bRunLengthPixel.Length;
@@ -819,7 +822,8 @@ namespace TargaImagePCL
                                     if (intImageRowBytesRead == intImageRowByteSize)
                                     {
                                         rows.Add(row);
-                                        row = new System.Collections.Generic.List<byte>();
+                                        row = new byte[intImageRowByteSize];
+                                        rowI = 0;
                                         intImageRowBytesRead = 0;
 
                                     }
@@ -835,7 +839,7 @@ namespace TargaImagePCL
                                 // read each byte
                                 for (int i = 0; i < intBytesToRead; i++)
                                 {
-                                    row.Add(binReader.ReadByte());
+                                    row[rowI++] = binReader.ReadByte();
 
                                     // increment the byte counts
                                     intImageBytesRead++;
@@ -847,7 +851,8 @@ namespace TargaImagePCL
                                     if (intImageRowBytesRead == intImageRowByteSize)
                                     {
                                         rows.Add(row);
-                                        row = new System.Collections.Generic.List<byte>();
+                                        row = new byte[intImageRowByteSize];
+                                        rowI = 0;
                                         intImageRowBytesRead = 0;
                                     }
 
@@ -868,17 +873,15 @@ namespace TargaImagePCL
                         for (int i = 0; i < (int)this.objTargaHeader.Height; i++)
                         {
                             // loop through each byte in the row
-                            for (int j = 0; j < intImageRowByteSize; j++)
-                            {
-                                // add the byte to the row
-                                row.Add(binReader.ReadByte());
-                            }
+
+                            binReader.Read(row);
 
                             // add row to the list of rows
                             rows.Add(row);
 
                             // create a new row
-                            row = new System.Collections.Generic.List<byte>();
+
+                            row = new byte[intImageRowByteSize];
                         }
 
 
@@ -938,7 +941,7 @@ namespace TargaImagePCL
                                     rows[i].Reverse();
 
                                 // get the byte array for the row
-                                byte[] brow = rows[i].ToArray();
+                                byte[] brow = rows[i];
 
                                 // write the row bytes and padding bytes to the memory streem
                                 msData.Write(brow, 0, brow.Length);
