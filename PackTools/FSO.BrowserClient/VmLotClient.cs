@@ -14,6 +14,7 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json.Linq;
@@ -86,6 +87,12 @@ namespace FSO_BrowserClient
             vm = new VM(new VMContext(null), driver, new VMNullHeadlineProvider());
             vm.Init();
             vm.MyUID = PersistID;
+            // Diagnostic only: VMThread's per-tick exception handler already catches
+            // SimAntics exceptions and calls SignalDialog with the details, but nothing
+            // in this pipeline read it, so every engine-level failure looked identical
+            // to a clean, silent routing rejection. Surface it so real errors are visible.
+            vm.OnDialog += (info) =>
+                Console.WriteLine($"vm dialog [{info.Title}] {info.Message}");
             vm.OnChatEvent += (evt) =>
             {
                 var text = evt.Text is string[] arr ? string.Join(" | ", arr) : evt.Text?.ToString();
@@ -348,15 +355,28 @@ namespace FSO_BrowserClient
         {
             var ava = MyAvatar;
             if (ava == null || !Synced) return (null, null);
-            VMEntity best = null;
-            float bestDist = 1.6f; // ~1.5 tile pick radius
+            // Windows and doors are real placed VMEntity instances (from the house XML's
+            // <objects>, loaded before Furnish() places furniture), not architecture
+            // metadata — so a flat nearest-neighbour search treats a window exactly like
+            // any other object, and a furniture piece against a wall routinely loses a
+            // proximity tie to the window/door behind it. Bucket them separately: any
+            // furniture within the normal pick radius always wins, and a window/door is
+            // only picked when nothing else qualifies and the click is close to the
+            // fixture itself (a much tighter radius than furniture gets).
+            VMEntity bestFurniture = null, bestArch = null;
+            float bestFurnitureDist = 1.6f; // ~1.5 tile pick radius
+            float bestArchDist = 0.75f; // fallback only, once furniture has had first pick
             foreach (var ent in vm.Entities)
             {
                 if (ent is VMAvatar) continue;
                 if (ent.Position == LotTilePos.OUT_OF_WORLD) continue;
                 var d = Vector2.Distance(new Vector2(ent.Position.x / 16f, ent.Position.y / 16f), tile);
-                if (d < bestDist) { bestDist = d; best = ent; }
+                var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+                var isArch = (flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) != 0;
+                if (isArch) { if (d < bestArchDist) { bestArchDist = d; bestArch = ent; } }
+                else { if (d < bestFurnitureDist) { bestFurnitureDist = d; bestFurniture = ent; } }
             }
+            var best = bestFurniture ?? bestArch;
             if (best == null) return (null, null);
             // Do NOT redirect a multitile part to its master here. Parts carry
             // TreeTableID 65535, but VMEntity.UseTreeTableOf copies the master's
@@ -524,32 +544,50 @@ namespace FSO_BrowserClient
         }
 
         /// <summary>
-        /// Live entity billboards: pack objects by GUID texture, avatars as tinted
-        /// capsules — positions straight out of the shared VM every frame.
+        /// Live entities in true per-tile depth order: pack objects by GUID
+        /// texture, avatars as tinted capsules or (with a VitaboyLayer) real
+        /// skinned bodies — positions straight out of the shared VM every frame.
         /// </summary>
         /// <param name="vitaboy">
-        /// When a sim already has a real Vitaboy body on screen, its capsule is
-        /// skipped — the "this is you" marker still floats above it.
+        /// When given, a sim with a resolved body draws as that body, in its
+        /// correct place in the depth-sorted list, instead of a capsule. Real
+        /// bodies used to draw in one unsorted pass *after* every sprite here,
+        /// which always looked right for an empty room and always looked wrong
+        /// next to furniture: a sim on a tile "behind" a table still drew in
+        /// front of it, i.e. standing on or inside it. Interleaving avatar draws
+        /// into this same sorted list — flushing the SpriteBatch around each one,
+        /// since a raw 3D draw can't be batched — fixes that; it does not add
+        /// real depth against walls, which stays the ledgered problem it was.
         /// </param>
-        public void DrawEntities(SpriteBatch sb, WorldState state, VitaboyLayer vitaboy = null)
+        public void DrawEntities(GraphicsDevice gd, SpriteBatch sb, WorldState state, VitaboyLayer vitaboy = null)
         {
             if (!texturesReady || vm == null) return;
             var space = state.WorldSpace;
             var offset = space.GetPointScreenOffset();
             var scale = space.TilePxWidthHalf / 64f;
 
-            var draws = new List<(float sortKey, Texture2D tex, Vector2 tile, bool isSim, Color tint)>();
+            var draws = new List<(float sortKey, Texture2D tex, Vector2 tile, bool isSim, Color tint,
+                VMAvatar bodyAva, SimAvatar body)>();
             foreach (var ent in vm.Entities)
             {
                 if (ent.Position == LotTilePos.OUT_OF_WORLD) continue;
                 var tile = new Vector2(ent.Position.x / 16f, ent.Position.y / 16f);
                 if (ent is VMAvatar ava)
                 {
+                    // Resolve now, at list-build time, not draw time: HasModel can
+                    // only ever become true once TryGetModel has run for this
+                    // avatar at least once, so deciding "capsule or body" from a
+                    // stale HasModel here would leave a brand new avatar drawing a
+                    // capsule forever, since nothing would ever call TryGetModel
+                    // for it later either.
+                    var body = vitaboy?.TryGetModel(ava);
                     var tint = TintFor(ava.PersistID);
-                    if (vitaboy?.HasModel(ava.ObjectID) != true)
-                        draws.Add((tile.X + tile.Y + 0.01f, simTex, tile, true, tint));
+                    if (body?.Skeleton == null)
+                        draws.Add((tile.X + tile.Y + 0.01f, simTex, tile, true, tint, null, null));
+                    else
+                        draws.Add((tile.X + tile.Y + 0.01f, null, tile, true, tint, ava, body));
                     if (ava.PersistID == PersistID && markerTex != null)
-                        draws.Add((tile.X + tile.Y + 0.02f, markerTex, tile, true, Color.Yellow));
+                        draws.Add((tile.X + tile.Y + 0.02f, markerTex, tile, true, Color.Yellow, null, null));
                 }
                 else
                 {
@@ -566,12 +604,23 @@ namespace FSO_BrowserClient
                     // its own tile, so drawing every part with its own billboard is
                     // what reassembles a 1x3 bed. Pack objects only ever have art on
                     // the lead, so they are unaffected.
-                    draws.Add((tile.X + tile.Y, tex, tile, false, Color.White));
+                    draws.Add((tile.X + tile.Y, tex, tile, false, Color.White, null, null));
                 }
             }
 
+            var batchOpen = true; // sb.Begin() was already called by our caller
             foreach (var d in draws.OrderBy(d => d.sortKey))
             {
+                if (d.bodyAva != null)
+                {
+                    // Can't mix a raw 3D draw into an open SpriteBatch — flush,
+                    // draw the body, reopen so the remaining sprites still batch.
+                    if (batchOpen) { sb.End(); batchOpen = false; }
+                    vitaboy.DrawResolved(gd, state, d.bodyAva, d.body);
+                    continue;
+                }
+                if (!batchOpen) { sb.Begin(); batchOpen = true; }
+
                 var screen = space.GetScreenFromTile(d.tile) + offset;
                 var drawScale = d.isSim ? 1f : scale;
                 var w = d.tex.Width * drawScale;
@@ -582,6 +631,7 @@ namespace FSO_BrowserClient
                 if (d.tex == markerTex) pos.Y -= 56f;
                 sb.Draw(d.tex, pos, null, d.tint, 0f, Vector2.Zero, drawScale, SpriteEffects.None, 0f);
             }
+            if (!batchOpen) sb.Begin(); // leave it open — caller's End() expects that
         }
 
         static Color TintFor(uint persistID)

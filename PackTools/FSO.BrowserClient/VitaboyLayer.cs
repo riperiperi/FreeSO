@@ -24,13 +24,17 @@ namespace FSO_BrowserClient
     /// WorldContent.AvatarEffect — so we replicate DrawAvatars' device and effect
     /// setup and skip the batch entirely.
     ///
-    /// Behind ?vitaboy=1. Capsules stay the default until this is proven.
+    /// On by default; ?vitaboy=0 opts back to capsules (the known-good fallback
+    /// where real bodies don't render). mixed_mode_vm.js ran a ?vitaboy=1 tab and
+    /// a plain tab through 60s+ of shared lockstep VM and found zero desyncs, which
+    /// is what cleared this to become the default.
     /// </summary>
     public class VitaboyLayer
     {
-        /// <summary>?vitaboy=1. Also gates passing a GraphicsDevice to the content
-        /// boot — the avatar mesh/texture providers are device-gated, so without
-        /// it Content.AvatarMeshes is null and there is nothing to draw.</summary>
+        /// <summary>On by default; ?vitaboy=0 disables. Also gates passing a
+        /// GraphicsDevice to the content boot — the avatar mesh/texture providers
+        /// are device-gated, so without it Content.AvatarMeshes is null and there
+        /// is nothing to draw.</summary>
         public static bool Enabled;
 
         public static string Status { get; private set; } = "off";
@@ -49,19 +53,29 @@ namespace FSO_BrowserClient
         /// can drop its placeholder capsule.</summary>
         public bool HasModel(short objectID) => models.ContainsKey(objectID);
 
-        public void Draw(GraphicsDevice gd, WorldState state, VM vm)
-        {
-            if (!Enabled || vm == null) return;
-            var effect = WorldContent.AvatarEffect;
-            if (effect == null) { Status = "no avatar effect"; return; }
+        /// <summary>
+        /// Resolve (building on first call) the model for an avatar, without
+        /// drawing it. The caller uses this to decide sprite-capsule vs. real-body
+        /// *before* it commits to a position in its own depth-sorted draw list —
+        /// see DrawResolved's doc comment for why draw and resolve are split.
+        /// </summary>
+        public SimAvatar TryGetModel(VMAvatar ava) => ModelFor(ava);
 
-            var avatars = new List<VMAvatar>();
-            foreach (var ent in vm.Entities)
-            {
-                if (ent is VMAvatar ava && ent.Position != LotTilePos.OUT_OF_WORLD)
-                    avatars.Add(ava);
-            }
-            if (avatars.Count == 0) { Status = "no avatars in vm"; return; }
+        /// <summary>
+        /// Draw one already-resolved avatar. Split from resolution (TryGetModel)
+        /// so a caller — VmLotClient.DrawEntities — can interleave real bodies with
+        /// sprite-drawn furniture in true per-tile depth order: sort furniture and
+        /// avatars into one list by tile.X+tile.Y, then for each entry either draw
+        /// the sprite or call this, flushing the SpriteBatch around it. Before this
+        /// split, every real body drew in one pass *after* all furniture with depth
+        /// testing off, which was a deliberate "never invisible" tradeoff — but it
+        /// meant a sim standing on a tile behind a table still drew in front of it,
+        /// which reads as the body standing on or inside the furniture. Wrong.
+        /// </summary>
+        public void DrawResolved(GraphicsDevice gd, WorldState state, VMAvatar ava, SimAvatar model)
+        {
+            var effect = WorldContent.AvatarEffect;
+            if (effect == null || model?.Skeleton == null) return;
 
             var prevDepth = gd.DepthStencilState;
             var prevBlend = gd.BlendState;
@@ -69,9 +83,9 @@ namespace FSO_BrowserClient
 
             // Depth off, cull off. The browser world draw never populates a usable
             // depth buffer (the software-depth path is disabled here), so testing
-            // against it just discards the sim; and the sprite layers that follow
-            // already paint over everything regardless. Sorting against walls is the
-            // ledgered depth problem, not this layer's.
+            // against it just discards the sim. True per-pixel depth against walls
+            // is the ledgered problem this layer doesn't solve; per-tile draw order
+            // (the caller's job) is what it does solve.
             gd.DepthStencilState = DepthStencilState.None;
             gd.BlendState = BlendState.AlphaBlend;
             gd.RasterizerState = RasterizerState.CullNone;
@@ -89,54 +103,42 @@ namespace FSO_BrowserClient
             SetBool(effect, "depthOutMode", false);
             Set(effect, "AmbientLight", Vector4.One);
 
-            drawn = 0;
-            foreach (var ava in avatars)
+            // Tile units → world units, then face the VM's direction. Same two
+            // transforms AvatarComponent applies (EntityComponent.World is a plain
+            // translation; the rotation is AvatarComponent's).
+            var pos = ava.VisualPosition;
+            model.Position = WorldSpace.GetWorldFromTile(pos);
+            var world = Matrix.CreateRotationY((float)(Math.PI - ava.RadianDirection))
+                * Matrix.CreateTranslation(WorldSpace.GetWorldFromTile(pos));
+
+            Set(effect, "ObjectID", ava.ObjectID / 65535f);
+            Set(effect, "Level", (float)ava.Position.Level + 0.0001f);
+            Set(effect, "World", world);
+
+            foreach (var pass in effect.CurrentTechnique.Passes)
             {
-                var model = ModelFor(ava);
-                if (model?.Skeleton == null) continue;
-
-                // Tile units → world units, then face the VM's direction. Same two
-                // transforms AvatarComponent applies (EntityComponent.World is a
-                // plain translation; the rotation is AvatarComponent's).
-                var pos = ava.VisualPosition;
-                model.Position = WorldSpace.GetWorldFromTile(pos);
-                var world = Matrix.CreateRotationY((float)(Math.PI - ava.RadianDirection))
-                    * Matrix.CreateTranslation(WorldSpace.GetWorldFromTile(pos));
-
-                Set(effect, "ObjectID", ava.ObjectID / 65535f);
-                Set(effect, "Level", (float)ava.Position.Level + 0.0001f);
-                Set(effect, "World", world);
-
-                foreach (var pass in effect.CurrentTechnique.Passes)
-                {
-                    pass.Apply();
-                    model.DrawGeometry(gd, effect);
-                }
-                drawn++;
-
-                if (!loggedFirst)
-                {
-                    // Where do the matrices actually put this sim? A silent layer and
-                    // a layer drawing off-screen look identical from the console.
-                    var headBone = model.Skeleton.GetBone("HEAD")?.AbsolutePosition ?? Vector3.Zero;
-                    var clip = Vector4.Transform(new Vector4(headBone, 1), world * state.View * state.Projection);
-                    var vp = gd.Viewport;
-                    Console.WriteLine($"vitaboy: sim {ava.ObjectID} at tile {pos.X:F1},{pos.Y:F1}, " +
-                        $"head on screen {(int)((clip.X / clip.W + 1) * 0.5f * vp.Width)}," +
-                        $"{(int)((1 - clip.Y / clip.W) * 0.5f * vp.Height)}");
-                }
+                pass.Apply();
+                model.DrawGeometry(gd, effect);
             }
+            drawn++;
+
+            if (!loggedFirst)
+            {
+                loggedFirst = true;
+                // Where do the matrices actually put this sim? A silent layer and a
+                // layer drawing off-screen look identical from the console.
+                var headBone = model.Skeleton.GetBone("HEAD")?.AbsolutePosition ?? Vector3.Zero;
+                var clip = Vector4.Transform(new Vector4(headBone, 1), world * state.View * state.Projection);
+                var vp = gd.Viewport;
+                Console.WriteLine($"vitaboy: sim {ava.ObjectID} at tile {pos.X:F1},{pos.Y:F1}, " +
+                    $"head on screen {(int)((clip.X / clip.W + 1) * 0.5f * vp.Width)}," +
+                    $"{(int)((1 - clip.Y / clip.W) * 0.5f * vp.Height)}");
+            }
+            Status = $"{drawn} sims drawn";
 
             gd.DepthStencilState = prevDepth;
             gd.BlendState = prevBlend;
             gd.RasterizerState = prevRaster;
-
-            Status = $"{drawn}/{avatars.Count} sims drawn";
-            if (!loggedFirst && drawn > 0)
-            {
-                loggedFirst = true;
-                Console.WriteLine($"vitaboy: first sim drawn ({Status})");
-            }
         }
 
         SimAvatar ModelFor(VMAvatar ava)

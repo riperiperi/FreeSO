@@ -24,7 +24,62 @@ Parked. Join-city scaffolding, KNIF, Mario-optional, LotView net8 dual-target, `
 - **Browser open blocker:** lot draws but terrain rasterizes nothing — canvas verified working (clear-color probe visible, triangle + UI draw), camera/VB/matrices verified sane (`lotdbg` line in console), `DrawImmediate=true` so `TerrainComponent.Draw` runs. Suspect the GrassShader `DrawBase` pass (`Passes[WorldConfig.PassOffset]`, PassOffset=0) outputs nothing under WebGL — next step is a minimal GrassShader test draw or comparing pass semantics vs desktop.
 - **Overnight 2026-08-13 (late→dawn): browser milestone run.** Real GrassShader terrain renders in Chrome (`48e0e1d76` — software-depth discard + missing FloorGeom FullReset were the last blockers). **The AI-generated grove house stands on the browser lot** (`65eea822f` — `?house=grove`: BlueprintArchLoader loads XML arch into LotView with no VM/no TSO assets; RC flat-color walls forced in 2D). **Two tabs reach LotJoined simultaneously** (`5d37f91f3` — join + house together; fake city/lot servers on 33101/34101, gateway 8087). Run recipe: serve FSO.BrowserClient on :5259, start `tools/fake-city-server.py 33101` + `fake-lot-server.py 34101`, open `?join=1&gateway=ws://127.0.0.1:8087&house=grove`.
 - **Dawn additions:** the house is **furnished and inhabited** (`7195f05d6`) — ContactSheet `--export-dir` emits per-object PNGs + manifest from the compiled packs; `FurnitureLayer` billboards them per `houses/grove-furnish.json`, plus capsule placeholder sims. Full demo: two tabs at `?join=1&gateway=ws://127.0.0.1:8087&house=grove`, both LotJoined, furnished house on screen.
-- **Still open, in order:** (1) ~~VM tick streaming~~ **DONE 2026-08-13 (remote session): real Phase B shipped** — `?vm=1` runs the full SimAntics VM in the browser in lockstep with `FSO.LotHostLite` (sandbox protocol over the gateway `/sandbox` route); two tabs + native smoke clients share one world, identical entity hashes, zero desyncs; TTAB pie menu on click (DOM overlay) sends real interactions; chat overlay crosses runtimes. Content = `tools/make_browser_content.py` 253MB trimmed bundle (197MB tar.gz) → MEMFS → stock SERVER `Content.Init` (~15s in-tab). Run recipe: LotHostLite `--tso-dir <bundle>/tso --bare-objects` + WsGateway + serve publish + `?vm=1&name=…`. (2) swap fake servers for the real archive server (sandbox host stands in), (3) ~~XNB byte-patch~~ **RETIRED: patched bytes committed** (`patch_glsl_es.py`), (4) real object pipeline in browser — KNIF anomaly still ledgered below; **billboards now VM-fed** (live entity positions), which is the demo look, (5) Vitaboy avatars in browser (capsules stand in), (6) MTL-color import bug (green toilet), (7) desktop grove screenshot, (8) SLOT/sit.
+- **Still open, in order:** (1) ~~VM tick streaming~~ **DONE 2026-08-13 (remote session): real Phase B shipped** — `?vm=1` runs the full SimAntics VM in the browser in lockstep with `FSO.LotHostLite` (sandbox protocol over the gateway `/sandbox` route); two tabs + native smoke clients share one world, identical entity hashes, zero desyncs; TTAB pie menu on click (DOM overlay) sends real interactions; chat overlay crosses runtimes. Content = `tools/make_browser_content.py` 253MB trimmed bundle (197MB tar.gz) → MEMFS → stock SERVER `Content.Init` (~15s in-tab). Run recipe: LotHostLite `--tso-dir <bundle>/tso --bare-objects` + WsGateway + serve publish + `?vm=1&name=…`. (2) swap fake servers for the real archive server (sandbox host stands in), (3) ~~XNB byte-patch~~ **RETIRED: patched bytes committed** (`patch_glsl_es.py`), (4) real object pipeline in browser — KNIF anomaly still ledgered below; **billboards now VM-fed** (live entity positions), which is the demo look, (5) ~~Vitaboy avatars in browser~~ **DONE 2026-08-16: real skinned bodies are now the default** (see QA pass entry below), (6) MTL-color import bug (green toilet), (7) desktop grove screenshot, (8) ~~SLOT/sit~~ **Sit confirmed working (chairs); Sleep on EA beds still open — see QA pass entry below.**
+
+### Vitaboy avatars + real EA furniture, then a full QA pass (2026-08-16)
+
+The night before this entry: real Vitaboy bodies (`VitaboyLayer.cs`, skinned mesh per
+VM avatar, `WorldContent.AvatarEffect` draw outside the sprite batch) and real EA
+furniture placed by GUID (`grove-furnish.json` entries resolve straight to base-game
+object GUIDs, not just CC0 packs) landed behind `?vitaboy=1`. Kat asked to "try it and
+qa" — she played the live build herself and caught two real bugs neither screenshots
+nor console assertions had surfaced:
+
+- **Sims drew through furniture.** `VitaboyLayer.Draw` drew every body in one pass
+  after all furniture, depth off — a body "behind" a table in isometric terms still
+  drew on top of it. Fixed by interleaving avatar draws into the same per-tile sorted
+  list furniture already uses (`VmLotClient.DrawEntities`, `VitaboyLayer.DrawResolved`
+  replacing the old whole-scene `Draw`). `2bfdfda7a`.
+- **A toilet in the dining room** — moved the night before to dodge a placement
+  collision without checking which room it landed in. Moved next to the bathroom
+  sink; verified with a full `objectAt()` sweep of the furnished area against the live
+  VM, not a screenshot guess. `760c0c60e`.
+
+Two more issues turned up in the QA pass itself, root-caused by parallel Explore
+agents then fixed/diagnosed live against the running demo (not inferred from code):
+
+- **Proximity object-pick lost to windows/doors — FIXED.** `PieMenuAt` did a flat
+  1.6-tile nearest-neighbour search with no type distinction; windows/doors are real
+  placed `VMEntity` instances loaded before `Furnish()`, so furniture against a wall
+  routinely lost the pick to the window/door behind it (`ea_dining_chair`,
+  `ea_fridge`, `lamproundtable` all affected — confirmed against the live house).
+  Architecture-flagged entities (`VMEntityFlags2.ArchitectualWindow/Door`) now bucket
+  separately with a tight ~0.75-tile fallback, so furniture always wins at normal pick
+  range. `bd7dff833`. Verified live: "Have A Snack" on the fridge — unreachable all
+  session because of this bug — now runs end to end (routes in, queue goes
+  `Have A Snack` → `Eat`, holds while eating, returns to idle).
+- **Sleep on EA beds queues, then silently reverts to Idle — DIAGNOSED, not fixed.**
+  `VM.OnDialog` was wired up in both the browser client and LotHostLite (`960e3294a`)
+  — nothing had ever read it, so a real SimAntics exception was indistinguishable from
+  a clean rejection. Running Sleep live with that instrumentation, plus one-shot logs
+  on `VMMemory.GetSlot` returning null and `VMSlotParser` finding zero routing
+  candidates, ruled out three specific mechanisms in order: no exception ever fires;
+  `GetSlot` never returns null for the clicked bed part; `FindAvaliableLocations`
+  never reports zero candidates. `AllowPersonIntersection` was also directly
+  disproven as the cause by comparing against a confirmed-working chair, which has
+  the identical "flag not set" runtime state (sitting uses slot containment, not a
+  tile-position Snap, so it never hits that check). The queue accepts Sleep, holds
+  ~4-5s, then cleanly reverts — so whatever rejects it is earlier in the bed's own
+  behavior tree than any routing/slot primitive. Pinning down the exact primitive
+  needs BHAV bytecode disassembly of the Sleep interaction tree; ledgered rather than
+  guessed at. `960e3294a`.
+
+Furniture audit re-run after both fixes: **15/21 usable** (up from ≥11/21 before
+tonight, 0 objects the probe couldn't find — up from several mis-picked by the
+window bug). `?vitaboy=1` becomes the default (`cab5224f1`) — cleared by
+`mixed_mode_vm.js`: a `?vitaboy=1` tab and a plain tab ran 60s+ of shared lockstep VM
+and agreed on every synctick hash, so the `GraphicsDevice` the flag threads into
+`Content.Init` is not a desync risk. `?vitaboy=0` is the opt-out fallback.
 
 ### Real-furniture renderer ledger (2026-08-13, remote session)
 

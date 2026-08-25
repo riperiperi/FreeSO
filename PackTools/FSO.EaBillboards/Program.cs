@@ -130,9 +130,26 @@ namespace FSO.EaBillboards
             var iff = new IffFile();
             using (var ms = new MemoryStream(iffs.GetEntry(entry))) iff.Read(ms);
             Console.WriteLine($"{fileName}.iff");
-            foreach (var o in iff.List<OBJD>().OrderBy(o => o.MasterID).ThenBy(o => o.SubIndex))
+            var objds = iff.List<OBJD>().OrderBy(o => o.MasterID).ThenBy(o => o.SubIndex).ToList();
+            foreach (var o in objds)
                 Console.WriteLine($"  0x{o.GUID:X8}  master=0x{o.MasterID:X4} sub={o.SubIndex,-6} " +
                     $"graphic={o.BaseGraphicID,-6} ttab={o.TreeTableID,-6} slot={o.SlotID,-4} {o.ChunkLabel}");
+
+            // Routing (Type 3) SLOT entries decide whether VMGotoRoutingSlot can find
+            // anywhere to walk a sim to for this object — dump every SLOT chunk any
+            // OBJD above actually references, so a degenerate routing slot (zeroed
+            // proximity range, wrong type) is visible instead of inferred.
+            var slotIds = objds.Select(o => o.SlotID).Where(id => id != 0).Distinct();
+            foreach (var slotId in slotIds)
+            {
+                var slot = iff.Get<SLOT>(slotId);
+                Console.WriteLine($"  SLOT chunk {slotId}: {(slot == null ? "MISSING" : $"v{slot.Version}, {slot.Chronological.Count} entries")}");
+                if (slot == null) continue;
+                foreach (var s in slot.Chronological)
+                    Console.WriteLine($"    type={s.Type} offset={s.Offset} rsflags={s.Rsflags} " +
+                        $"minProx={s.MinProximity} maxProx={s.MaxProximity} optProx={s.OptimalProximity} " +
+                        $"standing={s.Standing} sitting={s.Sitting} snapTarget={s.SnapTargetSlot} facing={s.Facing}");
+            }
             return 0;
         }
 

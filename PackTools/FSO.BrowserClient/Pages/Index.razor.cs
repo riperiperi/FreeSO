@@ -128,10 +128,15 @@ namespace FSO_BrowserClient.Pages
                 // SimAntics VM in lockstep with LotHostLite. ?name= labels the avatar.
                 var vmMode = QueryValue(uri, "vm") == "1";
                 var vmName = QueryValue(uri, "name");
-                // ?vitaboy=1 — draw real skinned Sims instead of capsules. Also
-                // makes the content boot pass a GraphicsDevice, which is what turns
-                // on the avatar mesh/texture providers.
-                VitaboyLayer.Enabled = QueryValue(uri, "vitaboy") == "1";
+                // Real skinned Sims by default; ?vitaboy=0 opts back to capsules
+                // (the known-good fallback where real bodies don't render). Also
+                // gates whether the content boot passes a GraphicsDevice, which is
+                // what turns on the avatar mesh/texture providers. Cleared to be the
+                // default by mixed_mode_vm.js: a ?vitaboy=1 tab and a plain tab ran
+                // 60s+ of shared lockstep VM and agreed on every synctick hash, so
+                // the GraphicsDevice this flag threads into Content.Init is not a
+                // desync risk.
+                VitaboyLayer.Enabled = QueryValue(uri, "vitaboy") != "0";
 
                 _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl,
                     furnishReal, zoomParam, rot, vmMode, vmName, Navigation.BaseUri);

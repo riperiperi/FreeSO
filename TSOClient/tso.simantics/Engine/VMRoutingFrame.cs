@@ -626,6 +626,8 @@ namespace FSO.SimAntics.Engine
                         Choices = parser.FindAvaliableLocations(Target, VM.Context, avatar);
                         if (Choices.Count == 0)
                         {
+                            Console.WriteLine($"vm routing HardFail: target={Target?.ObjectID} ({Target?.Object?.OBJ?.GUID:X8}) " +
+                                $"code={parser.FailCode} blocker={parser.Blocker?.ObjectID} ({parser.Blocker?.Object?.OBJ?.GUID:X8})");
                             HardFail(parser.FailCode, parser.Blocker);
                             return VMPrimitiveExitCode.CONTINUE;
                         }
