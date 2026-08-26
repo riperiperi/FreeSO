@@ -146,6 +146,7 @@ namespace FSO.Client.Rendering.City
             Touch = new UILotControlTouchHelper(this, false);
             Touch.MinZoom = 0.25f;
             Touch.MaxZoom = 2.5f;
+            Touch._3D = true;
             InvalidateCamera();
         }
 
@@ -290,6 +291,7 @@ namespace FSO.Client.Rendering.City
         {
             Focused = state.WindowFocused;
             Parent = city;
+
             Touch.Update(state);
             var inCity = Zoomed != TerrainZoomMode.Lot;
             if (TargetZoom > 2.3f)

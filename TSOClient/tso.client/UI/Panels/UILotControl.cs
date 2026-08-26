@@ -125,7 +125,8 @@ namespace FSO.Client.UI.Panels
 
         //1 = near, 0.5 = med, 0.25 = far
         //"target" because we rescale the game target to fit this zoom level.
-        public float TargetZoom { get; set; } = 1;
+        public float TargetZoom { get; set; } = Math.Max(1, FSOEnvironment.DPIScaleFactor);
+        public float Current2DZoom { get; set; } = Math.Max(1, FSOEnvironment.DPIScaleFactor);
 
         public float BBScale { get { return World.BackbufferScale; } }
         public I3DRotate Rotate { get { return World.State.Cameras.Camera3D; } } //(I3DRotate)World.State; } }
@@ -983,6 +984,8 @@ namespace FSO.Client.UI.Panels
                 case WorldZoom.Far:
                     TargetZoom = 0.25f; break;
             }
+
+            Current2DZoom = TargetZoom;
             LastZoom = World.State.Zoom;
         }
 
@@ -1007,6 +1010,10 @@ namespace FSO.Client.UI.Panels
             //handling smooth scaled zoom
             var camType = World.State.Cameras.ActiveType;
             Touch._3D = camType != LotView.Utils.Camera.CameraControllerType._2D;
+            Touch.MinZoom = Touch._3D ? -0.75f : 0.25f;
+            Touch.MaxZoom = Touch._3D ? 2 : 2 * FSOEnvironment.DPIScaleFactor;
+
+            var rate = 60f / FSOEnvironment.RefreshRate;
             if (World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType._3D)
             {
                 if (World.BackbufferScale != 1) World.BackbufferScale = 1;
@@ -1020,10 +1027,11 @@ namespace FSO.Client.UI.Panels
                 }
                 else if (TargetZoom < -0.25f)
                 {
-                    TargetZoom -= (TargetZoom - 0.25f) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
+                    TargetZoom -= (TargetZoom - 0.25f) * (1f - (float)Math.Pow(0.975f, rate));
                 }
                 s3d.Zoom3D += ((9.75f - (TargetZoom - 0.25f) * 5.7f) - s3d.Zoom3D) / 10;
 
+                Current2DZoom = TargetZoom;
             }
             else if (World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType._2D)
             {
@@ -1034,14 +1042,26 @@ namespace FSO.Client.UI.Panels
                     LastZoom = World.State.Zoom;
                 }
 
+                var divSpeed = (1f - (float)Math.Pow(0.85f, rate));
+
+                var current = UILotControlTouchHelper.ToZoomSpace(Current2DZoom);
+                var target = UILotControlTouchHelper.ToZoomSpace(TargetZoom);
+                var diff = target - current;
+                var vel = diff * divSpeed;
+                vel = (vel < 0) ?
+                    Math.Max(diff, Math.Min(vel, -0.02f * rate)) :
+                    Math.Min(diff, Math.Max(vel, 0.02f * rate));
+
+                Current2DZoom = UILotControlTouchHelper.FromZoomSpace(current + vel);
+
                 float BaseScale;
                 WorldZoom targetZoom;
-                if (TargetZoom < 0.5f)
+                if (Current2DZoom < 0.5f)
                 {
                     targetZoom = WorldZoom.Far;
                     BaseScale = 0.25f;
                 }
-                else if (TargetZoom < 1f)
+                else if (Current2DZoom < 1f)
                 {
                     targetZoom = WorldZoom.Medium;
                     BaseScale = 0.5f;
@@ -1051,7 +1071,8 @@ namespace FSO.Client.UI.Panels
                     targetZoom = WorldZoom.Near;
                     BaseScale = 1f;
                 }
-                World.BackbufferScale = TargetZoom / BaseScale;
+
+                World.BackbufferScale = Current2DZoom / BaseScale;
                 if (World.State.Zoom != targetZoom) World.State.Zoom = targetZoom;
                 LastZoom = targetZoom;
                 WorldConfig.Current.SmoothZoom = false;

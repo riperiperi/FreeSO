@@ -106,19 +106,29 @@ namespace FSO.Client.UI.Screens
             }
         }
 
-        private int _Rotation = 0;
-        public int Rotation
+        public new int Rotation
         {
             get
             {
-                return _Rotation;
+                if (World != null)
+                {
+                    return World.State.Rotation switch
+                    {
+                        WorldRotation.TopLeft => 0,
+                        WorldRotation.TopRight => 1,
+                        WorldRotation.BottomRight => 2,
+                        WorldRotation.BottomLeft => 3,
+                        _ => default
+                    };
+                }
+
+                return default;
             }
             set
             {
-                _Rotation = value;
                 if (World != null)
                 {
-                    switch (_Rotation)
+                    switch (value)
                     {
                         case 0:
                             World.State.Rotation = WorldRotation.TopLeft; break;

@@ -84,7 +84,6 @@ namespace FSO.Client.UI.Panels
         public override void Update(UpdateState state)
         {
             var _3d = _3D;
-            MinZoom = _3d ? -0.75f : 0.25f;
             base.Update(state);
             bool rotated = false;
 
@@ -106,7 +105,15 @@ namespace FSO.Client.UI.Panels
 
                     if (MouseIsOn)
                     {
-                        Master.TargetZoom = Master.TargetZoom + diff / 1600f;
+                        if (_3d)
+                        {
+                            Master.TargetZoom = Master.TargetZoom + diff / 1600f;
+                        }
+                        else
+                        {
+                            Master.TargetZoom = FromZoomSpace(ToZoomSpace(Master.TargetZoom) + diff / 600f);
+                        }
+
                         Master.TargetZoom = Math.Max(MinZoom, Math.Min(Master.TargetZoom, MaxZoom));
                         Master.UserModZoom = true;
                         ZoomFreezeTime = (10 * FSOEnvironment.RefreshRate) / 60;
@@ -349,6 +356,16 @@ namespace FSO.Client.UI.Panels
             if (ScrollVelocity.Length() > 0.001f) Master.Scroll(-ScrollVelocity / (Master.TargetZoom * 128));
 
             UpdatesSinceDraw++;
+        }
+
+        public static float ToZoomSpace(float zoom)
+        {
+            return MathF.Log2(zoom * 4);
+        }
+
+        public static float FromZoomSpace(float zoom)
+        {
+            return MathF.Pow(2, zoom) / 4f;
         }
 
         public override void Draw(UISpriteBatch batch)

@@ -326,6 +326,7 @@ namespace FSO.Client.Rendering.City
                     {
                         case WorldZoom.Near:
                             m_LotZoomSize = 72 * 128;
+                            m_LotZoomSize *= lotWorld.BackbufferScale;
                             break;
                         case WorldZoom.Medium:
                             m_LotZoomSize = 72 * 64;

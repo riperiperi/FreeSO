@@ -179,19 +179,29 @@ namespace FSO.Client.UI.Screens
             }
         }
 
-        private int _Rotation = 0;
-        public int Rotation
+        public new int Rotation
         {
             get
             {
-                return _Rotation;
+                if (World != null)
+                {
+                    return World.State.Rotation switch
+                    {
+                        WorldRotation.TopLeft => 0,
+                        WorldRotation.TopRight => 1,
+                        WorldRotation.BottomRight => 2,
+                        WorldRotation.BottomLeft => 3,
+                        _ => default
+                    };
+                }
+
+                return default;
             }
             set
             {
-                _Rotation = value;
                 if (World != null)
                 {
-                    switch (_Rotation)
+                    switch (value)
                     {
                         case 0:
                             World.State.Rotation = WorldRotation.TopLeft; break;
@@ -846,6 +856,7 @@ namespace FSO.Client.UI.Screens
 
                 World.State.DisableSmoothRotation = true;
 
+                float heightDiff = 0;
                 if (info.Type != LotTransitionType.Teleport)
                 {
                     var position = MapCoordinates.Unpack(vm.TSOState.LotID);
@@ -853,7 +864,7 @@ namespace FSO.Client.UI.Screens
                     var currentElevation = CityRenderer.GetElevationAt(position.X, position.Y);
 
                     var baseAltDiff = (currentElevation - previousElevation) * 100;
-                    var heightDiff = baseAltDiff * World.Architecture.Blueprint.TerrainFactor * 3;
+                    heightDiff = baseAltDiff * World.Architecture.Blueprint.TerrainFactor * 3;
 
                     TransitionCameras.Camera3D.CamHeight -= heightDiff;
                 }
@@ -917,8 +928,16 @@ namespace FSO.Client.UI.Screens
                     if (World.State.Level != lastState.Level) World.State.Level = lastState.Level;
                     if (World.State.Rotation != lastState.Rotation) World.State.Rotation = lastState.Rotation;
                     if (World.State.Zoom != lastState.Zoom) World.State.Zoom = lastState.Zoom;
+                    LotControl.TargetZoom = TransitionLotControl?.TargetZoom ?? 1;
                     World.State.PreciseZoom = lastState.PreciseZoom;
                     World.State.CenterTile = lastState.CenterTile - new Vector2(info.RelativeChangeX * (TransitionWorld.Architecture.Blueprint.Width - 2), info.RelativeChangeY * (TransitionWorld.Architecture.Blueprint.Height - 2));
+
+                    if (lastState.CameraMode != CameraRenderMode._3D)
+                    {
+                        var space = World.State.WorldSpace;
+                        World.State.CenterTile += space.GetTileFromScreen(space.GetScreenFromTile(new Vector3(0, 0, -heightDiff / 3)));
+                    }
+
                     if (lastWorld.State.ScrollAnchor != null)
                     {
                         var myOldAvatar = TransitionVM?.GetAvatarByPersist(TransitionVM.MyUID);

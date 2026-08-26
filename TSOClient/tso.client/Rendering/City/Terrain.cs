@@ -613,7 +613,7 @@ namespace FSO.Client.Rendering.City
 
         private void DrawSpotlights(float HB)
         {
-            float iScale = (float)m_ScrWidth/(HB*2.0f);
+            float iScale = (float)m_ScrWidth/(HB*2.0f) * FSOEnvironment.DPIScaleFactor;
 		
             float spotlightScale = (float)(iScale*(2.0*Math.Sqrt(0.5*0.5*2)/5.10));
 
@@ -825,7 +825,7 @@ namespace FSO.Client.Rendering.City
                 return;
             }
 
-            float iScale = (float)m_ScrWidth / (HB * 2);
+            float iScale = (float)m_ScrWidth / (HB * 2) * FSOEnvironment.DPIScaleFactor;
 
 		    float treeWidth = (float)(Math.Sqrt(2)*(128.0/144.0));
 		    float treeHeight = treeWidth*(80/128);
