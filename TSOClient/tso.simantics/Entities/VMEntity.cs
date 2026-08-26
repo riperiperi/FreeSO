@@ -1542,27 +1542,25 @@ namespace FSO.SimAntics
         internal void SetWallStyle(int side, VMArchitecture arch, ushort value)
         {
             //0=top right, 1=bottom right, 2=bottom left, 3 = top left
-            WallTile targ;
+            WallTile targ = arch.GetWall(Position.TileX, Position.TileY, Position.Level);
             switch (side)
             {
                 case 0:
-                    targ = arch.GetWall(Position.TileX, Position.TileY, Position.Level);
                     targ.ObjSetTRStyle = value;
                     if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopRightDoor = value != 0;
-                    arch.SetWall(Position.TileX, Position.TileY, Position.Level, targ);
                     break;
                 case 1:
-                    //this seems to be the rule... only set if wall is top left/right. Fixes multitile windows (like really long ones)
-                    return;
+                    targ.ObjSetBRStyle = value;
+                    break;
                 case 2:
-                    return;
+                    targ.ObjSetBLStyle = value;
+                    break;
                 case 3:
-                    targ = arch.GetWall(Position.TileX, Position.TileY, Position.Level);
                     targ.ObjSetTLStyle = value;
                     if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopLeftDoor = value != 0;
-                    arch.SetWall(Position.TileX, Position.TileY, Position.Level, targ); 
                     break;
             }
+            arch.SetWall(Position.TileX, Position.TileY, Position.Level, targ);
         }
 
         public void UpdateDynamicMultitile(VMContext context)

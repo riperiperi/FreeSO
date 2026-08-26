@@ -72,6 +72,9 @@ namespace FSO.LotView.Model
         public ushort ObjSetTLStyle; //custom styles set by objects (windows and doors)
         public ushort ObjSetTRStyle;
 
+        public ushort ObjSetBLStyle; 
+        public ushort ObjSetBRStyle;
+
         public bool TopLeftDoor;
         public bool TopRightDoor;
 

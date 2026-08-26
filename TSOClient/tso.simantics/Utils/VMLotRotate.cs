@@ -176,18 +176,21 @@ namespace FSO.SimAntics.Utils
                             output.BottomRightPattern = input.TopRightPattern;
                             output.BottomLeftPattern = input.BottomRightPattern;
 
-                            
                             if (y + 1 < Arch.Height)
                             {
                                 var newLeft = Arch.Walls[level - 1][GetOffset(x, y + 1)];
                                 output.TopLeftStyle = newLeft.TopRightStyle;
-                                output.ObjSetTLStyle = newLeft.ObjSetTRStyle;
                                 output.TopLeftDoor = newLeft.TopRightDoor;
                             }
 
                             output.TopRightStyle = input.TopLeftStyle;
-                            output.ObjSetTRStyle = input.ObjSetTLStyle;
                             output.TopRightDoor = input.TopLeftDoor;
+
+                            output.ObjSetTRStyle = input.ObjSetTLStyle;
+                            output.ObjSetTLStyle = input.ObjSetBLStyle;
+                            output.ObjSetBLStyle = input.ObjSetBRStyle;
+                            output.ObjSetBRStyle = input.ObjSetTRStyle;
+
                             break;
                         case 2:
                             if ((input.Segments & WallSegments.TopLeft) > 0) output.Segments |= WallSegments.BottomRight;
@@ -203,7 +206,6 @@ namespace FSO.SimAntics.Utils
                             {
                                 var newRight = Arch.Walls[level - 1][GetOffset(x, y + 1)];
                                 output.TopRightStyle = newRight.TopRightStyle;
-                                output.ObjSetTRStyle = newRight.ObjSetTRStyle;
                                 output.TopRightDoor = newRight.TopRightDoor;
                             }
 
@@ -211,9 +213,13 @@ namespace FSO.SimAntics.Utils
                             {
                                 var newLeft = Arch.Walls[level - 1][GetOffset(x + 1, y)];
                                 output.TopLeftStyle = newLeft.TopLeftStyle;
-                                output.ObjSetTLStyle = newLeft.ObjSetTLStyle;
                                 output.TopLeftDoor = newLeft.TopLeftDoor;
                             }
+
+                            output.ObjSetTRStyle = input.ObjSetBLStyle;
+                            output.ObjSetTLStyle = input.ObjSetBRStyle;
+                            output.ObjSetBLStyle = input.ObjSetTRStyle;
+                            output.ObjSetBRStyle = input.ObjSetTLStyle;
 
                             break;
                         case 3:
@@ -228,7 +234,6 @@ namespace FSO.SimAntics.Utils
 
                             output.TopLeftStyle = input.TopRightStyle;
                             output.TopLeftDoor = input.TopRightDoor;
-                            output.ObjSetTLStyle = input.ObjSetTRStyle;
 
                             if (x + 1 < Arch.Width)
                             {
@@ -237,6 +242,12 @@ namespace FSO.SimAntics.Utils
                                 output.ObjSetTRStyle = newRight.ObjSetTLStyle;
                                 output.TopRightDoor = newRight.TopLeftDoor;
                             }
+
+                            output.ObjSetTLStyle = input.ObjSetTRStyle;
+                            output.ObjSetTRStyle = input.ObjSetBRStyle;
+                            output.ObjSetBRStyle = input.ObjSetBLStyle;
+                            output.ObjSetBLStyle = input.ObjSetTLStyle;
+
                             break;
                     }
                 }

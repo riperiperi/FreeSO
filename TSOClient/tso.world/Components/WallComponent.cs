@@ -989,12 +989,12 @@ namespace FSO.LotView.Components
                             {
                                 var newLeft = blueprint.GetWall(x, (short)(y + 1), level);
                                 output.TopLeftStyle = newLeft.TopRightStyle;
-                                output.ObjSetTLStyle = newLeft.ObjSetTRStyle;
                                 output.TopLeftDoor = newLeft.TopRightDoor;
                             }
 
                             output.TopRightStyle = input.TopLeftStyle;
                             output.ObjSetTRStyle = input.ObjSetTLStyle;
+                            output.ObjSetTLStyle = input.ObjSetBLStyle;
                             output.TopRightDoor = input.TopLeftDoor;
                             break;
                         case 2:
@@ -1011,7 +1011,6 @@ namespace FSO.LotView.Components
                             {
                                 var newRight = blueprint.GetWall(x, (short)(y + 1), level);
                                 output.TopRightStyle = newRight.TopRightStyle;
-                                output.ObjSetTRStyle = newRight.ObjSetTRStyle;
                                 output.TopRightDoor = newRight.TopRightDoor;
                             }
 
@@ -1019,9 +1018,11 @@ namespace FSO.LotView.Components
                             {
                                 var newLeft = blueprint.GetWall((short)(x + 1), y, level);
                                 output.TopLeftStyle = newLeft.TopLeftStyle;
-                                output.ObjSetTLStyle = newLeft.ObjSetTLStyle;
                                 output.TopLeftDoor = newLeft.TopLeftDoor;
                             }
+
+                            output.ObjSetTRStyle = input.ObjSetBLStyle;
+                            output.ObjSetTLStyle = input.ObjSetBRStyle;
 
                             break;
                         case 3:
@@ -1042,9 +1043,10 @@ namespace FSO.LotView.Components
                             {
                                 var newRight = blueprint.GetWall((short)(x + 1), y, level);
                                 output.TopRightStyle = newRight.TopLeftStyle;
-                                output.ObjSetTRStyle = newRight.ObjSetTLStyle;
                                 output.TopRightDoor = newRight.TopLeftDoor;
                             }
+
+                            output.ObjSetTRStyle = input.ObjSetBRStyle;
                             break;
                     }
                 }
