@@ -382,7 +382,7 @@ namespace FSO.Client.UI.Panels
         public void AsyncAPIThumb(uint lotID)
         {
             if (ThumbLock != null) ThumbLock.Held--;
-            //LotThumbnail.SetThumbnail(DefaultThumb, CurrentLot.Value?.Id ?? 0);
+            LotThumbnail.SetThumbnail(null, CurrentLot.Value?.Id ?? 0); // Maybe make this DefaultThumb when we know the tile is occupied.
             ThumbLock = FindController<CoreGameScreenController>().Terrain.LockLotThumb(lotID);
         }
 
@@ -425,11 +425,6 @@ namespace FSO.Client.UI.Panels
                 {
                     OriginalDescription = CurrentLot.Value.Lot_Description;
                     HouseDescriptionTextEdit.CurrentText = TransformLotDescription(CurrentLot.Value.Lot_Name, OriginalDescription);
-                }
-
-                if (isEmpty)
-                {
-                    LotThumbnail.SetThumbnail(null, CurrentLot.Value.Id);
                 }
             }
 
