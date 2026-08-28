@@ -568,12 +568,14 @@ float4 LightSpecularVec(float3 normal, float3 pos) {
 	return DiffuseColor * (1 - pow(cosan, GrassShininess));
 }
 
-void RoofParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
+void RoofParallaxPS3D(GrassParallaxPSVTX input, out float4 color : COLOR0, out float4 depthB : COLOR1)
 {
 	float3 viewDir = normalize(input.TangentViewPos.xyz - input.TangentModelPos);
 	float d = input.GrassInfo.w;
 	if (IgnoreColor == false) color = input.Color;
 	else color = float4(1, 1, 1, 1);//*DiffuseColor;
+
+	depthB = packDepth(d);
 	float2 texCoords = ParallaxMapping(input.GrassInfo.yz, viewDir);
 	color *= tex2Dgrad(TexSampler, texCoords, ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
 	if (color.a == 0) discard;
