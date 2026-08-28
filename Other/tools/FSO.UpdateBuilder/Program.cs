@@ -97,6 +97,41 @@ namespace FSO.UpdateBuilder
             };
         }
 
+        private static async Task<FSOUpdateFile> FolderToTar(GitHubClient client, Release release, string target, string versionString, string zipQualifier, string directory, RSA? crypto)
+        {
+            // Build a tar from the input directory. (assumes running on mac)
+            var dirParent = Path.GetDirectoryName(directory);
+            var tarPath = Path.Combine(dirParent, $"{zipQualifier}-{target}-{versionString}.tar.gz");
+
+            ExecuteZshScript($"-c \"tar -czvf {Path.GetFullPath(tarPath)} -C {Path.GetFullPath(directory)} .\"");
+
+            var data = File.ReadAllBytes(tarPath);
+
+            using var mem = new MemoryStream(data);
+
+            mem.Position = 0;
+
+            var asset = await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
+            {
+                FileName = $"{zipQualifier}-{target}-{versionString}.tar.gz",
+                ContentType = "application/x-gzip",
+                RawData = new MemoryStream(data),
+            });
+
+            var hash = SHA256.Create();
+
+            mem.Position = 0;
+            var shaHash = SHA256.HashData(mem);
+
+            return new FSOUpdateFile()
+            {
+                zip = FixAssetUrl(asset.BrowserDownloadUrl, versionString),
+                size = (int)mem.Length,
+                hash = Convert.ToBase64String(shaHash),
+                signature = crypto != null ? Convert.ToBase64String(crypto.SignHash(shaHash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1)) : "",
+            };
+        }
+
         private static RSA TryGetCrypto(string privateKey)
         {
             try
@@ -424,11 +459,15 @@ namespace FSO.UpdateBuilder
                 File.WriteAllText(Path.Combine(clientPath, "version.json"), infoText);
                 File.WriteAllText(Path.Combine(serverPath, "version.json"), infoText);
 
+                // TODO: client full/delta should probably be TAR so we don't have to patch permissions, but the updater doesn't support untar right now.
+
                 // Build and upload client/server zips (with encrypted SHA-256 hash)
                 Console.WriteLine("  - Client Full Zip...");
                 FSOUpdateFile clientInfo = await FolderToZip(client, release, target, versionString, "client", clientPath, crypto);
                 Console.WriteLine("  - Server Full Zip...");
-                FSOUpdateFile serverInfo = await FolderToZip(client, release, target, versionString, "server", serverPath, crypto);
+                FSOUpdateFile serverInfo = target == "windows" ?
+                    (await FolderToZip(client, release, target, versionString, "server", serverPath, crypto)) :
+                    (await FolderToTar(client, release, target, versionString, "server", serverPath, crypto));
 
                 manifest.full.SetPlatform(target, clientInfo);
                 manifest.server.SetPlatform(target, serverInfo);
@@ -483,6 +522,11 @@ namespace FSO.UpdateBuilder
                             RawData = File.OpenRead(dmgPath),
                         });
                     }
+                }
+                else if (target == "linux")
+                {
+                    // Not really an installer, just a tar packed version of the full client.
+                    FSOUpdateFile linuxInstallerInfo = await FolderToTar(client, release, target, versionString, "installer", clientPath, crypto);
                 }
                 else if (target == "windows")
                 {

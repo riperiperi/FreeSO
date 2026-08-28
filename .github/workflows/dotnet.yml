@@ -81,8 +81,51 @@ jobs:
         path: mac-server.tar.gz
         archive: false
 
+  build-linux:
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    # Install the .NET Core workload
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 9.0.x
+
+    - run: dotnet publish TSOClient/FSO.Unix -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r linux-x64 --self-contained -o Artifacts/Client
+    - run: dotnet publish TSOClient/FSO.Server.Core -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r linux-x64 --self-contained -o Artifacts/Server
+    - run: cp TSOClient/FSO.Unix/install.sh Artifacts/Client/install.sh
+    - run: cp TSOClient/FSO.Unix/fso.png Artifacts/Client/fso.png
+    - run: chmod +x Artifacts/Client/install.sh
+
+    - name: Tar client
+      run: tar -czvf linux.tar.gz -C Artifacts/Client .
+
+    - name: Upload client artifacts
+      uses: actions/upload-artifact@v7
+      with:
+        name: FreeSOClientLinux
+        path: linux.tar.gz
+        archive: false
+
+    - name: Tar server
+      run: tar -czvf linux-server.tar.gz -C Artifacts/Server .
+
+    - name: Upload server artifacts
+      uses: actions/upload-artifact@v7
+      with:
+        name: FreeSOServerLinux
+        path: linux-server.tar.gz
+        archive: false
+
   create-release:
-    needs: [build-win, build-mac]
+    needs: [build-win, build-mac, build-linux]
     runs-on: macos-latest
     permissions:
       contents: write
@@ -128,11 +171,29 @@ jobs:
         name: mac-server.tar.gz
         path: tempUpdate
 
+    - name: Download Client (linux)
+      uses: actions/download-artifact@v8
+      with:
+        name: linux.tar.gz
+        path: tempUpdate
+
+    - name: Download Server (linux)
+      uses: actions/download-artifact@v8
+      with:
+        name: linux-server.tar.gz
+        path: tempUpdate
+
     - name: Untar client (mac)
       run: mkdir tempUpdate/mac/ && tar -xzvf tempUpdate/mac.tar.gz -C tempUpdate/mac/
 
     - name: Untar server (mac)
       run: mkdir tempUpdate/mac-server/ && tar -xzvf tempUpdate/mac-server.tar.gz -C tempUpdate/mac-server/
+
+    - name: Untar client (linux)
+      run: mkdir tempUpdate/linux/ && tar -xzvf tempUpdate/linux.tar.gz -C tempUpdate/linux/
+
+    - name: Untar server (linux)
+      run: mkdir tempUpdate/linux-server/ && tar -xzvf tempUpdate/linux-server.tar.gz -C tempUpdate/linux-server/
 
     - name: Install create-dmg
       run: |
@@ -145,7 +206,7 @@ jobs:
         FSO_UPDATE_CHANNEL_URL: ${{ vars.FSO_UPDATE_CHANNEL_URL }}
         FSO_UPDATE_PUBLIC_KEY: ${{ secrets.FSO_UPDATE_PUBLIC_KEY }}
         FSO_UPDATE_PRIVATE_KEY: ${{ secrets.FSO_UPDATE_PRIVATE_KEY }}
-        FSO_UPDATE_TARGETS: "windows,mac"
+        FSO_UPDATE_TARGETS: "windows,mac,linux"
       run: |
         dotnet run -c Release -- "../../../tempUpdate/" 
       working-directory: Other/tools/FSO.UpdateBuilder
@@ -194,7 +255,7 @@ jobs:
         FSO_UPDATE_CHANNEL_URL: ${{ vars.FSO_UPDATE_CHANNEL_URL }}
         FSO_UPDATE_PUBLIC_KEY: ${{ secrets.FSO_UPDATE_PUBLIC_KEY }}
         FSO_UPDATE_PRIVATE_KEY: ${{ secrets.FSO_UPDATE_PRIVATE_KEY }}
-        FSO_UPDATE_TARGETS: "windows,mac"
+        FSO_UPDATE_TARGETS: "windows,mac,linux"
       run: |
         dotnet run -c Release -- --windowsMsi
       working-directory: Other/tools/FSO.UpdateBuilder
