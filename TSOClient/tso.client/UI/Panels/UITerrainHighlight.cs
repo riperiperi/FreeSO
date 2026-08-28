@@ -20,7 +20,7 @@ namespace FSO.Client.UI.Panels
             spriteBatch.Draw(Fill, new Rectangle((int)Start.X, (int)Start.Y, (int)length, lineWidth), null, tint, direction, new Vector2(0, 0.5f), SpriteEffects.None, 0); //
         }
 
-        public static Vector2? GetEndpointFromLotId(Terrain terrain, Vector2 from, int location) // allows us to find the end point of an arrow 
+        public static Vector2? GetEndpointFromLotId(Terrain terrain, int location) // allows us to find the end point of an arrow 
         {
             var x = location >> 16;
             var y = location & 0xFFFF;
@@ -34,7 +34,7 @@ namespace FSO.Client.UI.Panels
         public static void DrawArrow(UISpriteBatch batch, Terrain terrain, Vector2 from, int location, Color tint)
         {
             if (!terrain.Visible) return;
-            Vector2? dest = GetEndpointFromLotId(terrain, from, location);
+            Vector2? dest = GetEndpointFromLotId(terrain, location);
             if (!dest.HasValue) return;
 
             Vector2 to = dest.Value;

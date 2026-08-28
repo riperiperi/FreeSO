@@ -6,6 +6,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels.Profile;
 using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
+using FSO.Common;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
 using FSO.Common.Rendering.Framework.Model;
@@ -498,6 +499,84 @@ namespace FSO.Client.UI.Panels
                 UITerrainHighlight.DrawArrow(batch, ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, 
                     (Position + (_Open? Size : BackgroundContractedImage.Size) / 2)* Common.FSOEnvironment.DPIScaleFactor, (int)CurrentLot.Value.Id, new Color(200, 225, 255));
             base.Draw(batch);
+        }
+
+        private void AutoPlaceCenter()
+        {
+            var width = GameScreen.Current.ScreenWidth;
+            var height = GameScreen.Current.ScreenHeight;
+
+            Position = new Vector2((width - ContractedBackgroundImage.Width) / 2, (height - ContractedBackgroundImage.Height) / 2);
+        }
+
+        private bool IsPositionValid(Vector2 position)
+        {
+            var width = GameScreen.Current.ScreenWidth;
+            var height = GameScreen.Current.ScreenHeight;
+
+            var trueWidth = BackgroundExpandedImage.Visible ? Size.X : BackgroundContractedImage.Width;
+
+            if (position.X < 0 || position.Y < 0 || position.X + trueWidth > width || position.Y + Size.Y > height)
+            {
+                return false;
+            }
+
+            var myHitbox = new Rectangle(position.ToPoint(), Size.ToPoint());
+            var ucpHitbox = new Rectangle(0, height - 200, 300, 200);
+
+            if (myHitbox.Intersects(ucpHitbox))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public void AutoPlace(int location)
+        {
+            var screen = GameFacade.Screens.CurrentUIScreen as CoreGameScreen;
+            
+            if (screen == null)
+            {
+                AutoPlaceCenter();
+                return;
+            }
+
+            var toOpt = UITerrainHighlight.GetEndpointFromLotId(screen.CityRenderer, location);
+
+            if (toOpt == null)
+            {
+                AutoPlaceCenter();
+                return;
+            }
+
+            var to = toOpt.Value / FSOEnvironment.DPIScaleFactor;
+
+            // Try place in all four directions.
+
+            var trueWidth = BackgroundExpandedImage.Visible ? Size.X : BackgroundContractedImage.Width;
+            var distance = 30f;
+
+            for (int i = 0; i < 4; i++)
+            {
+                var isY = i == 0 || i == 3;
+                var isNegative = (i % 2) == 0;
+
+                var relativeOffset = new Vector2(
+                    isY ? (trueWidth / -2) : (isNegative ? -trueWidth : 0),
+                    isY ? (isNegative ? -Size.Y : 0) : (Size.Y / -2)
+                    );
+
+                var dist = isNegative ? -distance : distance;
+                Position = to + new Vector2(isY ? 0 : dist, isY ? dist : 0) + relativeOffset;
+
+                if (IsPositionValid(Position))
+                {
+                    return;
+                }
+            }
+
+            AutoPlaceCenter();
         }
     }
 

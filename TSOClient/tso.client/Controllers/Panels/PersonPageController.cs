@@ -91,7 +91,13 @@ namespace FSO.Client.Controllers
             View.CurrentTab = UIPersonPageTab.Description;
             View.SetOpen(false);
             View.Parent.Add(View);
-            View.Visible = true;
+
+            if (!View.Visible)
+            {
+                View.AutoPlace();
+                View.Visible = true;
+            }
+
             ChangeTopic();
         }
 

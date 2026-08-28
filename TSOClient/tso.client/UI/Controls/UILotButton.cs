@@ -154,7 +154,7 @@ namespace FSO.Client.UI.Controls
                     var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
                     var pos = (terrain.GetFar2DFromTile(xp, yp) + terrain.GetFar2DFromTile(xp + 1, yp + 1)) / 2;
 
-                    Position = pos - new Vector2(40, 110);
+                    Position = pos / FSOEnvironment.DPIScaleFactor - new Vector2(40, 110);
                     AvoidOther();
                 }
                 Thumb = FindController<CoreGameScreenController>().Terrain.LockLotThumb(value);
@@ -265,7 +265,7 @@ namespace FSO.Client.UI.Controls
                 var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
                 var Size = new Vector2(80, 50) / dpi;
                 Vector2 startVec = new Vector2(40, 25) + Position;
-                Vector2? dest = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId);
+                Vector2? dest = UITerrainHighlight.GetEndpointFromLotId(terrain, (int)LotId);
                 if (!dest.HasValue) return;
 
                 Vector2 end = dest.Value;

@@ -5,6 +5,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -26,6 +27,7 @@ namespace FSO.Client.UI.Panels
         public UIImage IgnoreTab { get; set; }
 
         public Binding<Avatar> Binding;
+        public override Vector2 Size { get; set; }
 
         public UIBookmarks()
         {
@@ -53,6 +55,8 @@ namespace FSO.Client.UI.Panels
             CloseButton.OnButtonClick += CloseButton_OnButtonClick;
             IgnoreTabButton.OnButtonClick += (btn) => { ChangeType(BookmarkType.IGNORE_AVATAR); };
             SimsTabButton.OnButtonClick += (btn) => { ChangeType(BookmarkType.AVATAR); };
+
+            Size = background.Size;
         }
 
         private void ChangeType(BookmarkType type)
@@ -88,6 +92,14 @@ namespace FSO.Client.UI.Panels
         private void CloseButton_OnButtonClick(UIElement button)
         {
             FindController<BookmarksController>().Close();
+        }
+
+        public void AutoPlace()
+        {
+            var width = GameScreen.Current.ScreenWidth;
+            var height = GameScreen.Current.ScreenHeight;
+
+            Position = new Vector2((width - Size.X) / 2, (height - Size.Y) / 2);
         }
     }
 

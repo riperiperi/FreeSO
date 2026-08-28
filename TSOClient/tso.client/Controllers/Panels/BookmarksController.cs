@@ -94,7 +94,12 @@ namespace FSO.Client.Controllers.Panels
         {
             RefreshResults();
             View.Parent.Add(View);
-            View.Visible = true;
+
+            if (!View.Visible)
+            {
+                View.Visible = true;
+                View.AutoPlace();
+            }
         }
 
         public void Dispose()

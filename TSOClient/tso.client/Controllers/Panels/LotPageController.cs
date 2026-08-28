@@ -50,7 +50,13 @@ namespace FSO.Client.Controllers.Panels
                 DataService.Request(MaskedStruct.AdmitInfo_Lot, lotId);
             });
             View.Parent.Add(View);
-            View.Visible = true;
+            
+            if (!View.Visible)
+            {
+                View.AutoPlace((int)lotId);
+                View.Visible = true;
+            }
+
             View.AsyncAPIThumb(lotId);
             ChangeTopic();
             FSOFacade.Hints.TriggerHint("ui:lot_page");

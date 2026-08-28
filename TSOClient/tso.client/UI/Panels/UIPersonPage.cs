@@ -1197,6 +1197,16 @@ namespace FSO.Client.UI.Panels
             DailyRelationship.Caption = str.ToString();
             LifetimeRelationship.Caption = ltr.ToString();
         }
+
+        public void AutoPlace()
+        {
+            var width = GameScreen.Current.ScreenWidth;
+            var height = GameScreen.Current.ScreenHeight;
+
+            var myWidth = BackgroundExpandedImage.Visible ? Size.X : BackgroundContractedImage.Width;
+
+            Position = new Vector2((width - myWidth) / 2, (height - Size.Y) / 2);
+        }
     }
 
     public enum UIPersonPageTab
