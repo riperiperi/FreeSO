@@ -382,8 +382,13 @@ namespace FSO.Client.UI.Panels
         public void AsyncAPIThumb(uint lotID)
         {
             if (ThumbLock != null) ThumbLock.Held--;
-            LotThumbnail.SetThumbnail(null, CurrentLot.Value?.Id ?? 0); // Maybe make this DefaultThumb when we know the tile is occupied.
+            var prevLock = ThumbLock;
             ThumbLock = FindController<CoreGameScreenController>().Terrain.LockLotThumb(lotID);
+
+            if (prevLock != ThumbLock)
+            {
+                LotThumbnail.SetThumbnail(null, CurrentLot.Value?.Id ?? 0); // Maybe make this DefaultThumb when we know the tile is occupied.
+            }
         }
 
         private void RefreshUI()
