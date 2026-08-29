@@ -4,7 +4,7 @@
     {
         public string authorName { get; set; } = "riperiperi";
         public string repoName { get; set; } = "FreeSO";
-        public string[] installerPlatforms { get; set; } = ["windows", "mac"];
+        public string[] installerPlatforms { get; set; } = ["windows", "mac", "linux"];
         public string remeshAuthorName { get; set; } = "riperiperi";
         public string remeshRepoName { get; set; } = "FSO.Remeshes";
         public string targetPath { get; set; } = "update.json";

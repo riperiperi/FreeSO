@@ -68,7 +68,7 @@
                 releaseUrl == other.releaseUrl &&
                 (windows == other.windows || (windows?.Equals(other.windows) ?? false)) &&
                 (mac == other.mac || (mac?.Equals(other.mac) ?? false)) &&
-                (linux == other.linux || (windows?.Equals(other.linux) ?? false));
+                (linux == other.linux || (linux?.Equals(other.linux) ?? false));
         }
 
         public override bool Equals(object? obj)
