@@ -1,22 +1,21 @@
-﻿using System;
-using System.Linq;
+﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using FSO.Client.UI.Controls;
-using Microsoft.Xna.Framework;
+using FSO.Client.UI.Framework.Parser;
+using FSO.Client.UI.Panels.EODs;
+using FSO.Client.Utils;
+using FSO.Common;
+using FSO.Common.Model;
+using FSO.Content.Model;
+using FSO.LotView;
+using FSO.LotView.Components;
+using FSO.LotView.Model;
+using FSO.LotView.Utils.Camera;
 using FSO.SimAntics;
 using FSO.SimAntics.Model;
-using FSO.Client.UI.Panels.EODs;
-using FSO.Client.UI.Framework.Parser;
-using FSO.LotView.Components;
-using FSO.Common;
-using FSO.Content.Model;
 using FSO.SimAntics.Model.TSOPlatform;
-using FSO.Common.Model;
-using FSO.Client.Utils;
-using FSO.LotView.Utils.Camera;
-using FSO.LotView;
 using FSO.SimAntics.Utils;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Panels
 {
@@ -119,6 +118,7 @@ namespace FSO.Client.UI.Panels
         private bool ExtraTallInitialized;
 
         public UIButton DirectControlButton;
+        public UIButton IsoToggleButton;
 
         public UILiveMode (UILotControl lotController) {
             Small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
@@ -162,6 +162,17 @@ namespace FSO.Client.UI.Panels
             DirectControlButton.Tooltip = GameFacade.Strings.GetString("f100", "7");
             DirectControlButton.OnButtonClick += DirectControlToggle;
             this.Add(DirectControlButton);
+
+            if (GraphicsModeControl.Mode != GlobalGraphicsMode.Full2D)
+            {
+                var isoTex = ui.Get("live_isobtn.png").Get(GameFacade.GraphicsDevice);
+                IsoToggleButton = new UIButton(isoTex);
+                IsoToggleButton.ImageStates = 4;
+                IsoToggleButton.Position = new Vector2(108, 126);
+                IsoToggleButton.Tooltip = GameFacade.Strings.GetString("f100", "13");
+                IsoToggleButton.OnButtonClick += IsoToggle;
+                this.Add(IsoToggleButton);
+            }
 
             MotiveDisplay = new UIMotiveDisplay();
             MotiveDisplay.Position = new Vector2(165, 56);
@@ -278,6 +289,11 @@ namespace FSO.Client.UI.Panels
         private void DirectControlToggle(UIElement button)
         {
             LotController.World?.ToggleFirstPerson(CameraControllerType.Direct);
+        }
+
+        private void IsoToggle(UIElement button)
+        {
+            GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
         }
 
         private void AvatarIconHover(VMAvatar avatar, Vector2 position)
