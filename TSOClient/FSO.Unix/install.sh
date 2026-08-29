@@ -4,9 +4,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-PUBLISH_DIR = SCRIPT_DIR
+PUBLISH_DIR=$SCRIPT_DIR
 
 INSTALL_DIR="$HOME/.local/share/FreeSO"
+echo "Copying FreeSO to $INSTALL_DIR ..."
 mkdir -p "$INSTALL_DIR"
 rm -rf "$INSTALL_DIR"/*
 cp -R "$PUBLISH_DIR"/* "$INSTALL_DIR/"
