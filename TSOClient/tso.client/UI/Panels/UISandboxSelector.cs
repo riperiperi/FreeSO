@@ -5,9 +5,6 @@ using FSO.Client.Utils;
 using FSO.Common;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace FSO.Client.UI.Panels
 {
@@ -28,13 +25,18 @@ namespace FSO.Client.UI.Panels
 
         public Binding<Avatar> Binding;
 
+        private static string GetString(string index)
+        {
+            return GameFacade.Strings.GetString("f133", index);
+        }
+
         public UISandboxSelector() : base(UIDialogStyle.Close, true)
         {
             if (GlobalSettings.Default.DebugBody == 0) {
                 GameThread.NextUpdate(x => FSOFacade.Controller.ShowPersonCreation(null));
             }
             var ui = this.RenderScript("bookmarks.uis");
-            Caption = "Host a lot on :37564";
+            Caption = GetString("1");
 
             //var background = ui.Create<UIImage>("BookmarkBackground");
             //SimsTab = ui.Create<UIImage>("SimsTab");
@@ -153,19 +155,6 @@ namespace FSO.Client.UI.Panels
                 string filename = Path.GetFileName(entry);
                 xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
             }
-            
-            try
-            {
-
-                paths = Directory.GetFiles(Path.Combine(GlobalSettings.Default.TS1HybridPath, @"UserData/Houses/"), "House**.iff", SearchOption.AllDirectories);
-                for (int i = 0; i < paths.Length; i++)
-                {
-                    string entry = paths[i];
-                    string filename = Path.GetFileName(entry);
-                    xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
-                }
-            }
-            catch { }
 
             try
             {
@@ -188,15 +177,6 @@ namespace FSO.Client.UI.Panels
             BookmarkListBox.Columns[0].Alignment = TextAlignment.Left | TextAlignment.Top;
             BookmarkListBox.Columns[0].Width = (int)BookmarkListBox.Width;
             BookmarkListBox.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename.Substring(0, x.Filename.Length-4))).ToList();
-        }
-
-        private void ChangeType(BookmarkType type)
-        {
-            var bookmark = type == BookmarkType.AVATAR;
-            SimsTabButton.Selected = bookmark;
-            SimsTab.Visible = bookmark;
-            IgnoreTabButton.Selected = !bookmark;
-            IgnoreTab.Visible = !bookmark;
         }
 
         private void BookmarkListBox_OnDoubleClick(UIElement button)

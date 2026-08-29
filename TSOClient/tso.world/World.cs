@@ -378,6 +378,8 @@ namespace FSO.LotView
             BackbufferScale = 1;
             var transTime = instant ? 0 : -1;
 
+            Platform?.Dispose();
+
             switch (mode)
             {
                 case GlobalGraphicsMode.Full2D:

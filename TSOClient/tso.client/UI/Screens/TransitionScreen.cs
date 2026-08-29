@@ -78,11 +78,13 @@ namespace FSO.Client.UI.Screens
 
         public void ShowSandboxMode()
         {
-            SandboxModeButton = new UIButton()
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
+
+            SandboxModeButton = new UIButton(ui.Get("mode_sandboxbtn.png").Get(gd))
             {
-                Caption = "Sandbox Mode",
+                Tooltip = GameFacade.Strings.GetString("f133", "1"),
                 Y = 10,
-                Width = 125,
                 X = 10
             };
             this.Add(SandboxModeButton);

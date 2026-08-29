@@ -102,11 +102,13 @@ namespace FSO.Client.UI.Screens
                 }
             }
 
-            var gameplayButton = new UIButton()
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
+
+            var gameplayButton = new UIButton(ui.Get("mode_sandboxbtn.png").Get(gd))
             {
-                Caption = "Sandbox Mode",
+                Tooltip = GameFacade.Strings.GetString("f133", "1"),
                 Y = 10,
-                Width = 125,
                 X = 10
             };
             this.Add(gameplayButton);
