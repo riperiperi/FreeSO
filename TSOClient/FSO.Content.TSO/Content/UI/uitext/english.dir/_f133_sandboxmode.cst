@@ -2,8 +2,12 @@
 2 ^New...^
 3 ^Start Server^
 4 ^Join a Server^
-5 ^CAS^
+5 ^Create a Sim^
 6 ^Saved Properties^
 7 ^Job Lots^
 8 ^Hosts a server on port :37564 with the selected lot^
 9 ^Create a sim to use in Sandbox Mode^
+10 ^Enter the address of the server you wish to connect to. (can optionally include port, eg localhost:6666)^
+11 ^You need to Create a Sim before you can use Sandbox Mode.^
+12 ^Join a sandbox server using an IP address^
+13 ^Open Folder...^

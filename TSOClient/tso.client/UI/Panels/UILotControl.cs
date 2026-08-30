@@ -16,6 +16,7 @@ using FSO.Common.Model;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
 using FSO.Files.RC;
 using FSO.HIT;
 using FSO.LotView;
@@ -166,6 +167,7 @@ namespace FSO.Client.UI.Panels
         private int LastWallMode = -1; //invalidates last roomcuts
         private bool LastRectCutNotable = false; //set if the last rect cut made a noticable change to the cuts array. If true refresh regardless of new cut effect.
         private bool HasLanded = false;
+        private string LastSaveName;
 
         private HashSet<uint> DirectCancelUIDs = [];
 
@@ -1477,6 +1479,8 @@ namespace FSO.Client.UI.Panels
 
         private void SaveLot()
         {
+            var name = LastSaveName ?? vm.TSOState.Name ?? "house_00";
+
             LotSaveDialog = new UIAlert(new UIAlertOptions
             {
                 Title = "Save Lot",
@@ -1488,9 +1492,15 @@ namespace FSO.Client.UI.Panels
                     new UIAlertButton(UIAlertButtonType.Cancel, (b) => { UIScreen.RemoveDialog(LotSaveDialog); LotSaveDialog = null; }),
                     new UIAlertButton(UIAlertButtonType.OK, (b) =>
                     {
+                        LastSaveName = LotSaveDialog.ResponseText;
+
                         try {
-                            var exporter = new VMWorldExporter();
-                            exporter.SaveHouse(vm, Path.Combine(FSOEnvironment.UserDir, ("Blueprints/"+LotSaveDialog.ResponseText+".xml")));
+                            /*
+                             * Blueprint exports are no longer used. You might want to re-enable this if you want to make new job lots.
+                             * var exporter = new VMWorldExporter();
+                             * exporter.SaveHouse(vm, Path.Combine(FSOEnvironment.UserDir, ("Blueprints/"+LotSaveDialog.ResponseText+".xml")));
+                             */
+
                             var marshal = vm.Save(!(UIScreen.Current is SandboxGameScreen));
                             Directory.CreateDirectory(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"));
                             using (var output = new FileStream(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"+LotSaveDialog.ResponseText+".fsov"), FileMode.Create))
@@ -1498,6 +1508,14 @@ namespace FSO.Client.UI.Panels
                                 marshal.SerializeInto(new BinaryWriter(output));
                             }
                             if (vm.GlobalLink != null) ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Save();
+
+                            var thumb = vm.Context.World.GetLotThumb(GameFacade.GraphicsDevice, null);
+                            thumb = TextureUtils.Decimate(thumb, GameFacade.GraphicsDevice, 2, false);
+                            using (var output = new FileStream(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"+LotSaveDialog.ResponseText+".png"), FileMode.Create))
+                            {
+                                thumb.SaveAsPng(output, thumb.Width, thumb.Height);
+                            }
+                            thumb.Dispose();
 
                             UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);
                         } catch
@@ -1508,7 +1526,7 @@ namespace FSO.Client.UI.Panels
                     })
                 }
             });
-            LotSaveDialog.ResponseText = "house_00";
+            LotSaveDialog.ResponseText = name;
             UIScreen.GlobalShowDialog(LotSaveDialog, true);
         }
 

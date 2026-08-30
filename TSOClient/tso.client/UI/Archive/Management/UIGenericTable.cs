@@ -20,7 +20,7 @@ namespace FSO.Client.UI.Archive.Management
 
     internal class UIGenericTable : UIContainer
     {
-        private const int ColumnLegendHeight = 20;
+        private const int ConstColumnLegendHeight = 20;
         private const int SliderWidth = 20;
 
         public List<UIListBoxItem> Items
@@ -71,6 +71,9 @@ namespace FSO.Client.UI.Archive.Management
             }
         }
 
+        private bool WithLegend;
+        private int ColumnLegendHeight => WithLegend ? ConstColumnLegendHeight : 0;
+
         public override Vector2 Size { get; set; }
         public event ChangeDelegate OnChange;
 
@@ -80,8 +83,9 @@ namespace FSO.Client.UI.Archive.Management
         private readonly List<UITableColumn> _columns;
         private List<UILabel> _columnLabels;
 
-        public UIGenericTable(List<UITableColumn> columns, int height = 300)
+        public UIGenericTable(List<UITableColumn> columns, int height = 300, bool withLegend = true)
         {
+            WithLegend = withLegend;
             _columns = columns;
 
             var gd = GameFacade.GraphicsDevice;
@@ -178,6 +182,11 @@ namespace FSO.Client.UI.Archive.Management
             else
             {
                 _columnLabels = new List<UILabel>();
+            }
+
+            if (!WithLegend)
+            {
+                return;
             }
 
             int totalWidth = 0;

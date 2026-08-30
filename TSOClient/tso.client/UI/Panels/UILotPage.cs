@@ -618,6 +618,8 @@ namespace FSO.Client.UI.Panels
 
         private UILotRelationship _Mode;
 
+        public override Vector2 Size => RoommateButton.Size;
+
         public UILotThumbButton()
         {
         }
@@ -657,7 +659,6 @@ namespace FSO.Client.UI.Panels
 
         public void SetThumbnail(Texture2D thumbnail, uint lot)
         {
-            //if (Thumbnail.Texture != thumbnail && CurrentLotThumb != 0) Thumbnail.Texture.Dispose(); 
             Thumbnail.Texture = thumbnail;
             if (thumbnail != null)
             {
@@ -666,6 +667,11 @@ namespace FSO.Client.UI.Panels
                 Thumbnail.X = (VisitorButton.Texture.Width/4 - Thumbnail.Width) / 2.0f;
             }
             CurrentLotThumb = lot;
+        }
+
+        public void DisposeThumbnail()
+        {
+            Thumbnail.Texture.Dispose();
         }
 
         public UILotRelationship Mode

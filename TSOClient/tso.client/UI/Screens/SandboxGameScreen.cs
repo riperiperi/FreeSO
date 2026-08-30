@@ -653,7 +653,8 @@ namespace FSO.Client.UI.Screens
                     if (isIff) jobLevel = short.Parse(path.Substring(path.Length - 6, 2));
                     else
                     {
-                        jobLevel = short.Parse(path.Substring(path.IndexOf('0'), 2));
+                        var lastUnderscore = path.LastIndexOf('_');
+                        jobLevel = short.Parse(path.Substring(lastUnderscore - 2, 2));
                         if (jobLevel != -1)
                         {
                             floorClip = new Rectangle(8, 8, 56 - 8, 56 - 8);
@@ -680,6 +681,8 @@ namespace FSO.Client.UI.Screens
                 });
             }
             vm.Tick();
+
+            vm.TSOState.Name = Path.GetFileNameWithoutExtension(path);
 
             return false;
         }

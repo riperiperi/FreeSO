@@ -1,4 +1,5 @@
-﻿using FSO.Common.Domain.Realestate;
+﻿using FSO.Common;
+using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Enum;
 using FSO.Common.Model;
@@ -788,10 +789,14 @@ namespace FSO.Server.Servers.Lot.Domain
                 var randomChance = (jobType == 2 && jobLevel > 6) ? 2 : 1;
                 var lotID = JobMatchmaker.JobGradeToLotGroup[jobType][jobLevel] + (new Random()).Next(randomChance);
 
-                path = Content.Content.Get().GetPath("housedata/blueprints/" + JobMatchmaker.JobXMLName[jobType]
-                    + lotID.ToString().PadLeft(2, '0') + "_"
-                    + "00"
-                    + ".xml");
+                var filename = $"{JobMatchmaker.JobXMLName[jobType]}{lotID.ToString().PadLeft(2, '0')}_00.xml";
+
+                path = Path.Combine(FSOEnvironment.ContentDir, "Blueprints/" + filename);
+
+                if (!Path.Exists(path))
+                {
+                    path = Content.Content.Get().GetPath("housedata/blueprints/" + filename);
+                }
             }
             Lot.SendCommand(new VMBlueprintRestoreCmd
             {
