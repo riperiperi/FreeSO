@@ -2,6 +2,16 @@
 
 namespace FSO.Common.Utils.Interop
 {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SDL2DisplayMode
+    {
+        public uint Format;
+        public int Width;
+        public int Height;
+        public int RefreshRate;
+        public nint DriverData;
+    }
+
     public class SDL2Interop
     {
         public static IntPtr NativeLibrary = GetNativeLibrary();
@@ -19,11 +29,23 @@ namespace FSO.Common.Utils.Interop
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int d_sdl_getwindowdisplayindex(IntPtr window);
-        public static d_sdl_getwindowdisplayindex GetSize = FuncLoader.LoadFunction<d_sdl_getwindowdisplayindex>(NativeLibrary, "SDL_GetWindowDisplayIndex");
+        public delegate int d_sdl_getwindowsize(IntPtr window, out int w, out int h);
+        public static d_sdl_getwindowsize GetWindowSize = FuncLoader.LoadFunction<d_sdl_getwindowsize>(NativeLibrary, "SDL_GetWindowSize");
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int d_sdl_getdisplaydpi(IntPtr window, out float ddpi, out float hdpi, out float vdpi);
+        public delegate int d_sdl_gl_getdrawablesize(IntPtr window, out int w, out int h);
+        public static d_sdl_gl_getdrawablesize GetGlDrawableSize = FuncLoader.LoadFunction<d_sdl_gl_getdrawablesize>(NativeLibrary, "SDL_GL_GetDrawableSize");
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate int d_sdl_getwindowdisplayindex(IntPtr window);
+        public static d_sdl_getwindowdisplayindex GetWindowDisplayIndex = FuncLoader.LoadFunction<d_sdl_getwindowdisplayindex>(NativeLibrary, "SDL_GetWindowDisplayIndex");
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate int d_sdl_getdisplaydpi(int index, out float ddpi, out float hdpi, out float vdpi);
         public static d_sdl_getdisplaydpi GetDisplayDpi = FuncLoader.LoadFunction<d_sdl_getdisplaydpi>(NativeLibrary, "SDL_GetDisplayDPI");
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate int d_sdl_getcurrentdisplaymode(int index, out SDL2DisplayMode mode);
+        public static d_sdl_getcurrentdisplaymode GetCurrentDisplayMode = FuncLoader.LoadFunction<d_sdl_getcurrentdisplaymode>(NativeLibrary, "SDL_GetCurrentDisplayMode");
     }
 }

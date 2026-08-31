@@ -479,7 +479,7 @@ namespace FSO.Client.UI.Panels
             AutoButton.OnButtonClick += (btn) =>
             {
                 GlobalSettings.Default.DPIAuto = !GlobalSettings.Default.DPIAuto;
-                if ((GameFacade.Game as TSOGame).UpdateDpi())
+                if ((GameFacade.Game as TSOGame).UpdateDisplayMode())
                 {
                     DPISlider.Value = FSOEnvironment.DPIScaleFactor * 4;
                     UpdateScreen();

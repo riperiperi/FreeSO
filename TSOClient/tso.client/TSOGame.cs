@@ -2,7 +2,6 @@ using FSO.Client.GameContent;
 using FSO.Client.Network;
 using FSO.Client.Regulators;
 using FSO.Client.UI;
-using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.Audio;
 using FSO.Common.DataService;
@@ -33,6 +32,9 @@ namespace FSO.Client
     /// </summary>
     public class TSOGame : FSO.Common.Rendering.Framework.Game
     {
+        private const int MinDpiWidth = 1280;
+        private const int MinDpiHeight = 720;
+
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
 
@@ -40,7 +42,7 @@ namespace FSO.Client
         {
             if (!FSOEnvironment.DirectX)
             {
-                FSOProgram.GetDeviceDpi = GetSDLDeviceDpi;
+                FSOProgram.GetDisplayInfo = GetSDLDisplayInfo;
             }
 
             GameFacade.Game = this;
@@ -54,15 +56,15 @@ namespace FSO.Client
             }
 
             FSOEnvironment.DPIScaleFactor = GlobalSettings.Default.DPIScaleFactor;
-            UpdateDpi();
+            UpdateDisplayMode();
             if (!FSOEnvironment.SoftwareDepth)
             {
                 Graphics.PreferredBackBufferWidth = (int)(GlobalSettings.Default.GraphicsWidth * FSOEnvironment.DPIScaleFactor);
                 Graphics.PreferredBackBufferHeight = (int)(GlobalSettings.Default.GraphicsHeight * FSOEnvironment.DPIScaleFactor);
                 //Graphics.PreferMultiSampling = true;
                 Graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
-                TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
                 FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
+                TargetElapsedTime = new TimeSpan(10000000 / FSOEnvironment.RefreshRate);
                 Graphics.HardwareModeSwitch = false;
                 Graphics.ApplyChanges();
             }
@@ -81,37 +83,87 @@ namespace FSO.Client
             }
         }
 
-        private float GetSDLDeviceDpi(nint ptr)
+        private FSODisplayInfo GetSDLDisplayInfo(nint ptr)
         {
             try
             {
-                var display = SDL2Interop.GetSize(ptr);
-                SDL2Interop.GetDisplayDpi(display, out float ddpi, out float hdpi, out float vdpi);
+                /*
+                 * This is meant to work when creating the SDL window with HIDPI support, but monogame doesn't do that.
+                SDL2Interop.GetWindowSize(ptr, out int w, out int h);
+                SDL2Interop.GetGlDrawableSize(ptr, out int glw, out int glh);
 
-                return ddpi == 0 ? 1f : (ddpi / 96f);
+                return glh / (float)h;
+                */
+
+                float targetDpi = 1f;
+
+                var display = SDL2Interop.GetWindowDisplayIndex(ptr);
+                var modeSuccess = SDL2Interop.GetCurrentDisplayMode(display, out var mode);
+
+                if (!OperatingSystem.IsMacOS())
+                {
+                    SDL2Interop.GetDisplayDpi(display, out float ddpi, out float hdpi, out float vdpi);
+
+                    targetDpi = ddpi == 0 ? 1f : (ddpi / 96f);
+                }
+
+                int refreshRate = 0;
+
+                if (modeSuccess == 0)
+                {
+                    // Limit the DPI scale based on the effective resolution of the monitor.
+                    float maxDpi = Math.Max(1, Math.Min(mode.Width / (float)MinDpiWidth, mode.Height / (float)MinDpiHeight));
+                    targetDpi = Math.Min(maxDpi, targetDpi);
+
+                    // SDL can also automatically set the refresh rate.
+                    refreshRate = mode.RefreshRate;
+                }
+
+                targetDpi = MathF.Round(targetDpi * 4) / 4; // Quantize to 0.25 steps
+
+                return new(targetDpi, refreshRate);
             }
             catch
             {
-                FSOProgram.GetDeviceDpi = (ptr) => 1f;
+                FSOProgram.GetDisplayInfo = (ptr) => new(1f);
 
-                return 1f;
+                return new(1f);
             }
         }
 
-        public bool UpdateDpi()
+        private void UpdateRefreshRate(int rate)
         {
+            if (rate != FSOEnvironment.RefreshRate)
+            {
+                TargetElapsedTime = new TimeSpan(10000000 / rate);
+                FSOEnvironment.RefreshRate = rate;
+
+                GlobalSettings.Default.TargetRefreshRate = rate;
+                GlobalSettings.Default.Save();
+            }
+        }
+
+        public bool UpdateDisplayMode()
+        {
+            bool dpiChanged = false;
+            var info = FSOProgram.GetDisplayInfo(Window.Handle);
+
             if (GlobalSettings.Default.DPIAuto)
             {
-                var newDpi = FSOProgram.GetDeviceDpi(Window.Handle);
-                if (newDpi != FSOEnvironment.DPIScaleFactor)
+                if (info.Dpi != FSOEnvironment.DPIScaleFactor)
                 {
-                    FSOEnvironment.DPIScaleFactor = newDpi;
-                    return true;
+                    FSOEnvironment.DPIScaleFactor = info.Dpi;
+                    dpiChanged = true;
                 }
             }
 
-            return false;
-        }
+            if (info.RefreshRate != 0)
+            {
+                UpdateRefreshRate(Math.Max(60, info.RefreshRate));
+            }
+
+            return dpiChanged;
+        }T
 
         private void UpdateSize(int width, int height)
         {
@@ -140,7 +192,7 @@ namespace FSO.Client
             var height = Math.Max(1, Window.ClientBounds.Height);
 
             var oldDpi = FSOEnvironment.DPIScaleFactor;
-            bool dpiChanged = UpdateDpi();
+            bool dpiChanged = UpdateDisplayMode();
 
             if (dpiChanged)
             {

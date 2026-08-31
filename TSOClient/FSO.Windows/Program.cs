@@ -2,6 +2,7 @@
 using FSO.Client.UI.Panels;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
+using FSO.Common.Utils.Interop;
 using FSO.Windows.Platform;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -57,17 +58,24 @@ namespace FSO.Windows
 
                 // On linux and macos, timers are a lot more precise.
 
-                FSOProgram.GetDeviceDpi = (window) =>
+                FSOProgram.GetDisplayInfo = (window) =>
                 {
                     try
                     {
                         var form = System.Windows.Forms.Form.FromHandle(window) as System.Windows.Forms.Form;
+                        var screen = Screen.FromControl(form);
 
-                        return form.DeviceDpi / 96f;
+                        int refreshRate = 0;
+                        if (Win32Interop.TryGetCurrentMode(screen.DeviceName, out var mode) && mode.DisplayFrequency < int.MaxValue)
+                        {
+                            refreshRate = (int)mode.DisplayFrequency;
+                        }
+
+                        return new(form.DeviceDpi / 96f, refreshRate);
                     }
                     catch
                     {
-                        return 1f;
+                        return new(1f);
                     }
                 };
 

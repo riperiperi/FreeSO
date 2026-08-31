@@ -156,7 +156,6 @@ namespace FSO.SimAntics
             Driver = driver;
             Headline = headline;
             Scheduler = new VMScheduler(this);
-            GameTickRate = FSOEnvironment.RefreshRate;
 
             TS1 = Content.Content.Get().TS1;
             GlobTS1 = TS1;
@@ -254,7 +253,7 @@ namespace FSO.SimAntics
             }
         }
 
-        private int GameTickRate = 60;
+        private int GameTickRate => FSOEnvironment.RefreshRate;
         private int GameTickNum = 0;
         public int SpeedMultiplier = 1;
         public int LastSpeedMultiplier;
