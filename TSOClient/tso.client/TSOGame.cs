@@ -163,7 +163,7 @@ namespace FSO.Client
             }
 
             return dpiChanged;
-        }T
+        }
 
         private void UpdateSize(int width, int height)
         {
