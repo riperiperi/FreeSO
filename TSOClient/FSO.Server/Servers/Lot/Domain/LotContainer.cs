@@ -93,6 +93,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private IShardRealestateDomain Realestate;
         private VMTSOSurroundingTerrain Terrain;
+        private bool OutOfBounds;
         private bool TransientLot;
         private bool UnownedLot;
         private bool JobLot;
@@ -225,6 +226,8 @@ namespace FSO.Server.Servers.Lot.Domain
                         Terrain.Roads[x, y] = 0xF; //crossroads everywhere
                     }
                 }
+
+                OutOfBounds = true;
             }
             else if (UnownedLot)
             {
@@ -272,6 +275,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
             var coords = MapCoordinates.Unpack(LotPersist.location);
             var map = Realestate.GetMap();
+
+            OutOfBounds = !map.IsInBounds(coords.X, coords.Y);
 
             if (LotPersist.location >= 0x10200 && LotPersist.location < 0x20000)
             {
@@ -822,7 +827,8 @@ namespace FSO.Server.Servers.Lot.Domain
             IsSpectatorMode = (Context.Action == ClaimAction.LOT_SPECTATOR);
             VMGlobalLink = Kernel.Get<LotServerGlobalLink>();
             VMGlobalLink.Readonly = IsSpectatorMode;
-            if (AllowGuestOpening && !JobLot)
+
+            if (AllowGuestOpening && !OutOfBounds)
             {
                 var host = Kernel.Get<LiveSurroundHost>();
                 SurroundConnection = host.Connect(LotPersist.location, this, Host);
@@ -855,7 +861,7 @@ namespace FSO.Server.Servers.Lot.Domain
             bool isNew = false;
             bool archiveOldSave = LotPersist.ArchiveFlags.HasFlag(LotArchiveFlags.ArchiveFromOldSave);
             bool isMoved = LotPersist.MoveFlags > 0 || archiveOldSave;
-            HollowLots = Task.Run(LoadAdj);
+            HollowLots = OutOfBounds ? Task.FromResult(new byte[9][]) : Task.Run(LoadAdj);
             if (((!TransientLot) || Context.Action == ClaimAction.LOT_CLEANUP_HOLLOW) && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
                 LOG.Info("Successfully loaded and cleaned fsov for dbid = " + Context.DbId);

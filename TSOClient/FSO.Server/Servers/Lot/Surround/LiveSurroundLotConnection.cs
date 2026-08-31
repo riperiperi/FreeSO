@@ -66,7 +66,7 @@ namespace FSO.Server.Servers.Lot.Surround
 
             foreach (var ava in vm.Context.ObjectQueries.Avatars)
             {
-                bool withMessage = withSurroundMessages && IsEntityOutside(vm, ava);
+                bool withMessage = withSurroundMessages && ava.PersistID != 0 && IsEntityOutside(vm, ava);
 
                 var puppet = ((VMAvatar)ava).GetSurroundPuppet(withMessage);
 
