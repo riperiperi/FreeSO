@@ -2,12 +2,14 @@ using FSO.Client.GameContent;
 using FSO.Client.Network;
 using FSO.Client.Regulators;
 using FSO.Client.UI;
+using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.Audio;
 using FSO.Common.DataService;
 using FSO.Common.Domain;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
+using FSO.Common.Utils.Interop;
 using FSO.Files.Formats.IFF;
 using FSO.Files.RC;
 using FSO.HIT;
@@ -36,10 +38,10 @@ namespace FSO.Client
 
         public TSOGame() : base()
         {
-            /*
-            var test = new Utils.TestFunctions.ProjectionTest();
-            test.TestCombo();
-            */
+            if (!FSOEnvironment.DirectX)
+            {
+                FSOProgram.GetDeviceDpi = GetSDLDeviceDpi;
+            }
 
             GameFacade.Game = this;
             //if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
@@ -52,6 +54,7 @@ namespace FSO.Client
             }
 
             FSOEnvironment.DPIScaleFactor = GlobalSettings.Default.DPIScaleFactor;
+            UpdateDpi();
             if (!FSOEnvironment.SoftwareDepth)
             {
                 Graphics.PreferredBackBufferWidth = (int)(GlobalSettings.Default.GraphicsWidth * FSOEnvironment.DPIScaleFactor);
@@ -78,6 +81,93 @@ namespace FSO.Client
             }
         }
 
+        private float GetSDLDeviceDpi(nint ptr)
+        {
+            try
+            {
+                var display = SDL2Interop.GetSize(ptr);
+                SDL2Interop.GetDisplayDpi(display, out float ddpi, out float hdpi, out float vdpi);
+
+                return ddpi == 0 ? 1f : (ddpi / 96f);
+            }
+            catch
+            {
+                FSOProgram.GetDeviceDpi = (ptr) => 1f;
+
+                return 1f;
+            }
+        }
+
+        public bool UpdateDpi()
+        {
+            if (GlobalSettings.Default.DPIAuto)
+            {
+                var newDpi = FSOProgram.GetDeviceDpi(Window.Handle);
+                if (newDpi != FSOEnvironment.DPIScaleFactor)
+                {
+                    FSOEnvironment.DPIScaleFactor = newDpi;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void UpdateSize(int width, int height)
+        {
+            Graphics.PreferredBackBufferWidth = width;
+            Graphics.PreferredBackBufferHeight = height;
+            Graphics.ApplyChanges();
+
+            GlobalSettings.Default.GraphicsWidth = width;
+            GlobalSettings.Default.GraphicsHeight = height;
+
+            if (uiLayer?.CurrentUIScreen == null) return;
+
+            uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            uiLayer.CurrentUIScreen.ScaleX = uiLayer.CurrentUIScreen.ScaleY = FSOEnvironment.DPIScaleFactor;
+            GlobalSettings.Default.GraphicsWidth = (int)(width / FSOEnvironment.DPIScaleFactor);
+            GlobalSettings.Default.GraphicsHeight = (int)(height / FSOEnvironment.DPIScaleFactor);
+            uiLayer.CurrentUIScreen.GameResized();
+        }
+
+        private Point QueuedSizeFrom;
+        private float QueuedSizeMul = 1f;
+
+        void WindowMoved()
+        {
+            var width = Math.Max(1, Window.ClientBounds.Width);
+            var height = Math.Max(1, Window.ClientBounds.Height);
+
+            var oldDpi = FSOEnvironment.DPIScaleFactor;
+            bool dpiChanged = UpdateDpi();
+
+            if (dpiChanged)
+            {
+                var from = new Point(width, height);
+
+                float sizeMul = FSOEnvironment.DPIScaleFactor / oldDpi;
+                width = Math.Max(1, (int)(width * sizeMul));
+                height = Math.Max(1, (int)(height * sizeMul));
+
+                newChange = true;
+                UpdateSize(width, height);
+                newChange = false;
+
+                if (FSOEnvironment.DirectX)
+                {
+                    // On DirectX, we need to apply this after the move completes.
+                    QueuedSizeFrom = from;
+                    QueuedSizeMul = sizeMul;
+                }
+
+                if (dpiChanged)
+                {
+                    GlobalSettings.Default.Save();
+                }
+            }
+        }
+
         bool newChange = false;
         void Window_ClientSizeChanged(object sender, EventArgs e)
         {
@@ -86,20 +176,18 @@ namespace FSO.Client
             newChange = true;
             var width = Math.Max(1, Window.ClientBounds.Width);
             var height = Math.Max(1, Window.ClientBounds.Height);
-            Graphics.PreferredBackBufferWidth = width;
-            Graphics.PreferredBackBufferHeight = height;
-            Graphics.ApplyChanges();
 
-            GlobalSettings.Default.GraphicsWidth = width;
-            GlobalSettings.Default.GraphicsHeight = height;
+            if (QueuedSizeMul != 1 && QueuedSizeFrom.X == width && QueuedSizeFrom.Y == height)
+            {
+                width = Math.Max(1, (int)(width * QueuedSizeMul));
+                height = Math.Max(1, (int)(height * QueuedSizeMul));
+            }
+
+            QueuedSizeMul = 1;
+
+            UpdateSize(width, height);
 
             newChange = false;
-            if (uiLayer?.CurrentUIScreen == null) return;
-
-            uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
-            GlobalSettings.Default.GraphicsWidth = (int)(width / FSOEnvironment.DPIScaleFactor);
-            GlobalSettings.Default.GraphicsHeight = (int)(height / FSOEnvironment.DPIScaleFactor);
-            uiLayer.CurrentUIScreen.GameResized();
         }
 
         /// <summary>
@@ -285,7 +373,7 @@ namespace FSO.Client
         /// </summary>
         void AddTextInput()
         {
-            this.Window.GetType().GetEvent("TextInput")?.AddEventHandler(this.Window, (EventHandler<TextInputEventArgs>)GameScreen.TextInput);
+            this.Window.GetType().GetEvent("TextInput")?.AddEventHandler(this.Window, (EventHandler<TextInputEventArgs>)FSO.Common.Rendering.Framework.GameScreen.TextInput);
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -363,6 +451,8 @@ namespace FSO.Client
             // TODO: Unload any non ContentManager content here
         }
 
+        private Point LastPosition = new(int.MaxValue);
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -374,6 +464,12 @@ namespace FSO.Client
             DiscordRpcEngine.Update();
 
             if (HITVM.Get() != null) HITVM.Get().Tick();
+
+            if (LastPosition != Window.Position)
+            {
+                WindowMoved();
+                LastPosition = Window.Position;
+            }
 
             base.Update(gameTime);
             GameThread.UpdateExecuting = false;

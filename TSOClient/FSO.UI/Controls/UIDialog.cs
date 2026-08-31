@@ -212,5 +212,25 @@ namespace FSO.Client.UI.Controls
                 SetSize(value.X, value.Y);
             }
         }
+
+        public override void GameResized()
+        {
+            // Try snap the dialog's position inside the window.
+
+            var screen = UIScreen.Current;
+            var currentRect = new Rectangle(Position.ToPoint(), Size.ToPoint());
+
+            if (currentRect.Right > screen.ScreenWidth)
+            {
+                X = Math.Max(0, screen.ScreenWidth - currentRect.Width);
+            }
+
+            if (currentRect.Bottom > screen.ScreenHeight)
+            {
+                Y = Math.Max(0, screen.ScreenHeight - currentRect.Height);
+            }
+
+            base.GameResized();
+        }
     }
 }

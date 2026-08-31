@@ -57,11 +57,26 @@ namespace FSO.Windows
 
                 // On linux and macos, timers are a lot more precise.
 
+                FSOProgram.GetDeviceDpi = (window) =>
+                {
+                    try
+                    {
+                        var form = System.Windows.Forms.Form.FromHandle(window) as System.Windows.Forms.Form;
+
+                        return form.DeviceDpi / 96f;
+                    }
+                    catch
+                    {
+                        return 1f;
+                    }
+                };
+
                 FSOProgram.RegisterDragCallback = (window, callback) =>
                 {
                     var bindThread = new Thread(x =>
                     {
                         var form = System.Windows.Forms.Form.FromHandle(window) as System.Windows.Forms.Form;
+
                         form?.BeginInvoke(() =>
                         {
                             form.AllowDrop = true;

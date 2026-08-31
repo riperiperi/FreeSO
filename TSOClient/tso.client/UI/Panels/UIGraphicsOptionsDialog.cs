@@ -2,12 +2,10 @@
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
 using FSO.Common;
-using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.LotView;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -434,6 +432,10 @@ namespace FSO.Client.UI.Panels
     {
         public UILabel DPILabel;
         public UISlider DPISlider;
+
+        public UIButton AutoButton;
+        public UILabel AutoLabel;
+
         public UIDPIScaleDialog() : base(UIDialogStyle.OK, true) {
 
             DPILabel = new UILabel();
@@ -456,32 +458,75 @@ namespace FSO.Client.UI.Panels
 
             DPISlider.OnChange += DPISlider_OnChange;
 
+            DynamicOverlay.Add(AutoButton = new UIButton(GetTexture(0x0000083600000001))
+            {
+                Position = new Vector2(25, 107),
+            });
+
+            DynamicOverlay.Add(AutoLabel = new UILabel()
+            {
+                Caption = GameFacade.Strings.GetString("f103", "43"),
+                Position = new Vector2(50, 107)
+            });
+
             SetSize(400, 150);
 
             OKButton.OnButtonClick += (btn) =>
             {
                 UIScreen.RemoveDialog(this);
             };
+
+            AutoButton.OnButtonClick += (btn) =>
+            {
+                GlobalSettings.Default.DPIAuto = !GlobalSettings.Default.DPIAuto;
+                if ((GameFacade.Game as TSOGame).UpdateDpi())
+                {
+                    DPISlider.Value = FSOEnvironment.DPIScaleFactor * 4;
+                    UpdateScreen();
+                }
+
+                UpdateAutoDPI();
+            };
+
+            UpdateAutoDPI();
         }
 
         private void DPISlider_OnChange(UIElement element)
         {
+            if (GlobalSettings.Default.DPIAuto)
+            {
+                DPISlider.Value = FSOEnvironment.DPIScaleFactor * 4;
+                return;
+            }
+
             GameThread.NextUpdate((cb) =>
             {
                 FSOEnvironment.DPIScaleFactor = DPISlider.Value / 4f;
                 GlobalSettings.Default.DPIScaleFactor = FSOEnvironment.DPIScaleFactor;
 
-                var width = Math.Max(1, GameFacade.Game.Window.ClientBounds.Width);
-                var height = Math.Max(1, GameFacade.Game.Window.ClientBounds.Height);
-
-                UIScreen.Current.ScaleX = UIScreen.Current.ScaleY = FSOEnvironment.DPIScaleFactor;
-
-                GlobalSettings.Default.GraphicsWidth = (int)(width / FSOEnvironment.DPIScaleFactor);
-                GlobalSettings.Default.GraphicsHeight = (int)(height / FSOEnvironment.DPIScaleFactor);
-
-                UIScreen.Current.GameResized();
-                GlobalSettings.Default.Save();
+                UpdateScreen();
             });
+        }
+
+        private void UpdateScreen()
+        {
+            var width = Math.Max(1, GameFacade.Game.Window.ClientBounds.Width);
+            var height = Math.Max(1, GameFacade.Game.Window.ClientBounds.Height);
+
+            UIScreen.Current.ScaleX = UIScreen.Current.ScaleY = FSOEnvironment.DPIScaleFactor;
+
+            GlobalSettings.Default.GraphicsWidth = (int)(width / FSOEnvironment.DPIScaleFactor);
+            GlobalSettings.Default.GraphicsHeight = (int)(height / FSOEnvironment.DPIScaleFactor);
+
+            UIScreen.Current.GameResized();
+            GlobalSettings.Default.Save();
+        }
+
+        private void UpdateAutoDPI()
+        {
+            bool auto = GlobalSettings.Default.DPIAuto;
+            AutoButton.Selected = auto;
+            DPISlider.Opacity = auto ? 0.5f : 1f;
         }
 
         public override void Update(UpdateState state)

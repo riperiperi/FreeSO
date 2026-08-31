@@ -96,6 +96,7 @@ namespace FSO.Client
             { "Weather", "true" },
             { "DirectionalLight3D", "true" },
             { "DPIScaleFactor", "1" },
+            { "DPIAuto", "true" },
             { "TexCompression", "0" },
 
             { "ChatColor", "0" }, //uint packed color. 0 means choose random
@@ -171,6 +172,7 @@ namespace FSO.Client
         public bool Weather { get; set; }
         public bool DirectionalLight3D { get; set; }
         public float DPIScaleFactor { get; set; }
+        public bool DPIAuto { get; set; }
         public int TexCompression { get; set; } //first bit on/off, second bit is user defined or auto.
 
         public uint ChatColor { get; set; }
