@@ -163,12 +163,26 @@ namespace FSO.Client.UI.Panels
 
         private void OpenFolder(UIElement button)
         {
-            Process.Start(new ProcessStartInfo()
+            var target = Path.GetFullPath(Path.Combine(FSOEnvironment.ContentDir, "LocalHouse/"));
+
+            try
             {
-                FileName = Path.GetFullPath(Path.Combine(FSOEnvironment.ContentDir, "LocalHouse/")),
-                UseShellExecute = true,
-                Verb = "open"
-            });
+                if (!Directory.Exists(target))
+                {
+                    Directory.CreateDirectory(target);
+                }
+
+                Process.Start(new ProcessStartInfo()
+                {
+                    FileName = target,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+            }
+            catch
+            {
+                // Just fail silently for now.
+            }
         }
 
         private Texture2D TryLoadThumbnail(string path)
