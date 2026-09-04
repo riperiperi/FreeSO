@@ -276,11 +276,14 @@ namespace FSO.LotView.Components
                 parentState.ClearLighting(true);
             }
             var oldLevel = parentState.Level;
+            var oldBuild = parentState.BuildMode;
             parentState.SilentLevel = State.Level;
+            parentState.SilentBuildMode = 0;
 
             action(pxOffset);
             
             parentState.SilentLevel = oldLevel;
+            parentState.SilentBuildMode = oldBuild;
 
 
             if (parentState.CameraMode > CameraRenderMode._2D)

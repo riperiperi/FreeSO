@@ -120,7 +120,10 @@ namespace FSO.LotView
 
                             if (Blueprint.SubWorlds.Count > 0)
                             {
-                                Blueprint.SubWorlds[LastSubLightUpdate].RefreshLighting();
+                                if (LastSubLightUpdate < Blueprint.SubWorlds.Count)
+                                {
+                                    Blueprint.SubWorlds[LastSubLightUpdate].RefreshLighting();
+                                }
                                 LastSubLightUpdate = (LastSubLightUpdate + 1) % Blueprint.SubWorlds.Count;
                             }
                         }
