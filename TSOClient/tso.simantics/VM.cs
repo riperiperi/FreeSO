@@ -749,7 +749,7 @@ namespace FSO.SimAntics
             Context.VM = this;
             var idMap = input.Context.Architecture.IDMap;
             if (idMap != null) idMap.Apply(this);
-            Context.Architecture.RegenRoomMap();
+            Context.Architecture.InitRoomMap();
             Context.RegeneratePortalInfo();
             Context.Architecture.Terrain.RegenerateCenters();
 
@@ -965,7 +965,7 @@ namespace FSO.SimAntics
             input.Context.Ambience.ActiveBits = 0;
             Context = new VMContext(input.Context, Context);
             Context.VM = this;
-            Context.Architecture.RegenRoomMap();
+            Context.Architecture.InitRoomMap();
             Context.RegeneratePortalInfo();
 
             Entities = [];

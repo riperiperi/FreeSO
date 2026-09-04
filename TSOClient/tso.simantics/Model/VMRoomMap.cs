@@ -405,10 +405,12 @@ namespace FSO.SimAntics.Model
 
             for (int y = y1; y < y2; y++)
             {
+                bool hasNext = false;
                 VMObstacle next = null;
+                int i = y * Width + x1;
                 for (int x = x1; x < x2; x++)
                 {
-                    uint tRoom = map[x + y * Width];
+                    uint tRoom = map[i++];
                     if ((ushort)tRoom != room && ((tRoom>>16)&0x7FFF) != room)
                     {
                         //is there a door on this tile?
@@ -436,13 +438,15 @@ namespace FSO.SimAntics.Model
                         if (next != null) next.x2 += 16;
                         else
                         {
+                            hasNext = true;
                             next = new VMObstacle((x << 4) - 3, (y << 4) - 3, (x << 4) + 19, (y << 4) + 19);
                             result.Add(next);
                         }
                     }
-                    else
+                    else if (hasNext)
                     {
-                        if (next != null) next = null;
+                        hasNext = false;
+                        next = null;
                     }
                 }
             }

@@ -34,6 +34,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 obj.MultitileGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
 
+                vm.Context.ChangeCount++;
                 vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                     caller?.Name ?? "Unknown",
                     vm.GetUserIP(caller?.PersistID ?? 0),

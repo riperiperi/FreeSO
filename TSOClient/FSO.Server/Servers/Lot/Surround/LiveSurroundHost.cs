@@ -218,7 +218,7 @@ namespace FSO.Server.Servers.Lot.Surround
             }
         }
 
-        public bool HollowBroadcast(LiveSurroundLotConnection conn, Action<Action<byte[]>> generateHollow)
+        public bool HollowBroadcast(LiveSurroundLotConnection conn)
         {
             LiveSurroundLotConnection[] adj = null;
 
@@ -232,18 +232,51 @@ namespace FSO.Server.Servers.Lot.Surround
 
             if (adj != null)
             {
-                generateHollow((data) =>
+                var data = conn.GetHollow();
+
+                foreach (var conn2 in adj)
                 {
-                    foreach (var conn2 in adj)
-                    {
-                        conn2.SendHollowLotData(conn.LotLocation, data);
-                    }
-                });
+                    conn2.SendHollowLotData(conn.LotLocation, data);
+                }
 
                 return true;
             }
 
             return false;
+        }
+
+        public void GetSurroundings(LiveSurroundLotConnection conn, byte[][] data)
+        {
+            LiveSurroundLotConnection[] adj = null;
+
+            lock (ConnectionsLock)
+            {
+                if (AdjacencyById.TryGetValue(conn.LotLocation, out var adjList) && adjList.Count > 0)
+                {
+                    adj = [.. adjList];
+                }
+            }
+
+            if (adj != null)
+            {
+                var myLocation = MapCoordinates.Unpack(conn.LotLocation);
+
+                foreach (var conn2 in adj)
+                {
+                    var theirLocation = MapCoordinates.Unpack(conn2.LotLocation);
+
+                    int x = theirLocation.X - myLocation.X;
+                    int y = theirLocation.Y - myLocation.Y;
+
+                    if (x < -1 || y < -1 || x > 1 || y > 1 || (x == 0 && y == 0))
+                    {
+                        // Somehow out of bounds
+                        continue;
+                    }
+
+                    data[x + 1 + (y + 1) * 3] = conn2.GetHollow();
+                }
+            }
         }
 
         public void Dispose()

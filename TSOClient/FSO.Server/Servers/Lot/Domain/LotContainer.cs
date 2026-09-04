@@ -38,6 +38,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -81,7 +82,6 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private bool ShuttingDown;
 
-        private HashSet<uint> AvatarsToSave = new HashSet<uint>();
         private HashSet<IVoltronSession> SessionsToRelease = new HashSet<IVoltronSession>();
         private List<DbRelationship> RelationshipsToSave = new List<DbRelationship>();
         private DynamicTuning Tuning;
@@ -102,6 +102,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private Queue<Action> LotThreadActions = new Queue<Action>();
 
         private LiveSurroundLotConnection SurroundConnection;
+        private int HollowFrequency = 0;
+        private int HollowChangeCount;
         private HashSet<uint> FreeRoamLeaving = [];
 
         private bool AllowGuestOpening => Config.AllOpenable || ArchiveFreeRoam;
@@ -196,6 +198,8 @@ namespace FSO.Server.Servers.Lot.Domain
             TransientLot = context.SpecialLot || context.Action == ClaimAction.LOT_CLEANUP_HOLLOW;
             UnownedLot = context.UnownedLot;
             JobLot = context.JobLot;
+
+            HollowFrequency = Config.Hollow_Sync_Frequency;
 
             var skipAdj = context.Action.IsCleanup();
             if (JobLot) {
@@ -366,6 +370,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 return result;
             }
 
+            if (SurroundConnection != null)
+            {
+                SurroundConnection.GetSurroundings(result);
+            }
+
             LOG.Info("Loading adj lots for lot with dbid = " + Context.DbId);
             var myPos = MapCoordinates.Unpack(LotPersist.location);
             foreach (var lot in LotAdj)
@@ -379,6 +388,13 @@ namespace FSO.Server.Servers.Lot.Domain
                     var x = (pos.X - myPos.X) + 1;
                     var y = (pos.Y - myPos.Y) + 1;
                     if (x < 0 || x > 2 || y < 0 || y > 2) continue; //out of range (why does this happen?)
+
+                    if (result[y * 3 + x] != null)
+                    {
+                        // Got a more recent hollow lot from the surround connection.
+                        continue;
+                    }
+
                     using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
                         int numBytesToRead = Convert.ToInt32(fs.Length);
@@ -1030,6 +1046,20 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        private void ThrottledHollowBroadcast()
+        {
+            // Only broadcast once the current frequency has been passed since the last broadcast.
+
+            var msSinceLast = (Stopwatch.GetTimestamp() - LastHollowBroadcast) / (Stopwatch.Frequency / 1000);
+            if (msSinceLast >= HollowFrequency)
+            {
+                HollowBroadcast();
+
+                // The base frequency is how often it should update when users are actively making changes.
+                HollowFrequency = Config.Hollow_Sync_Frequency;
+            }
+        }
+
         private void Lot_OnGenericVMEvent(VMEventType type, object data)
         {
             if (type == VMEventType.TSOUserLeaveBuildBuy)
@@ -1039,72 +1069,54 @@ namespace FSO.Server.Servers.Lot.Domain
                 bool broadcastUpdate = msg.Build || true;
                 if (broadcastUpdate)
                 {
-                    if (LastHollowBroadcast == -1)
-                    {
-                        // In flight...
-                        return;
-                    }
+                    ScheduleHollowUpdate(HOLLOW_UPDATE_FREQ_MS);
+                }
+            }
+        }
 
-                    var msSinceLast = (Stopwatch.GetTimestamp() - LastHollowBroadcast) / (Stopwatch.Frequency / 1000);
+        private void ScheduleHollowUpdate(int frequency)
+        {
+            if (HollowFrequency == 0 || frequency < HollowFrequency)
+            {
+                HollowFrequency = frequency;
+            }
+        }
 
-                    if (msSinceLast > HOLLOW_UPDATE_FREQ_MS)
-                    {
-                        HollowBroadcast();
-                    }
-                    else
-                    {
-                        LastHollowBroadcast = -1;
-                        Task.Delay((int)(HOLLOW_UPDATE_FREQ_MS - msSinceLast), ClosedToken.Token).ContinueWith((task) =>
-                        {
-                            if (!task.IsCanceled)
-                            {
-                                BlockOnLotThread(HollowBroadcast);
-                            }
-                        });
-                    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void TryHollowSync()
+        {
+            if (Lot.Context.ChangeCount != HollowChangeCount)
+            {
+                if (HollowFrequency != 0 && SurroundConnection != null)
+                {
+                    ThrottledHollowBroadcast();
+                }
+                else
+                {
+                    HollowChangeCount = Lot.Context.ChangeCount;
                 }
             }
         }
 
         private void HollowBroadcast()
         {
-            var didBroadcast = SurroundConnection?.HollowBroadcast((Action<byte[]> onData) =>
+            if (HollowChangeCount != Lot.Context.ChangeCount)
             {
-                var hmarshal = Lot.HollowSave();
+                try
+                {
+                    var hmarshal = Lot.HollowSave();
 
-                Host.InBackground(() => {
-                    try
-                    {
+                    SurroundConnection.HollowBroadcast(hmarshal);
+                }
+                catch (Exception e)
+                {
+                    LOG.Warn(e, "Failed to generate hollow lot with dbid = " + Context.DbId);
+                    LOG.Warn(e.StackTrace);
+                }
 
-                        byte[] data;
-                        using (var output = new MemoryStream())
-                        {
-                            hmarshal.SerializeInto(new BinaryWriter(output));
-                            data = output.ToArray();
-                        }
-
-                        onData(data);
-
-                        if (!TransientLot)
-                        {
-                            var lotStr = LotPersist.lot_id.ToString("x8");
-                            string path = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/hollow.fsoh");
-
-                            using (var output = new FileStream(path, FileMode.Create))
-                            {
-                                output.Write(data);
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        LOG.Warn(e, "Failed to save hollow lot (to disk/db) with dbid = " + Context.DbId);
-                        LOG.Warn(e.StackTrace);
-                    }
-                });
-            }) ?? false;
-
-            LastHollowBroadcast = didBroadcast ? Stopwatch.GetTimestamp() : 0;
+                LastHollowBroadcast = Stopwatch.GetTimestamp();
+                HollowChangeCount = Lot.Context.ChangeCount;
+            }
         }
 
         public void UpdateTuning(IEnumerable<DynTuningEntry> tuning)
@@ -1350,6 +1362,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     {
                         TickFreeRoam();
                     }
+
+                    TryHollowSync();
 
                     var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
                     if (beingKilled.Any())

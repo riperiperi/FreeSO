@@ -324,10 +324,49 @@ namespace FSO.SimAntics
             }
         }
 
+        public void InitRoomMap()
+        {
+            RoomData =
+            [
+                new VMRoom(), //dummy at index 0
+            ];
+
+            for (int i = 0; i < Stories; i++)
+            {
+                var room = Rooms[i];
+                room.Width = Width;
+                room.Height = Height;
+                room.Map = new uint[Width * Height];
+
+                if (VM.UseWorld)
+                {
+                    WorldUI.RoomMap[i] = Rooms[i].Map;
+                }
+            }
+
+            if (VM.UseWorld)
+            {
+                WorldUI.Rooms = RoomData.ConvertAll(x => new Room
+                {
+                    Area = x.Area,
+                    Bounds = x.Bounds,
+                    IsOutside = x.IsOutside,
+                    IsPool = x.IsPool,
+                    WallLines = x.WallLines,
+                    FenceLines = x.FenceLines,
+                    RoomID = x.RoomID,
+                    Floor = x.Floor,
+                    Base = x.LightBaseRoom
+                });
+            }
+        }
+
         public void RegenRoomMap()
         {
-            RoomData = new List<VMRoom>();
-            RoomData.Add(new VMRoom()); //dummy at index 0
+            RoomData =
+            [
+                new VMRoom(), //dummy at index 0
+            ];
             for (int i=0; i<Stories; i++)
             {
                 Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData, (sbyte)i, Context);

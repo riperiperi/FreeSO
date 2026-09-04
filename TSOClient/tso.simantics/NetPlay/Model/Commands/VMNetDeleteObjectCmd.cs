@@ -36,6 +36,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
                     });
                 }
+
+                vm.Context.ChangeCount++;
                 vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                     caller?.Name ?? "Unknown",
                     vm.GetUserIP(caller?.PersistID ?? 0),

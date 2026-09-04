@@ -8,8 +8,20 @@ namespace FSO.Server.Servers.Lot
     {
         [JsonProperty("max_lots")]
         public int Max_Lots = 1;
+
+        /// <summary>
+        /// Number of simulation ticks per tick sent to the client.
+        /// Higher values reduce network load but increase latency.
+        /// </summary>
         [JsonProperty("tick_rate_divider")]
         public int Tick_Rate_Divider = 4;
+
+        /// <summary>
+        /// Frequency to sync hollow lots when build/buy changes are made in milliseconds.
+        /// By default, hollow lots are only synced when build/buy mode is exited. (0)
+        /// </summary>
+        [JsonProperty("hollow_sync_frequency")]
+        public int Hollow_Sync_Frequency = 0;
 
         [JsonProperty("simNFS")]
         public string SimNFS;

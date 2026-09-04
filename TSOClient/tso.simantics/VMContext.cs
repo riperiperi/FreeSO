@@ -56,6 +56,11 @@ namespace FSO.SimAntics
 
         public HashSet<ushort> DeferredLightingRefresh = new HashSet<ushort>();
 
+        /// <summary>
+        /// Used to determine when to update the hollow lot save when player driven lot changes occur.
+        /// </summary>
+        public int ChangeCount;
+
         public VMContext(LotView.World world) : this(world, null) { }
 
         public VMContext(LotView.World world, VMContext oldContext){

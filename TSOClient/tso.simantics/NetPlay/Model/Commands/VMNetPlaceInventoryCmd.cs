@@ -171,6 +171,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 (CreatedGroup.BaseObject.TSOState as VMTSOObjectState).Donate(vm, CreatedGroup.BaseObject);
             }
 
+            vm.Context.ChangeCount++;
             if (caller != null)
             {
                 vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,

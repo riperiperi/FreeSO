@@ -21,6 +21,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Style >= Content.Content.Get().WorldRoofs.Count) return false;
             Pitch = Math.Max(0f, Math.Min(1.25f, Pitch));
             vm.Context.Architecture.SetRoof(Pitch, Style);
+            vm.Context.ChangeCount++;
             return true;
         }
 

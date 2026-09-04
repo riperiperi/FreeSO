@@ -2,6 +2,7 @@
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Servers.Lot.Domain;
 using FSO.SimAntics;
+using FSO.SimAntics.Marshals.Hollow;
 
 namespace FSO.Server.Servers.Lot.Surround
 {
@@ -29,6 +30,11 @@ namespace FSO.Server.Servers.Lot.Surround
 
         private HashSet<uint> PlayersCopy = [];
         private HashSet<uint> NewPlayersCopy = [];
+
+
+        private Lock HollowLock = new();
+        private VMHollowMarshal HollowMarshal;
+        private byte[] Hollow;
 
         private bool Dirty = false;
 
@@ -201,14 +207,54 @@ namespace FSO.Server.Servers.Lot.Surround
             }
         }
 
-        public bool HollowBroadcast(Action<Action<byte[]>> generateHollow)
+        public bool HollowBroadcast(VMHollowMarshal marshal)
         {
-            return Host.HollowBroadcast(this, generateHollow);
+            lock (HollowLock)
+            {
+                // Doesn't actually serialize the hollow marshal til another lot needs it.
+                Hollow = null;
+                HollowMarshal = marshal;
+            }
+
+            return Host.HollowBroadcast(this);
         }
 
         public void SendHollowLotData(uint location, byte[] data)
         {
             LotContainer.SendHollowLotData(location, data);
+        }
+
+        public void GetSurroundings(byte[][] data)
+        {
+            Host.GetSurroundings(this, data);
+        }
+
+        public byte[] GetHollow()
+        {
+            lock (HollowLock)
+            {
+                if (Hollow == null)
+                {
+                    if (HollowMarshal == null)
+                    {
+                        return null;
+                    }
+
+                    // Serialize it the first time that it's needed, then use that
+                    // data for any future requests.
+
+                    byte[] data;
+                    using (var output = new MemoryStream())
+                    {
+                        HollowMarshal.SerializeInto(new BinaryWriter(output));
+                        data = output.ToArray();
+                    }
+
+                    Hollow = data;
+                }
+
+                return Hollow;
+            }
         }
 
         public void Dispose()

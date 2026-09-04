@@ -1067,7 +1067,7 @@ namespace FSO.SimAntics.Utils
             if (lotsMode == 0) return;
             for (int y=0; y<3; y++)
             {
-                for (int x=0; x<3; x++)
+                for (int x = 0; x < 3; x++)
                 {
                     int i = y * 3 + x;
                     if (x == 1 & y == 1) continue; //that's us...
@@ -1081,11 +1081,12 @@ namespace FSO.SimAntics.Utils
                     }
 
                     // If there's an existing subworld with this lot id, replace it.
+                    SubWorldComponent subworld = null;
                     vm.Context.Blueprint.SubWorlds.RemoveAll((x) =>
                     {
                         if (x.Index == i)
                         {
-                            x.Dispose();
+                            subworld = x;
                             return true;
                         }
 
@@ -1096,8 +1097,11 @@ namespace FSO.SimAntics.Utils
                     uint newLocation = (uint)(((baseX + cityRelative.X) << 16) | ((baseY + cityRelative.Y) & 0xFFFF));
 
                     var gd = vm.Context.World.State.Device;
-                    var subworld = vm.Context.World.MakeSubWorld(gd, i);
-                    subworld.Initialize(gd);
+                    if (subworld == null)
+                    {
+                        subworld = vm.Context.World.MakeSubWorld(gd, i);
+                        subworld.Initialize(gd);
+                    }
                     var tempVM = new VM(new VMContext(subworld), new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
                     tempVM.Init();
 

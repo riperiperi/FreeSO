@@ -66,6 +66,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
                 if (Mode != PurchaseMode.Donate) CreatedGroup.InitialPrice = (int)value;
 
+                vm.Context.ChangeCount++;
+
                 return true;
             }
             else if (vm.GlobalLink != null && item != null)

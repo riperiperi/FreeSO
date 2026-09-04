@@ -160,6 +160,7 @@ namespace FSO.Server.Embedded
                             Max_Lots = 100,
                             Use_SSL = false,
                             Tick_Rate_Divider = config.Flags.HasFlag(ArchiveConfigFlags.ReducedTickRate) ? 4 : 1,
+                            Hollow_Sync_Frequency = 5000, // 5 seconds
                             Cities = new Servers.Lot.LotServerConfigurationCity[]
                             {
                                 new Servers.Lot.LotServerConfigurationCity()

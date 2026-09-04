@@ -18,6 +18,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 Commands[i] = cmd;
             }
             vm.Context.Architecture.RunCommands(Commands, false);
+            vm.Context.ChangeCount++;
             return true;
         }
 
