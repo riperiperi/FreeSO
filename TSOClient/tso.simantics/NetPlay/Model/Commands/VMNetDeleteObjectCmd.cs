@@ -20,7 +20,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Mode == DeleteMode.Delete)//ObjectPID == 0) //only has value when this is an inventory move.
             {
                 VMEntity obj = vm.GetObjectById(ObjectID);
-                if (obj == null || (!vm.TS1 && caller == null)) return false;
+                if (obj == null) return false;
                 var value = (obj.PersistID != 0 || vm.TS1) ? obj.MultitileGroup.Price : 0;
 
                 obj.ExecuteEntryPoint(12, vm.Context, true);
@@ -90,8 +90,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
-            if (IsSpectator(caller)) return false;
             if (Verified) return true;
+            if (caller == null && !vm.TS1) return false;
+            if (IsSpectator(caller)) return false;
+
             ObjectPID = 0;
             VMEntity obj = vm.GetObjectById(ObjectID);
 
