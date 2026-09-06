@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FSO.Common;
+﻿using FSO.Common;
 using FSO.Common.Utils;
 using FSO.HIT;
 using FSO.LotView.Components.Model;
@@ -13,16 +6,19 @@ using FSO.LotView.Components.SM64Geo;
 using FSO.LotView.Model;
 using FSO.LotView.RC;
 using FSO.LotView.Utils.Camera;
-using Mario.Controller;
-using Mario.Data;
-using Mario.Entities;
-using Mario.Enum;
-using Mario.Geo;
-using Mario.Math;
-using Mario.World;
+using FSO.Platformer;
+using FSO.Platformer.Controller;
+using FSO.Platformer.Data;
+using FSO.Platformer.Entities;
+using FSO.Platformer.Enum;
+using FSO.Platformer.Geo;
+using FSO.Platformer.Math;
+using FSO.Platformer.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.IO.Compression;
+using System.Runtime.CompilerServices;
 
 namespace FSO.LotView.Components
 {
@@ -56,16 +52,16 @@ namespace FSO.LotView.Components
     // Can't show anything until:
     // - Animation data is present (from server or local Content)
     // - lot is fully loaded
-    // Do not spawn a controllable mario or generate collision until:
+    // Do not spawn a controllable player or generate collision until:
     // - A controller is plugged (and the component has been shown)
 
-    internal class VisualMario : IDisposable
+    internal class VisualPlatformer : IDisposable
     {
         public AvatarComponent Avatar;
         private SM64Component Component;
 
-        public Mario.Mario Mario;
-        public MarioObject MarioObj;
+        public FSO.Platformer.Player Player;
+        public PlayerObject PlayerObj;
         public SM64GeometryEmit GeoEmit;
 
         public Vector3 LastPosition;
@@ -84,13 +80,16 @@ namespace FSO.LotView.Components
 
         public Queue<SM64VisualState> QueuedFrames = new Queue<SM64VisualState>();
 
-        public VisualMario(SM64Component component)
+        public VisualPlatformer(SM64Component component)
         {
             Component = component;
 
-            Mario = new Mario.Mario();
-            Mario.Area = new Area();
-            MarioObj = new MarioObject();
+            Player = new FSO.Platformer.Player
+            {
+                Area = new Area()
+            };
+
+            PlayerObj = new PlayerObject();
             GeoEmit = new SM64GeometryEmit();
         }
 
@@ -114,9 +113,8 @@ namespace FSO.LotView.Components
             GeoEmit.Dispose();
         }
 
-        public Vector3 GetMarioPosition()
+        public Vector3 GetPlayerPosition()
         {
-            //var pos = MarioObj.Header.Gfx.Pos;
             var pos = Vector3.Lerp(LastPosition, Position ?? LastPosition, InterpProgress) / 3;
 
             return new Vector3(pos.X, pos.Z, pos.Y);// * (1/3f) / 80f;
@@ -136,7 +134,7 @@ namespace FSO.LotView.Components
             var worldState = Component.State;
             var worldSpace = worldState.WorldSpace;
 
-            var pos = GetMarioPosition() * 3;
+            var pos = GetPlayerPosition() * 3;
             pos = new Vector3(pos.X, pos.Z, pos.Y);
             //worldState.Camera.View * 
             var scrPos = GetScreenPos(pos, worldState);
@@ -173,7 +171,7 @@ namespace FSO.LotView.Components
 
         public sbyte DetermineLevel(bool forLight)
         {
-            return Component.DetermineLevel(GetMarioPosition(), forLight);
+            return Component.DetermineLevel(GetPlayerPosition(), forLight);
         }
     }
 
@@ -192,6 +190,7 @@ namespace FSO.LotView.Components
     public class SM64Component : IDisposable
     {
         private const float WorldToSm64 = 80f / 1f;
+        private const int HistoryLength = 30;
 
         private static AnimSource AnimData;
 
@@ -200,17 +199,18 @@ namespace FSO.LotView.Components
         private Blueprint Bp;
         internal WorldState State;
         private Collision Collision = new Collision();
-        private DataSource Data;
+        private static DataSource Data;
         private SM64Scene Scene;
-        private Mario.Mario Mario;
-        private MarioObject MyMarioObj;
+        private FSO.Platformer.Player Player;
+        private PlayerObject MyPlayerObj;
+        private Queue<PlayerState> StateHistory = [];
         private bool TerrainUpdated = false;
-        private bool DidInitMario = false;
-        private bool MarioActiveForMe = false;
+        private bool DidInitPlayer = false;
+        private bool PlayerActiveForMe = false;
         private int DeathFrames = 0;
 
         private SM64GeometryEmit GeoEmit;
-        private MarioGeo Geo;
+        private PlayerGeo Geo;
 
         private ControllerState LastState = new ControllerState();
 
@@ -218,8 +218,8 @@ namespace FSO.LotView.Components
         public Queue<uint> SoundQueue = new Queue<uint>();
         public short MyID = 0;
 
-        internal Dictionary<AvatarComponent, VisualMario> OtherMarios = new Dictionary<AvatarComponent, VisualMario>();
-        internal VisualMario MyMario;
+        internal Dictionary<AvatarComponent, VisualPlatformer> OtherPlayers = new Dictionary<AvatarComponent, VisualPlatformer>();
+        internal VisualPlatformer MyPlayer;
 
         internal Dictionary<int, CollisionObject> CollisionObjectsById = new Dictionary<int, CollisionObject>();
         internal Dictionary<EntityComponent, CollisionObject> CollisionObjectsByEnt = new Dictionary<EntityComponent, CollisionObject>();
@@ -256,23 +256,29 @@ namespace FSO.LotView.Components
             Bp = bp;
             TerrainBase = new Surface[bp.Width * bp.Height * 2];
 
-            try
+            if (Data == null)
             {
-                Data = new RomSource(new FileStream("Content/sm64.z64", FileMode.Open, FileAccess.Read));
-            }
-            catch
-            {
+                if (File.Exists("Content/sm64.z64"))
+                {
+                    try
+                    {
+                        Data = new RomSource(new FileStream("Content/sm64.z64", FileMode.Open, FileAccess.Read));
+                    }
+                    catch
+                    {
 
+                    }
+                }
             }
 
             Scene = new SM64Scene(this);
 
-            MyMario = new VisualMario(this);
+            MyPlayer = new VisualPlatformer(this);
 
-            Mario = MyMario.Mario;
-            MyMarioObj = MyMario.MarioObj;
-            GeoEmit = MyMario.GeoEmit;
-            Geo = new MarioGeo(GeoEmit);
+            Player = MyPlayer.Player;
+            MyPlayerObj = MyPlayer.PlayerObj;
+            GeoEmit = MyPlayer.GeoEmit;
+            Geo = new PlayerGeo(GeoEmit);
 
             ColId = bp.Stories + 2;
         }
@@ -283,47 +289,52 @@ namespace FSO.LotView.Components
 
             DeathFrames = 0;
 
-            var start = GetBaseMarioPos();
+            var start = GetBasePlayerPos();
 
             var pos = start.Item1 * 3 * WorldToSm64;
 
             var angle = new Vec3s((short)((start.Item2.X / Math.PI) * 32768), (short)((start.Item2.Y / Math.PI) * 32768), (short)((start.Item2.Z / Math.PI) * 32768));
 
-            var spawnInfo = new Mario.SpawnInfo()
+            var spawnInfo = new SpawnInfo()
             {
                 StartPos = new Vec3s((short)pos.X, (short)(pos.Z + 1000), (short)pos.Y),
                 StartAngle = angle
             };
 
-            Mario.InitFromSaveFile(spawnInfo);
+            Player.InitFromSaveFile(spawnInfo);
 
-            Mario.Init(Scene, spawnInfo,
+            Player.Init(Scene, spawnInfo,
             area,
-            MyMarioObj,
+            MyPlayerObj,
             Collision,
             Data);
 
-            Mario.SetMarioAction(MarioAction.ACT_SPAWN_SPIN_AIRBORNE, 0);
+            Player.SetPlayerAction(PlayerAction.ACT_SPAWN_SPIN_AIRBORNE, 0);
 
-            Scene.play_sound(1, new Vec3f());
+            if (playSound)
+            {
+                Scene.play_sound(1, new Vec3f());
+            }
         }
 
-        public void UpdateOtherMario(AvatarComponent avatar, SM64VisualState state)
+        public void UpdateOtherPlayer(AvatarComponent avatar, SM64VisualState state)
         {
-            if (!OtherMarios.TryGetValue(avatar, out VisualMario other))
+            if (!OtherPlayers.TryGetValue(avatar, out VisualPlatformer other))
             {
-                other = new VisualMario(this);
-                other.Avatar = avatar;
+                other = new VisualPlatformer(this)
+                {
+                    Avatar = avatar
+                };
 
-                OtherMarios.Add(avatar, other);
+                OtherPlayers.Add(avatar, other);
             }
 
-            avatar.MyMario = other;
+            avatar.MyPlatformer = other;
 
             other.QueuedFrames.Enqueue(state);
         }
 
-        public Tuple<Vector3, Vector3> GetBaseMarioPos()
+        public Tuple<Vector3, Vector3> GetBasePlayerPos()
         {
             // Try find the mailbox
             var mailbox = Bp.Objects.FirstOrDefault(x => x.Obj.OBJ.GUID == 0xEF121974);
@@ -380,21 +391,21 @@ namespace FSO.LotView.Components
             return forLight || TileIndoors((int)pos.X, (int)pos.Y, level) ? level : Bp.Stories;
         }
 
-        public void RemoveMario(AvatarComponent avatar)
+        public void RemovePlayer(AvatarComponent avatar)
         {
-            // Removes this mario from existence, as its parent avatar is gone.
+            // Removes this player from existence, as its parent avatar is gone.
 
-            if (OtherMarios.TryGetValue(avatar, out VisualMario other))
+            if (OtherPlayers.TryGetValue(avatar, out VisualPlatformer other))
             {
                 other.Dispose();
 
-                OtherMarios.Remove(avatar);
+                OtherPlayers.Remove(avatar);
             }
         }
 
         public void PlaySound(AvatarComponent avatar, uint sound)
         {
-            if (OtherMarios.TryGetValue(avatar, out var other))
+            if (OtherPlayers.TryGetValue(avatar, out var other))
             {
                 Scene.SetSource(other);
 
@@ -451,7 +462,7 @@ namespace FSO.LotView.Components
 
             if (gamepad.Buttons.Start == ButtonState.Pressed && gamepad.Buttons.Back == ButtonState.Pressed)
             {
-                // Reset mario
+                // Reset player
                 Init(false);
             }
 
@@ -461,8 +472,6 @@ namespace FSO.LotView.Components
             if (gamepad.Buttons.LeftShoulder == ButtonState.Pressed) controllerState.ButtonDown |= Button.Z_TRIG;
 
             var leftStick = BoostStick(gamepad.ThumbSticks.Left, 1.20f);
-
-            Console.WriteLine($"{leftStick.Length()}");
 
             controllerState.StickX = leftStick.X * 64;
             controllerState.StickY = leftStick.Y * 64;
@@ -519,7 +528,7 @@ namespace FSO.LotView.Components
                 }
             }
 
-            if (world.ScrollAnchor != null && world.ScrollAnchor.MyMario != null && world.CameraMode == CameraRenderMode._3D)
+            if (world.ScrollAnchor != null && world.ScrollAnchor.MyPlatformer != null && world.CameraMode == CameraRenderMode._3D)
             {
                 CameraController(world);
             }
@@ -529,7 +538,7 @@ namespace FSO.LotView.Components
                 UpdateRemainderOther -= 1f / FSOEnvironment.RefreshRate;
                 while (UpdateRemainderOther <= 0)
                 {
-                    foreach (var other in OtherMarios.Values)
+                    foreach (var other in OtherPlayers.Values)
                     {
                         while (other.QueuedFrames.Count > 2) other.QueuedFrames.Dequeue(); // Too far ahead.
 
@@ -537,7 +546,7 @@ namespace FSO.LotView.Components
                         {
                             var state = other.QueuedFrames.Dequeue();
 
-                            var obj = other.MarioObj;
+                            var obj = other.PlayerObj;
                             var gfx = obj.Header.Gfx;
 
                             gfx.Pos = new Vec3f(state.PosX, state.PosY, state.PosZ);
@@ -546,7 +555,7 @@ namespace FSO.LotView.Components
 
                             var animInfo = gfx.AnimInfo;
 
-                            other.Mario.Area.UpdateCounter = state.GlobalAnimTimer;
+                            other.Player.Area.UpdateCounter = state.GlobalAnimTimer;
 
                             animInfo.AnimID = state.AnimID;
                             animInfo.AnimYTrans = state.AnimYTrans;
@@ -561,14 +570,14 @@ namespace FSO.LotView.Components
 
                             try
                             {
-                                Data.LoadMarioAnimation(ref other.Mario.Animation, (MarioAnimation)animInfo.AnimID);
-                                animInfo.CurAnim = other.Mario.Animation.TargetAnim;
+                                Data.LoadPlayerAnimation(ref other.Player.Animation, (PlayerAnimation)animInfo.AnimID);
+                                animInfo.CurAnim = other.Player.Animation.TargetAnim;
 
                                 bool drawing = other.GeoEmit.Reset();
                                 Geo.SetGeoEmit(other.GeoEmit);
                                 Geo.EnableDisplayLists(drawing);
-                                Geo.SetAnimationGlobals(other.Mario, other.MarioObj.Header.Gfx.AnimInfo);
-                                Geo.mario_geo_body();
+                                Geo.SetAnimationGlobals(other.Player, other.PlayerObj.Header.Gfx.AnimInfo);
+                                Geo.player_geo_body();
                                 other.GeoEmit.End(drawing);
                             }
                             catch
@@ -585,7 +594,7 @@ namespace FSO.LotView.Components
                 }
             }
 
-            if (!MarioActiveForMe)
+            if (!PlayerActiveForMe)
             {
                 if (Allowed)
                 {
@@ -593,7 +602,7 @@ namespace FSO.LotView.Components
 
                     if (gamepad.IsConnected && visible)
                     {
-                        MarioActiveForMe = true;
+                        PlayerActiveForMe = true;
                         InitCollision(world);
                     }
                 }
@@ -604,21 +613,26 @@ namespace FSO.LotView.Components
             // Should only execute at 30 fps.
             if (world != null)
             {
-                Scene.SetSource(MyMario);
+                Scene.SetSource(MyPlayer);
 
-                if (DidInitMario)
+                if (DidInitPlayer)
                 {
-                    if (MyMario.Avatar == null && MyID != 0)
+                    if (MyPlayer.Avatar == null && MyID != 0)
                     {
                         // Look up my avatar, and bind to them.
                         foreach (var avatar in Bp.Avatars)
                         {
                             if (avatar.ObjectID == MyID)
                             {
-                                MyMario.Avatar = avatar;
-                                avatar.MyMario = MyMario;
+                                MyPlayer.Avatar = avatar;
+                                avatar.MyPlatformer = MyPlayer;
                             }
                         }
+                    }
+
+                    if (world.SimSpeed == 0)
+                    {
+                        return;
                     }
 
                     UpdateRemainder -= 1f / FSOEnvironment.RefreshRate;
@@ -632,45 +646,52 @@ namespace FSO.LotView.Components
                             }
                         }
 
-                        Mario.State.Controller = GenerateControllerState();
+                        Player.State.Controller = GenerateControllerState();
 
-                        Mario.Area.UpdateCounter++;
+                        Player.Area.UpdateCounter++;
 
                         var wallOffset = world.GetFrontDirection();
-                        Mario.Area.Camera.Yaw = Angle.Atan2s(wallOffset.Y, wallOffset.X);
+                        Player.Area.Camera.Yaw = Angle.Atan2s(wallOffset.Y, wallOffset.X);
 
                         try
                         {
                             // TODO: update camera yaw
                             // TODO: displacement? (on top of interpolated movement objects? we only really have cars and ducks lol)
-                            Mario.MarioUpdate();
+                            Player.PlayerUpdate();
 
-                            if (Mario.State.HurtCounter == 0 && Mario.State.Health < 2176 && Mario.State.Health > 0)
+                            if (Player.State.HurtCounter == 0 && Player.State.Health < 2176 && Player.State.Health > 0)
                             {
                                 // Slowly heal over time (about 35 seconds for a full heal)
-                                Mario.State.Health += 2;
+                                Player.State.Health += 2;
                             }
 
-                            if (Mario.Floor == null) return;
-                            // TODO: update_mario_platform (also displacement related)
+                            if (Player.Floor == null) return;
+                            // TODO: update_player_platform (also displacement related)
 
                             UpdateVisualState();
 
                             bool drawing = GeoEmit.Reset();
                             Geo.SetGeoEmit(GeoEmit);
                             Geo.EnableDisplayLists(drawing);
-                            Geo.SetAnimationGlobals(Mario, Mario.MarioObj.Header.Gfx.AnimInfo);
-                            Geo.mario_geo_body();
+                            Geo.SetAnimationGlobals(Player, Player.PlayerObj.Header.Gfx.AnimInfo);
+                            Geo.player_geo_body();
                             GeoEmit.End(drawing);
 
-                            MyMario.NewFrame = true;
+                            MyPlayer.NewFrame = true;
                         }
                         catch
                         {
                             // don't crash the game if something goes wrong here
-                            DidInitMario = false;
+                            DidInitPlayer = false;
                         }
-                        //Mario.GeoProcess();
+                        //Player.GeoProcess();
+
+                        StateHistory.Enqueue(Player.State);
+
+                        while (StateHistory.Count > HistoryLength)
+                        {
+                            StateHistory.Dequeue();
+                        }
 
                         UpdateRemainder += 1 / 30f;
                     }
@@ -679,7 +700,7 @@ namespace FSO.LotView.Components
                 {
                     Init();
 
-                    DidInitMario = true;
+                    DidInitPlayer = true;
                 }
             }
         }
@@ -688,23 +709,24 @@ namespace FSO.LotView.Components
         {
             ref SM64VisualState state = ref MyVisualState;
 
+            var gfx = Player.PlayerObj.Header.Gfx;
             state.Active = true;
-            state.GlobalAnimTimer = Mario.Area.UpdateCounter;
-            state.PosX = Mario.MarioObj.Header.Gfx.Pos.X;
-            state.PosY = Mario.MarioObj.Header.Gfx.Pos.Y;
-            state.PosZ = Mario.MarioObj.Header.Gfx.Pos.Z;
-            state.ScaleX = Mario.MarioObj.Header.Gfx.Scale.X;
-            state.ScaleY = Mario.MarioObj.Header.Gfx.Scale.Y;
-            state.ScaleZ = Mario.MarioObj.Header.Gfx.Scale.Z;
-            state.AngleX = Mario.MarioObj.Header.Gfx.Angle.X;
-            state.AngleY = Mario.MarioObj.Header.Gfx.Angle.Y;
-            state.AngleZ = Mario.MarioObj.Header.Gfx.Angle.Z;
-            state.AnimID = Mario.MarioObj.Header.Gfx.AnimInfo.AnimID;
-            state.AnimYTrans = Mario.MarioObj.Header.Gfx.AnimInfo.AnimYTrans;
-            state.AnimFrame = Mario.MarioObj.Header.Gfx.AnimInfo.AnimFrame;
-            state.AnimTimer = Mario.MarioObj.Header.Gfx.AnimInfo.AnimTimer;
-            state.AnimFrameAccelAssist = Mario.MarioObj.Header.Gfx.AnimInfo.AnimFrameAccelAssist;
-            state.AnimAccel = Mario.MarioObj.Header.Gfx.AnimInfo.AnimAccel;
+            state.GlobalAnimTimer = Player.Area.UpdateCounter;
+            state.PosX = gfx.Pos.X;
+            state.PosY = gfx.Pos.Y;
+            state.PosZ = gfx.Pos.Z;
+            state.ScaleX = gfx.Scale.X;
+            state.ScaleY = gfx.Scale.Y;
+            state.ScaleZ = gfx.Scale.Z;
+            state.AngleX = gfx.Angle.X;
+            state.AngleY = gfx.Angle.Y;
+            state.AngleZ = gfx.Angle.Z;
+            state.AnimID = gfx.AnimInfo.AnimID;
+            state.AnimYTrans = gfx.AnimInfo.AnimYTrans;
+            state.AnimFrame = gfx.AnimInfo.AnimFrame;
+            state.AnimTimer = gfx.AnimInfo.AnimTimer;
+            state.AnimFrameAccelAssist = gfx.AnimInfo.AnimFrameAccelAssist;
+            state.AnimAccel = gfx.AnimInfo.AnimAccel;
         }
 
         private Vector3 SmartLerp(Vector3 from, Vector3 to, float fac, float threshold)
@@ -763,14 +785,22 @@ namespace FSO.LotView.Components
             Texture.SetData(data);
         }
 
-        private void DrawMario(GraphicsDevice gd, WorldState state, VisualMario visual)
+        public void InitPosition()
+        {
+            PlayerObject obj = MyPlayer.PlayerObj;
+            var pos = ToVector3(obj.Header.Gfx.Pos) / WorldToSm64;
+            MyPlayer.Position = pos;
+            MyPlayer.LastPosition = pos;
+        }
+
+        private void DrawPlayer(GraphicsDevice gd, WorldState state, VisualPlatformer visual)
         {
             if (Texture == null)
             {
                 GenerateTexture(gd);
             }
 
-            MarioObject obj = visual.MarioObj;
+            PlayerObject obj = visual.PlayerObj;
             SM64GeometryEmit geoEmit = visual.GeoEmit;
 
             float baseScale = 1 / (WorldToSm64 * 3);
@@ -907,16 +937,16 @@ namespace FSO.LotView.Components
 
         public void Draw(GraphicsDevice gd, WorldState state)
         {
-            if (MarioActiveForMe)
+            if (PlayerActiveForMe)
             {
-                DrawMario(gd, state, MyMario);
+                DrawPlayer(gd, state, MyPlayer);
             }
 
-            foreach (var other in OtherMarios.Values)
+            foreach (var other in OtherPlayers.Values)
             {
                 if (!other.Valid) continue;
 
-                DrawMario(gd, state, other);
+                DrawPlayer(gd, state, other);
             }
         }
 
@@ -973,7 +1003,7 @@ namespace FSO.LotView.Components
 
         public void UpdateTerrain()
         {
-            if (Bp == null || !MarioActiveForMe)
+            if (Bp == null || !PlayerActiveForMe)
             {
                 return;
             }
@@ -1035,7 +1065,7 @@ namespace FSO.LotView.Components
 
         public void UpdateFloors()
         {
-            if (Bp == null || !MarioActiveForMe)
+            if (Bp == null || !PlayerActiveForMe)
             {
                 return;
             }
@@ -1053,6 +1083,18 @@ namespace FSO.LotView.Components
 
             EnsureGroupExists(floors.Length - 1);
 
+            // The bottom floor should create floor tiles on the border of the lot.
+
+            var w = Bp.Width;
+            var h = Bp.Height;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void addFromTerrain(List<Surface> group, int tileIndex)
+            {
+                group.Add(TerrainBase[tileIndex << 1]);
+                group.Add(TerrainBase[(tileIndex << 1) | 1]);
+            }
+
             for (int i = 0; i < floors.Length; i++)
             {
                 var floor = floors[i];
@@ -1060,6 +1102,21 @@ namespace FSO.LotView.Components
                 var surfaces = group.Surfaces;
 
                 surfaces.Clear();
+
+                if (i == 0)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        addFromTerrain(surfaces, x);
+                        addFromTerrain(surfaces, x + (h - 1) * w);
+                    }
+
+                    for (int y = 0; y < h; y++)
+                    {
+                        addFromTerrain(surfaces, y * w);
+                        addFromTerrain(surfaces, w - 1 + y * w);
+                    }
+                }
 
                 Vector3 heightOffset = new Vector3(0, i * 2.95f * 3 * WorldToSm64, 0);
 
@@ -1097,8 +1154,7 @@ namespace FSO.LotView.Components
 
                             // Then select both triangles.
 
-                            surfaces.Add(TerrainBase[tileIndex << 1]);
-                            surfaces.Add(TerrainBase[(tileIndex << 1) | 1]);
+                            addFromTerrain(surfaces, tileIndex);
                         }
                         else
                         {
@@ -1313,7 +1369,7 @@ namespace FSO.LotView.Components
 
         public void UpdateWalls()
         {
-            if (!MarioActiveForMe)
+            if (!PlayerActiveForMe)
             {
                 return;
             }
@@ -1381,7 +1437,7 @@ namespace FSO.LotView.Components
 
         public void UpdateRoof()
         {
-            if (!MarioActiveForMe)
+            if (!PlayerActiveForMe)
             {
                 return;
             }
@@ -1451,7 +1507,7 @@ namespace FSO.LotView.Components
 
         public void UpdateObject(EntityComponent obj)
         {
-            if (!MarioActiveForMe)
+            if (!PlayerActiveForMe)
             {
                 return;
             }
@@ -1567,30 +1623,30 @@ namespace FSO.LotView.Components
         {
             Bp = blueprint;
 
-            // Repoint marios to new avatar components.
-            if (MyMario.Avatar != null)
+            // Repoint players to new avatar components.
+            if (MyPlayer.Avatar != null)
             {
-                MyMario.Avatar = LocateAvatar(MyMario.Avatar);
+                MyPlayer.Avatar = LocateAvatar(MyPlayer.Avatar);
 
-                if (MyMario.Avatar != null)
+                if (MyPlayer.Avatar != null)
                 {
-                    MyMario.Avatar.MyMario = MyMario;
+                    MyPlayer.Avatar.MyPlatformer = MyPlayer;
                 }
             }
 
-            var others = OtherMarios.Values.ToList();
-            OtherMarios.Clear();
-            foreach (var mario in others)
+            var others = OtherPlayers.Values.ToList();
+            OtherPlayers.Clear();
+            foreach (var player in others)
             {
-                mario.Avatar = LocateAvatar(mario.Avatar);
+                player.Avatar = LocateAvatar(player.Avatar);
 
-                if (mario.Avatar == null)
+                if (player.Avatar == null)
                 {
-                    mario.Dispose();
+                    player.Dispose();
                 }
                 else
                 {
-                    OtherMarios.Add(mario.Avatar, mario);
+                    OtherPlayers.Add(player.Avatar, player);
                 }
             }
 
@@ -1599,9 +1655,72 @@ namespace FSO.LotView.Components
             InitCollision(state);
         }
 
-        internal void SoundPlayed(uint sound, VisualMario mario)
+        private bool IsActionKnockback(PlayerAction action)
         {
-            if (mario == MyMario)
+            return action == PlayerAction.ACT_BACKWARD_AIR_KB ||
+                action == PlayerAction.ACT_BACKWARD_GROUND_KB ||
+                action == PlayerAction.ACT_BACKWARD_WATER_KB ||
+                action == PlayerAction.ACT_FORWARD_AIR_KB ||
+                action == PlayerAction.ACT_FORWARD_GROUND_KB ||
+                action == PlayerAction.ACT_FORWARD_WATER_KB ||
+                action == PlayerAction.ACT_HARD_BACKWARD_AIR_KB ||
+                action == PlayerAction.ACT_HARD_BACKWARD_GROUND_KB ||
+                action == PlayerAction.ACT_HARD_FORWARD_AIR_KB ||
+                action == PlayerAction.ACT_HARD_FORWARD_GROUND_KB ||
+                action == PlayerAction.ACT_SOFT_BACKWARD_GROUND_KB ||
+                action == PlayerAction.ACT_SOFT_FORWARD_GROUND_KB;
+        }
+
+        public void Inherit(SM64Component last, int changeX, int changeY, float heightChange)
+        {
+            if (last.DidInitPlayer)
+            {
+                if (!DidInitPlayer)
+                {
+                    Init(false);
+                }
+
+                var inheritState = last.MyPlayer.Player.State;
+
+                if (IsActionKnockback(inheritState.Action))
+                {
+                    var history = last.StateHistory.ToArray();
+
+                    for (int i = history.Length - 1; i >= 0; i--)
+                    {
+                        var state = history[i];
+
+                        if (!IsActionKnockback(state.Action))
+                        {
+                            inheritState = state;
+                            break;
+                        }
+                    }
+                }
+
+                inheritState.Pos.X -= changeX * (Bp.Width - 2) * WorldToSm64 * 3; 
+                inheritState.Pos.Z -= changeY * (Bp.Height - 2) * WorldToSm64 * 3;
+                inheritState.Pos.Y -= heightChange * WorldToSm64;
+
+                MyPlayer.Player.State = inheritState;
+
+                MyPlayer.Avatar = LocateAvatar(last.MyPlayer.Avatar);
+                if (last.MyPlayer.Avatar.MyPlatformer == last.MyPlayer && MyPlayer.Avatar != null)
+                {
+                    MyPlayer.Avatar.MyPlatformer = MyPlayer;
+                }
+
+                MyPlayer.PlayerObj.Header.Gfx.Pos = inheritState.Pos;
+
+                InitPosition();
+
+                DidInitPlayer = true;
+            }
+        }
+
+        internal void SoundPlayed(uint sound, VisualPlatformer player)
+        {
+            if (player == MyPlayer)
             {
                 SoundQueue.Enqueue(sound);
             }
@@ -1614,10 +1733,10 @@ namespace FSO.LotView.Components
         }
     }
 
-    class SM64Scene : Mario.Scene
+    class SM64Scene : FSO.Platformer.Scene
     {
         private SM64Component Component;
-        private VisualMario Source;
+        private VisualPlatformer Source;
 
         // maybe these can be jump sounds, but they're a bit pained
         // bull_fall_med_voxf
@@ -1637,38 +1756,38 @@ namespace FSO.LotView.Components
 
         public Dictionary<uint, string> SoundBitsToHitEvt = new Dictionary<uint, string>()
         {
-            { Mario.Enum.Sound.SOUND_ACTION_TERRAIN_JUMP, "" },
-            { Mario.Enum.Sound.SOUND_ACTION_TERRAIN_LANDING, "bull_falloff_med" }, //might be a bit much (do not use hi lol)
+            { Sound.SOUND_ACTION_TERRAIN_JUMP, "" },
+            { Sound.SOUND_ACTION_TERRAIN_LANDING, "bull_falloff_med" }, //might be a bit much (do not use hi lol)
 
-            { Mario.Enum.Sound.SOUND_MARIO_YAH_WAH_HOO, "vox_salute_herioc" },
-            { Mario.Enum.Sound.SOUND_MARIO_YAH_WAH_HOO + 1, "vox_salute_herioc" },
-            { Mario.Enum.Sound.SOUND_MARIO_YAH_WAH_HOO + 2, "vox_salute_herioc" },
-            { Mario.Enum.Sound.SOUND_MARIO_PUNCH_YAH, "bull_fall_med_vox" },
-            { Mario.Enum.Sound.SOUND_MARIO_PUNCH_WAH, "bull_fall_med_vox" },
-            { Mario.Enum.Sound.SOUND_MARIO_PUNCH_HOO, "bull_fall_med_vox" },
-            //{ Mario.Enum.Sound.SOUND_MARIO_HOOHOO, "vox_salute_herioc" },
-            { Mario.Enum.Sound.SOUND_MARIO_ON_FIRE, "vox_ouch_big" }, //electrocution_vox
-            { Mario.Enum.Sound.SOUND_MARIO_OOOF, "vox_attack_buttplant" }, //"burglar_vox"
-            { Mario.Enum.Sound.SOUND_MARIO_HERE_WE_GO, "espresso_buzz_vox" },
+            { Sound.SOUND_PLAYER_YAH_WAH_HOO, "vox_salute_herioc" },
+            { Sound.SOUND_PLAYER_YAH_WAH_HOO + 1, "vox_salute_herioc" },
+            { Sound.SOUND_PLAYER_YAH_WAH_HOO + 2, "vox_salute_herioc" },
+            { Sound.SOUND_PLAYER_PUNCH_YAH, "bull_fall_med_vox" },
+            { Sound.SOUND_PLAYER_PUNCH_WAH, "bull_fall_med_vox" },
+            { Sound.SOUND_PLAYER_PUNCH_HOO, "bull_fall_med_vox" },
+            //{ Sound.SOUND_PLAYER_HOOHOO, "vox_salute_herioc" },
+            { Sound.SOUND_PLAYER_ON_FIRE, "vox_ouch_big" }, //electrocution_vox
+            { Sound.SOUND_PLAYER_OOOF, "vox_attack_buttplant" }, //"burglar_vox"
+            { Sound.SOUND_PLAYER_HERE_WE_GO, "espresso_buzz_vox" },
 
-            { Mario.Enum.Sound.SOUND_MARIO_YAHOO_WAHA_YIPPEE, "pool_dvboard_dive_vox" },
-            { Mario.Enum.Sound.SOUND_MARIO_YAHOO_WAHA_YIPPEE + 1, "pool_dvboard_dive_vox" },
-            { Mario.Enum.Sound.SOUND_MARIO_YAHOO_WAHA_YIPPEE + 2, "pool_dvboard_dive_vox" }, //vox_yodel
-            { Mario.Enum.Sound.SOUND_MARIO_YAHOO_WAHA_YIPPEE + 3, "pool_dvboard_dive_vox" }, //vox_bull_watch_enthral
-            { Mario.Enum.Sound.SOUND_MARIO_YAHOO_WAHA_YIPPEE + 4, "pool_dvboard_dive_vox" }, //vox_arriba
+            { Sound.SOUND_PLAYER_YAHOO_WAHA_YIPPEE, "pool_dvboard_dive_vox" },
+            { Sound.SOUND_PLAYER_YAHOO_WAHA_YIPPEE + 1, "pool_dvboard_dive_vox" },
+            { Sound.SOUND_PLAYER_YAHOO_WAHA_YIPPEE + 2, "pool_dvboard_dive_vox" }, //vox_yodel
+            { Sound.SOUND_PLAYER_YAHOO_WAHA_YIPPEE + 3, "pool_dvboard_dive_vox" }, //vox_bull_watch_enthral
+            { Sound.SOUND_PLAYER_YAHOO_WAHA_YIPPEE + 4, "pool_dvboard_dive_vox" }, //vox_arriba
 
-            { Mario.Enum.Sound.SOUND_MARIO_YAHOO, "bull_rider_voxc" },
-            { Mario.Enum.Sound.SOUND_MARIO_HOOHOO, "vox_hiccup" },
-            { Mario.Enum.Sound.SOUND_MARIO_IMA_TIRED, "vox_yawn_stretch" },
-            { Mario.Enum.Sound.SOUND_MARIO_DYING, "vox_drunk" },
-            { Mario.Enum.Sound.SOUND_MARIO_DOH, "counter_voxchop" },
-            { Mario.Enum.Sound.SOUND_MARIO_UH, "vox_oops" },
+            { Sound.SOUND_PLAYER_YAHOO, "bull_rider_voxc" },
+            { Sound.SOUND_PLAYER_HOOHOO, "vox_hiccup" },
+            { Sound.SOUND_PLAYER_IMA_TIRED, "vox_yawn_stretch" },
+            { Sound.SOUND_PLAYER_DYING, "vox_drunk" },
+            { Sound.SOUND_PLAYER_DOH, "counter_voxchop" },
+            { Sound.SOUND_PLAYER_UH, "vox_oops" },
 
-            { Mario.Enum.Sound.SOUND_GENERAL_FLAME_OUT, "fireplace_off" },
+            { Sound.SOUND_GENERAL_FLAME_OUT, "fireplace_off" },
 
-            { Mario.Enum.Sound.SOUND_ACTION_TERRAIN_BODY_HIT_GROUND, "body_falling" },
+            { Sound.SOUND_ACTION_TERRAIN_BODY_HIT_GROUND, "body_falling" },
 
-            { Mario.Enum.Sound.SOUND_MOVING_LAVA_BURN, "coffee_grind_loop" },
+            { Sound.SOUND_MOVING_LAVA_BURN, "coffee_grind_loop" },
 
             { 1, "sting_potion_funny" }
         };
@@ -1681,23 +1800,21 @@ namespace FSO.LotView.Components
                 "footstep_terrain",
             ];
 
-        public void SetSource(VisualMario visual)
+        public void SetSource(VisualPlatformer visual)
         {
             Source = visual;
         }
 
         public override void play_sound(uint soundBits, Vec3f pos)
         {
-            // TODO: play from mario location...
-
             const uint TerrainMask = 0xFFF0FFFF;
 
             string evt = null;
 
-            if ((soundBits & TerrainMask) == Mario.Enum.Sound.SOUND_ACTION_TERRAIN_STEP)
+            if ((soundBits & TerrainMask) == Sound.SOUND_ACTION_TERRAIN_STEP)
             {
                 int hardness = 2;
-                var visualPos = Component.MyMario.Position ?? default;
+                var visualPos = Component.MyPlayer.Position ?? default;
                 ushort floorTileId = Component.GetPreciseFloor(new Vector3(visualPos.X, visualPos.Z, visualPos.Y) / 3f);
 
                 if (floorTileId == 0)

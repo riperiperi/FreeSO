@@ -203,8 +203,9 @@ namespace FSO.LotView.Components
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float GetElevationPoint(int x, int y)
         {
-            if (x >= Size.Width || y >= Size.Height) return 0;
-            return GroundHeight[((y) * (Size.Width) + (x))] * Bp.TerrainFactor * 3;
+            x = Math.Clamp(x, 1, Size.Width - 1);
+            y = Math.Clamp(y, 1, Size.Height - 1);
+            return GroundHeight[y * Size.Width + x] * Bp.TerrainFactor * 3;
         }
 
         public void RegenTerrain(GraphicsDevice device, Blueprint blueprint)

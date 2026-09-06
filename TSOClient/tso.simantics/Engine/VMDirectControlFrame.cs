@@ -700,13 +700,11 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        public Point EdgeCheck(int marginTiles)
+        public static Point EdgeCheck(LotTilePos position, int marginTiles, int w, int h)
         {
-            var position = Caller.Position;
-
             int marginSubtiles = marginTiles << 4;
-            int w = VM.Context.Architecture.Width << 4;
-            int h = VM.Context.Architecture.Height << 4;
+            w <<= 4;
+            h <<= 4;
 
             var result = new Point();
 
@@ -716,6 +714,12 @@ namespace FSO.SimAntics.Engine
             if (position.y > h - marginSubtiles) result.Y++;
 
             return result;
+        }
+
+        public Point EdgeCheck(int marginTiles)
+        {
+            var arch = VM.Context.Architecture;
+            return EdgeCheck(Caller.Position, marginTiles, arch.Width, arch.Height);
         }
 
         #region VM Marshalling Functions

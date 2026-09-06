@@ -1,4 +1,6 @@
-﻿namespace FSO.LotView.Components.Model
+﻿using FSO.LotView.Model;
+
+namespace FSO.LotView.Components.Model
 {
     public struct SM64VisualState
     {
@@ -19,5 +21,10 @@
         public ushort AnimTimer;
         public int AnimFrameAccelAssist;
         public int AnimAccel;
+
+        public LotTilePos? ToPos()
+        {
+            return new LotTilePos((short)MathF.Round(PosX / 15f), (short)MathF.Round(PosZ / 15f), 1);
+        }
     }
 }

@@ -1565,6 +1565,55 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        private bool FreeRoamEdge(VMAvatar ava, Point edge)
+        {
+            // User appears to be attempting to leave the property. See if the lot can be entered and then tell the client to go and join it.
+
+            var location = LotPersist.location;
+            var coords = MapCoordinates.Unpack(location);
+            var cityOffset = LotTransitionInfo.RelativeChangeLotToCity(new Point(edge.X, edge.Y));
+            coords.X += (ushort)cityOffset.X;
+            coords.Y += (ushort)cityOffset.Y;
+
+            if (Realestate.IsOpenable(coords.X, coords.Y))
+            {
+                if (!TryBeginFreeRoam(ava.PersistID)) return true;
+
+                LOG.Info($"Edge check {edge} ({coords.X}, {coords.Y}) {Stopwatch.GetTimestamp()}");
+
+                var pid = ava.PersistID;
+
+                var info = new LotTransitionInfo()
+                {
+                    BeforeLocation = LotPersist.location,
+                    RelativeChangeX = edge.X,
+                    RelativeChangeY = edge.Y,
+
+                    AvatarLotTilePosX = ava.Position.x,
+                    AvatarLotTilePosY = ava.Position.y,
+                    AvatarDirection = ava.RadianDirection,
+
+                    Type = LotTransitionType.DirectControl
+                };
+
+                SaveAvatar(ava, () =>
+                {
+                    Host.ReleaseDbAvatarClaim(pid);
+
+                    Lot.ForwardCommand(new VMNetBeginFreeRoamCmd()
+                    {
+                        AvatarPID = pid,
+                        TargetLot = MapCoordinates.Pack(coords.X, coords.Y),
+                        Transition = info
+                    });
+                });
+
+                return true;
+            }
+
+            return false;
+        }
+
         public void TickFreeRoam()
         {
             foreach (var obj in Lot.Context.ObjectQueries.Avatars)
@@ -1585,47 +1634,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     var edge = dcFrame.EdgeCheck(1);
                     if (edge != default)
                     {
-                        // User appears to be attempting to leave the property. See if the lot can be entered and then tell the client to go and join it.
-
-                        var location = LotPersist.location;
-                        var coords = MapCoordinates.Unpack(location);
-                        var cityOffset = LotTransitionInfo.RelativeChangeLotToCity(new Point(edge.X, edge.Y));
-                        coords.X += (ushort)cityOffset.X;
-                        coords.Y += (ushort)cityOffset.Y;
-
-                        if (Realestate.IsOpenable(coords.X, coords.Y))
-                        {
-                            if (!TryBeginFreeRoam(ava.PersistID)) continue;
-
-                            LOG.Info($"Edge check {edge} ({coords.X}, {coords.Y}) {Stopwatch.GetTimestamp()}");
-
-                            var pid = ava.PersistID;
-
-                            var info = new LotTransitionInfo()
-                            {
-                                BeforeLocation = LotPersist.location,
-                                RelativeChangeX = edge.X,
-                                RelativeChangeY = edge.Y,
-
-                                AvatarLotTilePosX = ava.Position.x,
-                                AvatarLotTilePosY = ava.Position.y,
-                                AvatarDirection = ava.RadianDirection,
-
-                                Type = LotTransitionType.DirectControl
-                            };
-
-                            SaveAvatar(ava, () =>
-                            {
-                                Host.ReleaseDbAvatarClaim(pid);
-
-                                Lot.ForwardCommand(new VMNetBeginFreeRoamCmd()
-                                {
-                                    AvatarPID = pid,
-                                    TargetLot = MapCoordinates.Pack(coords.X, coords.Y),
-                                    Transition = info
-                                });
-                            });
-                        }
+                        if (FreeRoamEdge(ava, edge)) continue;
                     }
                     // Preload lots if the avatar is close to the edge.
                     // TODO
@@ -1692,6 +1701,20 @@ namespace FSO.Server.Servers.Lot.Domain
                                     Transition = info
                                 });
                             });
+                        }
+                    }
+                }
+                
+                if (ava.Platformer.Active)
+                {
+                    var pos = ava.Platformer.ToPos();
+                    if (pos != null)
+                    {
+                        var edge = VMDirectControlFrame.EdgeCheck(pos.Value, 1, Lot.Context.Architecture.Width, Lot.Context.Architecture.Height);
+
+                        if (edge != default)
+                        {
+                            if (FreeRoamEdge(ava, edge)) continue;
                         }
                     }
                 }

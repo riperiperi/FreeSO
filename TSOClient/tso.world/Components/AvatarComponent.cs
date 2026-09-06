@@ -20,7 +20,7 @@ namespace FSO.LotView.Components
         public int ALevel = 0;
         public _2DStandaloneSprite HeadlineSprite;
 
-        internal VisualMario MyMario;
+        internal VisualPlatformer MyPlatformer;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -49,7 +49,7 @@ namespace FSO.LotView.Components
 
         public Vector3 GetPelvisPosition()
         {
-            return MyMario == null ? GetRealPelvisPosition() : MyMario.GetMarioPosition();
+            return MyPlatformer == null ? GetRealPelvisPosition() : MyPlatformer.GetPlayerPosition();
         }
 
         public double RadianDirection;
@@ -129,9 +129,9 @@ namespace FSO.LotView.Components
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition;
             Vector4 projected;
 
-            if (MyMario != null)
+            if (MyPlatformer != null)
             {
-                var pos = MyMario.GetMarioPosition();
+                var pos = MyPlatformer.GetPlayerPosition();
                 projected = Vector4.Transform(new Vector4(pos.X * 3, pos.Z * 3 + 1.5f, pos.Y * 3, 1), world.View * world.Projection);
             }
             else

@@ -816,7 +816,7 @@ namespace FSO.LotView.Components
 
             device.RasterizerState = RasterizerState.CullClockwise;
             device.BlendState = BlendState.AlphaBlend;
-            int maxLevel = world.ScrollAnchor?.MyMario != null ? world.Level - 2 : world.Level - 1;
+            int maxLevel = world.ScrollAnchor?.MyPlatformer != null ? world.Level - 2 : world.Level - 1;
             for (int i = 0; i < Drawgroups.Length; i++)
             {
                 if (i > maxLevel) break;

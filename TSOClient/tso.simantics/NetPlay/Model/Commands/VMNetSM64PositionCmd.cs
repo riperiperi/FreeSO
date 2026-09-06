@@ -10,12 +10,19 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            // Tell the SM64 component about this sim's mario instance.
-            if (caller == null || caller.WorldUI == null || !(caller.WorldUI is AvatarComponent)) return false;
+            // Tell the SM64 component about this sim's platformer instance.
+            if (caller == null)
+            {
+                return false;
+            }
+
+            caller.Platformer = VisualState;
+
+            if (caller.WorldUI == null || !(caller.WorldUI is AvatarComponent)) return true;
 
             if (caller.PersistID != vm.MyUID)
             {
-                vm.Context.Blueprint.SM64?.UpdateOtherMario((AvatarComponent)caller.WorldUI, VisualState);
+                vm.Context.Blueprint.SM64?.UpdateOtherPlayer((AvatarComponent)caller.WorldUI, VisualState);
             }
 
             return true;

@@ -201,7 +201,7 @@ namespace FSO.LotView.Platform
                     bestDistance = intr.Value;
                 }
 
-                if (sim.MyMario != null)
+                if (sim.MyPlatformer != null)
                 {
                     pos = sim.GetRealPelvisPosition() * 3;
                     pos = new Vector3(pos.X, pos.Z, pos.Y);

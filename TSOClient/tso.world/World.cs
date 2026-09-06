@@ -404,9 +404,9 @@ namespace FSO.LotView
 
             float targHeight;
 
-            if (State.ScrollAnchor?.MyMario != null)
+            if (State.ScrollAnchor?.MyPlatformer != null)
             {
-                targHeight = State.ScrollAnchor.MyMario.GetMarioPosition().Z * 3;
+                targHeight = State.ScrollAnchor.MyPlatformer.GetPlayerPosition().Z * 3;
             }
             else
             {
@@ -503,9 +503,9 @@ namespace FSO.LotView
             {
                 pelvisCenter = isFirstPerson ? ((AvatarComponent)comp).GetHeadlinePos() + comp.Position : ((AvatarComponent)comp).GetPelvisPosition();
 
-                if (((AvatarComponent)comp).MyMario != null)
+                if (((AvatarComponent)comp).MyPlatformer != null)
                 {
-                    level = ((AvatarComponent)comp).MyMario.DetermineLevel(false);
+                    level = ((AvatarComponent)comp).MyPlatformer.DetermineLevel(false);
                 }
             }
             else

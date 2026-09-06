@@ -357,7 +357,7 @@ namespace FSO.LotView.Model
             this.Avatars.Remove(avatar);
             HeadlineObjects.Remove(avatar);
 
-            SM64?.RemoveMario(avatar);
+            SM64?.RemovePlayer(avatar);
         }
 
         public void SignalWallChange()

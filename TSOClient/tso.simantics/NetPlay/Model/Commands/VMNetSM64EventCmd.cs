@@ -10,7 +10,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            // Tell the SM64 component about this sim's mario instance.
+            // Tell the SM64 component about this sim's platformer instance.
             if (caller == null || caller.WorldUI == null || !(caller.WorldUI is AvatarComponent)) return false;
 
             if (caller.PersistID != vm.MyUID)

@@ -23,6 +23,7 @@ using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model.Platform;
 using FSO.SimAntics.Model.TS1Platform;
 using FSO.Common.Model;
+using FSO.LotView.Components.Model;
 
 namespace FSO.SimAntics
 {
@@ -159,6 +160,7 @@ namespace FSO.SimAntics
         public string[] SwimAnimations = new string[50];
         private STR BodyStrings;
         private VMAvatarType AvatarType;
+        public SM64VisualState Platformer;
         public override bool MovesOften
         {
             get

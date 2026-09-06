@@ -1,6 +1,6 @@
 ﻿using FSO.Vitaboy.Model;
-using Mario.Geo;
-using Mario.Math;
+using FSO.Platformer.Geo;
+using FSO.Platformer.Math;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;

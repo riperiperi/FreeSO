@@ -989,6 +989,14 @@ namespace FSO.Client.UI.Screens
 
                     newCameras.Camera3D.ResetCameraHeight(World);
                 }
+
+                var newBp = World.Architecture.Blueprint;
+                var lastBp = lastWorld.Architecture.Blueprint;
+
+                if (newBp.SM64 != null && lastBp.SM64 != null)
+                {
+                    newBp.SM64.Inherit(lastBp.SM64, info.RelativeChangeX, info.RelativeChangeY, heightDiff);
+                }
             }
 
             TransitionCameras = null;

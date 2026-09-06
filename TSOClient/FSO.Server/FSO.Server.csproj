@@ -48,8 +48,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Mario">
-      <HintPath>..\tso.world\Mario.dll</HintPath>
+    <Reference Include="FSO.Platformer">
+      <HintPath>..\tso.world\FSO.Platformer.dll</HintPath>
     </Reference>
   </ItemGroup>
 
