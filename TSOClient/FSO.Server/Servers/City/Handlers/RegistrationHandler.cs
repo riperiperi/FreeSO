@@ -141,6 +141,8 @@ namespace FSO.Server.Servers.City.Handlers
 
             uint newId = 0;
 
+            bool isArchive = Context.Config.Archive != null;
+
             using (var db = DAFactory.Get())
             {
                 var newAvatar = new DbAvatar();
@@ -168,6 +170,11 @@ namespace FSO.Server.Servers.City.Handlers
                 if ((user?.is_moderator) ?? false)
                 {
                     newAvatar.moderation_level = 1;
+
+                    if (!isArchive)
+                    {
+                        newAvatar.budget = Math.Max(newAvatar.budget, 100000);
+                    }
                 }
 
                 try
