@@ -37,12 +37,12 @@ namespace FSO.Files.Formats.IFF.Chunks
             return true;
         }
 
-        public DGRP3DMesh Get(DGRP dgrp, GraphicsDevice device)
+        public DGRP3DMesh Get(DGRP dgrp, OBJD obj, GraphicsDevice device)
         {
             if (Cached == null)
             {
                 var stream = new MemoryStream(data);
-                Cached = new DGRP3DMesh(dgrp, stream, device);
+                Cached = new DGRP3DMesh(dgrp, obj, stream, device);
             }
             data = null;
             return Cached;

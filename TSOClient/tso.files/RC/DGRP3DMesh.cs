@@ -1,4 +1,5 @@
-﻿using FSO.Common.MeshSimplify;
+﻿using FSO.Common;
+using FSO.Common.MeshSimplify;
 using FSO.Common.Rendering;
 using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
@@ -6,13 +7,9 @@ using FSO.Files.RC.Utils;
 using FSO.Files.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace FSO.Files.RC
 {
@@ -22,7 +19,7 @@ namespace FSO.Files.RC
         //2: normals
         //3: depth mask (for sinks, fireplaces)
         public static int CURRENT_VERSION = 3;
-        public static int CURRENT_RECONSTRUCT = 2;
+        public static int CURRENT_RECONSTRUCT = 15;
 
         public static DGRPRCParams DefaultParams = new DGRPRCParams();
         public static Dictionary<string, DGRPRCParams> ParamsByIff = new Dictionary<string, DGRPRCParams>()
@@ -32,42 +29,85 @@ namespace FSO.Files.RC
             {"windows5.iff", new DGRPRCParams() { DoorFix = true } },
 
             {"windowslodge.iff", new DGRPRCParams() { DoorFix = true } },
-            {"doors.iff", new DGRPRCParams() { DoorFix = true } },
+            {"doors.iff", new DGRPRCParams() { DoorFix = true, Flags = DGRPRCFlags.DisableFlip } },
             {"doors5.iff", new DGRPRCParams() { DoorFix = true } },
             {"doorsmagic.iff", new DGRPRCParams() { DoorFix = true } },
 
             {"phones.iff", new DGRPRCParams() { Rotations = new bool[] {true, true, false, false }, StartDGRP = 200, EndDGRP = 207 } },
 
-            {"countercasino.iff", new DGRPRCParams() { CounterFix = true } },
-            {"counters.iff", new DGRPRCParams() { CounterFix = true } },
-            {"counters2.iff", new DGRPRCParams() { CounterFix = true } },
-            {"counters3.iff", new DGRPRCParams() { CounterFix = true } },
-            {"counters4.iff", new DGRPRCParams() { CounterFix = true } },
-            {"counters5.iff", new DGRPRCParams() { CounterFix = true } },
-            {"counters6.iff", new DGRPRCParams() { CounterFix = true } },
-            {"counterwall.iff", new DGRPRCParams() { CounterFix = true } },
-            {"oj-rest-counters.iff", new DGRPRCParams() { CounterFix = true } },
-            {"oj-rest-pickup-counters.iff", new DGRPRCParams() { CounterFix = true } },
-            {"dishwashers.iff", new DGRPRCParams() { CounterFix = true } },
-            {"trashcompactor.iff", new DGRPRCParams() { CounterFix = true } },
+            {"countercasino.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"counters.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"counters2.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"counters3.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"counters4.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"counters5.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"counters6.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"counterwall.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"oj-rest-counters.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"oj-rest-pickup-counters.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFix } },
+            {"dishwashers.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFixBasic } },
+            {"trashcompactor.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFixBasic } },
             {"3tileclock.iff", new DGRPRCParams() { BlenderTweak = true } },
 
-            {"fencessuperstar.iff", new DGRPRCParams() { CounterFix = true } },
-            {"fencesnowbank.iff", new DGRPRCParams() { CounterFix = true } },
-            {"fencesunleashed.iff", new DGRPRCParams() { CounterFix = true } },
-            {"fencelodgestone.iff", new DGRPRCParams() { CounterFix = true } },
-            {"fenceparty.iff", new DGRPRCParams() { CounterFix = true } },
-            {"fencecarnival.iff", new DGRPRCParams() { CounterFix = true } },
-            {"fencesspellbound.iff", new DGRPRCParams() { CounterFix = true } },
-            {"columnarchmagic.iff", new DGRPRCParams() { CounterFix = true } },
+            {"fencessuperstar.iff", new DGRPRCParams() { Flags = DGRPRCFlags.ObjectFenceFix } },
+            {"fencesnowbank.iff", new DGRPRCParams() { Flags = DGRPRCFlags.ObjectFenceFix } },
+            {"fencesunleashed.iff", new DGRPRCParams() { Flags = DGRPRCFlags.ObjectFenceFix } },
+            {"fencelodgestone.iff", new DGRPRCParams() { Flags = DGRPRCFlags.ObjectFenceFix } },
+            {"fencecarnival.iff", new DGRPRCParams() { Flags = DGRPRCFlags.ObjectFenceFix } },
+            {"fencesspellbound.iff", new DGRPRCParams() { Flags = DGRPRCFlags.ObjectFenceFix } },
+            {"columnarchmagic.iff", new DGRPRCParams() { Flags = DGRPRCFlags.ObjectFenceFix } },
 
-            {"awnings.iff", new DGRPRCParams() { CounterFix = true } },
-            {"awnings3.iff", new DGRPRCParams() { CounterFix = true } },
-            {"awnings4.iff", new DGRPRCParams() { CounterFix = true } },
-            {"awningthatch.iff", new DGRPRCParams() { CounterFix = true } }
+            {"awnings.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFixBasic } },
+            {"awnings3.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFixBasic } },
+            {"awnings4.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFixBasic } },
+            {"awningthatch.iff", new DGRPRCParams() { Flags = DGRPRCFlags.CounterFixBasic } },
+
+            {"plantboxfenceunleashed.iff", new DGRPRCParams() { Flags = DGRPRCFlags.TileFix } },
+            {"fenceflowersnow.iff", new(DGRPRCFlags.ObjectFenceFix) },
+            {"conveyorbelt.iff", new(DGRPRCFlags.TileFix) },
+            {"castlefence.iff", new(DGRPRCFlags.ObjectFenceFix) },
+            {"fenceshd.iff", new(DGRPRCFlags.ObjectFenceFix) },
+            {"flowersoutdoor.iff", new(DGRPRCFlags.TileFix) },
+            {"columnarchscifi.iff", new(DGRPRCFlags.ObjectFenceFix) },
+
+            {"fenceparty.iff", new(DGRPRCFlags.ObjectFenceFix) },
+            {"fences.iff", new(DGRPRCFlags.ObjectFenceFix) },
+
+            // depends on dgrp # (box left mid l t x)
+            {"fencesstonevacation.iff", new(DGRPRCFlags.ObjectFence6Graphic) },
+            {"plantboxfence.iff", new(DGRPRCFlags.ObjectFence6Graphic) },
+
+            // needs one flip to complete the other side?
+            // tablesend5
+            
+            {"elevatorfreight.iff", new(DGRPRCFlags.TileFix) { Rotations = [true, false, true, false] } },
+            {"elevatorhotel.iff", new(DGRPRCFlags.TileFix) { Rotations = [true, false, true, false] } },
+            {"elevatormodern.iff", new(DGRPRCFlags.TileFix) { Rotations = [true, false, true, false] } },
+            {"paintings2.iff", new(DGRPRCFlags.DisableFlip | DGRPRCFlags.BackfaceAdjust) },
+            {"paintings3.iff", new(DGRPRCFlags.DisableFlip | DGRPRCFlags.BackfaceAdjust) },
+            {"paintings4.iff", new(DGRPRCFlags.DisableFlip | DGRPRCFlags.BackfaceAdjust) },
+            {"paintings7.iff", new(DGRPRCFlags.DisableFlip | DGRPRCFlags.BackfaceAdjust) },
+            {"mirrors2.iff", new(DGRPRCFlags.DisableFlip | DGRPRCFlags.BackfaceAdjust) },
+            {"windows4.iff", new(DGRPRCFlags.DisableFlip) },
+
+            {"timer.iff", new(DGRPRCFlags.DisableFlip) },
+            {"fso_fireball.iff", new(DGRPRCFlags.IncreaseDensity) },
         };
 
-        //STATIC: multithreading for 
+        /// <summary>
+        /// Disabling mesh simplification for these trees costs too much for the benefit.
+        /// </summary>
+        public string[] TreeExclusions =
+        [
+            "Poplar",
+            "Cypress",
+            "Saguaro",
+            "AgaveBloom",
+            "PricklyPear",
+            "Banyan",
+            "Banyon",
+            "Barrel Palm"
+        ];
 
         public static Queue<Action> QueuedRC = new Queue<Action>();
         public static AutoResetEvent NewRecon = new AutoResetEvent(false);
@@ -154,7 +194,7 @@ namespace FSO.Files.RC
         /// <param name="dgrp">The DGRP this mesh represents</param>
         /// <param name="source">Source stream containing FSOM mesh data</param>
         /// <param name="gd">Graphics device</param>
-        public DGRP3DMesh(DGRP dgrp, Stream source, GraphicsDevice gd)
+        public DGRP3DMesh(DGRP dgrp, OBJD obj, Stream source, GraphicsDevice gd)
         {
             Geoms = new List<Dictionary<Texture2D, DGRP3DGeometry>>();
             if (AssetStreaming.LoadingType > AssetStreamingMode.None)
@@ -174,7 +214,7 @@ namespace FSO.Files.RC
                     {
                         AssetStreaming.InStreamUpdate(() =>
                         {
-                            CleanupFailedLoad(dgrp, gd, null);
+                            CleanupFailedLoad(dgrp, obj, gd, null);
                             AssetStreaming.RemoveLoadingResource();
                         });
                     }
@@ -216,7 +256,7 @@ namespace FSO.Files.RC
         /// <param name="dgrp">The DGRP this mesh represents</param>
         /// <param name="filePath">Path to a file containing FSOM mesh data</param>
         /// <param name="gd">Graphics device</param>
-        public DGRP3DMesh(DGRP dgrp, string filePath, GraphicsDevice gd)
+        public DGRP3DMesh(DGRP dgrp, OBJD obj, string filePath, GraphicsDevice gd)
         {
             Geoms = new List<Dictionary<Texture2D, DGRP3DGeometry>>();
             if (AssetStreaming.LoadingType > AssetStreamingMode.None)
@@ -240,7 +280,7 @@ namespace FSO.Files.RC
                     {
                         AssetStreaming.InStreamUpdate(() =>
                         {
-                            CleanupFailedLoad(dgrp, gd, filePath);
+                            CleanupFailedLoad(dgrp, obj, gd, filePath);
                             AssetStreaming.RemoveLoadingResource();
                         });
                     }
@@ -264,11 +304,18 @@ namespace FSO.Files.RC
             }
         }
 
-        private void CleanupFailedLoad(DGRP dgrp, GraphicsDevice gd, string filePath)
+        private void CleanupFailedLoad(DGRP dgrp, OBJD obj, GraphicsDevice gd, string filePath)
         {
-            // TODO: force reconstruction to run
             UnloadedGeoms?.Clear();
-            CompleteFSOMLoad(gd);
+
+            if (obj != null)
+            {
+                GenerateMesh(dgrp, obj, gd);
+            }
+            else
+            {
+                CompleteFSOMLoad(gd);
+            }
         }
 
         private void LoadData(DGRP dgrp, Stream source, GraphicsDevice gd)
@@ -320,20 +367,23 @@ namespace FSO.Files.RC
 
         private void CompleteFSOMLoad(GraphicsDevice gd)
         {
-            foreach (var group in UnloadedGeoms)
+            if (UnloadedGeoms != null)
             {
-                var d = new Dictionary<Texture2D, DGRP3DGeometry>();
-                foreach (var geom in group)
+                foreach (var group in UnloadedGeoms)
                 {
-                    geom.CompleteFSOMLoad(gd);
-
-                    if (geom.Pixel != null)
+                    var d = new Dictionary<Texture2D, DGRP3DGeometry>();
+                    foreach (var geom in group)
                     {
-                        d.Add(geom.Pixel, geom);
-                    }
-                }
+                        geom.CompleteFSOMLoad(gd);
 
-                Geoms.Add(d);
+                        if (geom.Pixel != null)
+                        {
+                            d.Add(geom.Pixel, geom);
+                        }
+                    }
+
+                    Geoms.Add(d);
+                }
             }
 
             DepthMask?.CompleteFSOMLoad(gd);
@@ -341,11 +391,315 @@ namespace FSO.Files.RC
 
         public string SaveDirectory;
 
-        public DGRP3DMesh(DGRP dgrp, OBJD obj, GraphicsDevice gd, string saveDirectory)
+        private static void ExtrapolateEdges(List<VertexPositionTexture> verts, Dictionary<int, int> dict, uint rotation, int w, bool xp, bool yp, bool xn, bool yn, bool noEdge)
         {
+            //axis extrapolation
+            //clip: -0.4 to 0.4
+
+            //identify vertices very close to clipping range(border)
+            //! for each vertex outwith clipping range
+            //- idendify closest border pixel bp in image space
+            //- result.zy = bp.zy
+            //- result.x = (resultIMAGE.x - bpIMAGE.x) / 64;
+            //- clip x to -0.5, 0.5f.
+
+            var clip = 0.4;
+            var bWidth = 0.02;
+            var border1 = new List<Tuple<Vector2, Vector3>>();
+            var invalid1 = new List<KeyValuePair<int, int>>();
+            var border2 = new List<Tuple<Vector2, Vector3>>();
+            var invalid2 = new List<KeyValuePair<int, int>>();
+
+            if (xp || xn)
+            {
+                foreach (var vert in dict)
+                {
+                    var vpos = verts[vert.Value].Position;
+                    var dist = Math.Abs(vpos.X);
+                    if (dist > clip)
+                    {
+                        if (vpos.X > 0)
+                            invalid1.Add(vert);
+                        else
+                            invalid2.Add(vert);
+                    }
+                    else if (dist > (clip - bWidth))
+                    {
+                        if (vpos.X > 0)
+                            border1.Add(new Tuple<Vector2, Vector3>(new Vector2(vert.Key % w, vert.Key / w), vpos));
+                        else
+                            border2.Add(new Tuple<Vector2, Vector3>(new Vector2(vert.Key % w, vert.Key / w), vpos));
+                    }
+                }
+
+                var edge = 0.499f + 0.001f * (rotation % 2);
+
+                if (border1.Count > 0 && xp)
+                {
+                    foreach (var vert in invalid1)
+                    {
+                        var vstr = verts[vert.Value];
+                        var pos2d = new Vector2(vert.Key % w, vert.Key / w);
+                        var vpos = vstr.Position;
+                        var closest = border1.OrderBy(x => Vector2.DistanceSquared(x.Item1, pos2d)).First();
+
+                        var dist = Vector2.Distance(closest.Item1, pos2d);
+
+                        vpos.X = closest.Item2.X + Vector2.Distance(closest.Item1, pos2d) / 71.55f;
+
+                        if (noEdge || vpos.X <= 0.5f)
+                        {
+                            vpos.Y = closest.Item2.Y;
+                            vpos.Z = closest.Item2.Z;
+                        }
+
+                        if (vpos.X > 0.5f)
+                        {
+                            vpos.X = edge;
+                        }
+
+                        vstr.Position = vpos;
+                        verts[vert.Value] = vstr;
+                    }
+                }
+
+                if (border2.Count > 0 && xn)
+                {
+                    foreach (var vert in invalid2)
+                    {
+                        var vstr = verts[vert.Value];
+                        var pos2d = new Vector2(vert.Key % w, vert.Key / w);
+                        var vpos = vstr.Position;
+                        var closest = border2.OrderBy(x => Vector2.DistanceSquared(x.Item1, pos2d)).First();
+
+                        vpos.X = closest.Item2.X - Vector2.Distance(closest.Item1, pos2d) / 71.55f;
+
+                        if (noEdge || vpos.X >= -0.5f)
+                        {
+                            vpos.Y = closest.Item2.Y;
+                            vpos.Z = closest.Item2.Z;
+                        }
+
+                        if (vpos.X < -0.5f)
+                        {
+                            vpos.X = -edge;
+                        }
+
+                        vstr.Position = vpos;
+                        verts[vert.Value] = vstr;
+                    }
+                }
+
+                if (yp || yn)
+                {
+                    border1.Clear();
+                    invalid1.Clear();
+                    border2.Clear();
+                    invalid2.Clear();
+                }
+            }
+
+            if (yp || yn)
+            {
+                foreach (var vert in dict)
+                {
+                    var vpos = verts[vert.Value].Position;
+                    var dist = Math.Abs(vpos.Z);
+                    if (dist > clip)
+                    {
+                        if (vpos.Z > 0)
+                            invalid1.Add(vert);
+                        else
+                            invalid2.Add(vert);
+                    }
+                    else if (dist > (clip - bWidth))
+                    {
+                        if (vpos.Z > 0)
+                            border1.Add(new Tuple<Vector2, Vector3>(new Vector2(vert.Key % w, vert.Key / w), vpos));
+                        else
+                            border2.Add(new Tuple<Vector2, Vector3>(new Vector2(vert.Key % w, vert.Key / w), vpos));
+                    }
+                }
+
+                var edge = 0.499f + 0.001f * (rotation / 2);
+
+                if (border1.Count > 0 && yp)
+                {
+                    foreach (var vert in invalid1)
+                    {
+                        var vstr = verts[vert.Value];
+                        var pos2d = new Vector2(vert.Key % w, vert.Key / w);
+                        var vpos = vstr.Position;
+                        var closest = border1.OrderBy(x => Vector2.DistanceSquared(x.Item1, pos2d)).First();
+
+                        vpos.Z = closest.Item2.Z + Vector2.Distance(closest.Item1, pos2d) / 71.55f;
+
+                        if (noEdge || vpos.Z <= 0.5f)
+                        {
+                            vpos.Y = closest.Item2.Y;
+                            vpos.X = closest.Item2.X;
+                        }
+
+                        if (vpos.Z > 0.5f)
+                        {
+                            vpos.Z = edge;
+                        }
+
+                        vstr.Position = vpos;
+                        verts[vert.Value] = vstr;
+                    }
+                }
+
+                if (border2.Count > 0 && yn)
+                {
+                    foreach (var vert in invalid2)
+                    {
+                        var vstr = verts[vert.Value];
+                        var pos2d = new Vector2(vert.Key % w, vert.Key / w);
+                        var vpos = vstr.Position;
+                        var closest = border2.OrderBy(x => Vector2.DistanceSquared(x.Item1, pos2d)).First();
+
+                        vpos.Z = closest.Item2.Z - Vector2.Distance(closest.Item1, pos2d) / 71.55f;
+
+                        if (noEdge || vpos.Z >= -0.5f)
+                        {
+                            vpos.Y = closest.Item2.Y;
+                            vpos.X = closest.Item2.X;
+                        }
+
+                        if (vpos.Z < -0.5f)
+                        {
+                            vpos.Z = -edge;
+                        }
+
+                        vstr.Position = vpos;
+                        verts[vert.Value] = vstr;
+                    }
+                }
+            }
+        }
+
+        public DGRP3DMesh(DGRP dgrp, OBJD obj, GraphicsDevice gd)
+        {
+            Geoms = new List<Dictionary<Texture2D, DGRP3DGeometry>>();
+
+            GenerateMesh(dgrp, obj, gd);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ulong EdgeID(int i1, int i2)
+        {
+            return (((ulong)Math.Min((uint)i1, (uint)i2)) << 32) | ((ulong)Math.Max((uint)i1, (uint)i2));
+        }
+
+        private void Extrude(List<int> indices, List<VertexPositionTexture> vertices, float dist)
+        {
+            Dictionary<ulong, int> edgeCount = [];
+
+            var inds = CollectionsMarshal.AsSpan(indices);
+            var verts = CollectionsMarshal.AsSpan(vertices);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void addEdge(int i1, int i2)
+            {
+                ulong id = EdgeID(i1, i2);
+
+                if (!edgeCount.TryGetValue(id, out int count))
+                {
+                    edgeCount[id] = 1;
+                }
+                else
+                {
+                    edgeCount[id] += count;
+                }
+            }
+
+            for (int i = 0; i < inds.Length; i += 3)
+            {
+                addEdge(inds[i], inds[i + 1]);
+                addEdge(inds[i + 1], inds[i + 2]);
+                addEdge(inds[i + 2], inds[i]);
+            }
+
+            Dictionary<int, (int, Vector3)> borderVertices = [];
+
+            foreach (var pair in edgeCount)
+            {
+                if (pair.Value == 1)
+                {
+                    var id = pair.Key;
+                    borderVertices[(int)id] = default;
+                    borderVertices[(int)(id >> 32)] = default;
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static void offsetBorder(ref (int, Vector3) accumulator, int iFrom, int iTo, Span<VertexPositionTexture> verts)
+            {
+                var vFrom = verts[iFrom].Position;
+                var vTo = verts[iTo].Position;
+
+                var dir = vTo - vFrom;
+                dir.Normalize();
+
+                if (!float.IsNaN(dir.X))
+                {
+                    accumulator.Item1++;
+                    accumulator.Item2 += dir;
+                }
+            }
+
+            for (int i = 0; i < inds.Length; i += 3)
+            {
+                int i0 = inds[i];
+                int i1 = inds[i + 1];
+                int i2 = inds[i + 2];
+
+                bool border0 = borderVertices.TryGetValue(i0, out var accumulator0);
+                bool border1 = borderVertices.TryGetValue(i1, out var accumulator1);
+                bool border2 = borderVertices.TryGetValue(i2, out var accumulator2);
+
+                if (border0)
+                {
+                    if (!border1) offsetBorder(ref accumulator0, i1, i0, verts);
+                    if (!border2) offsetBorder(ref accumulator0, i2, i0, verts);
+                    borderVertices[i0] = accumulator0;
+                }
+
+                if (border1)
+                {
+                    if (!border0) offsetBorder(ref accumulator1, i0, i1, verts);
+                    if (!border2) offsetBorder(ref accumulator1, i2, i1, verts);
+                    borderVertices[i1] = accumulator1;
+                }
+
+                if (border2)
+                {
+                    if (!border1) offsetBorder(ref accumulator2, i1, i2, verts);
+                    if (!border0) offsetBorder(ref accumulator2, i0, i2, verts);
+                    borderVertices[i2] = accumulator2;
+                }
+            }
+
+            foreach (var pair in borderVertices)
+            {
+                var index = pair.Key;
+                var accumulator = pair.Value;
+
+                if (accumulator.Item1 > 0)
+                {
+                    var dir = accumulator.Item2;
+                    dir.Normalize();
+                    verts[index].Position += dir * dist;
+                }
+            }
+        }
+
+        private void GenerateMesh(DGRP dgrp, OBJD obj, GraphicsDevice gd)
+        {
+            var saveDirectory = Path.Combine(FSOEnvironment.UserDir, "MeshCache/");
             ReconstructVersion = CURRENT_RECONSTRUCT;
             SaveDirectory = saveDirectory;
-            Geoms = new List<Dictionary<Texture2D, DGRP3DGeometry>>();
             if (dgrp == null) return;
             Name = obj.ChunkParent.Filename.Replace('.', '_') + "_" + dgrp.ChunkID;
             var lower = obj.ChunkParent.Filename.ToLowerInvariant();
@@ -356,6 +710,14 @@ namespace FSO.Files.RC
             }
             if (!config.InRange(dgrp.ChunkID)) config = DefaultParams;
 
+            if (obj.ChunkParent.Filename.Contains("tree", StringComparison.InvariantCultureIgnoreCase) && !TreeExclusions.Any(x => obj.ChunkLabel.Contains(x)))
+            {
+                config = new DGRPRCParams(config);
+                config.Flags |= DGRPRCFlags.IncreaseDensity;
+            }
+
+            bool disableFlip = config.Flags.HasFlag(DGRPRCFlags.DisableFlip);
+
             int totalSpr = 0;
             for (uint rotation = 0; rotation < 4; rotation++)
             {
@@ -363,15 +725,17 @@ namespace FSO.Files.RC
                 {
                     if ((obj.SubIndex & 0xFF) == 1)
                     {
-                        if ((rotation+1)%4 > 1) continue;
-                    } else
+                        if ((rotation + 1) % 4 > 1) continue;
+                    }
+                    else
                     {
                         if ((rotation + 1) % 4 < 2) continue;
                     }
                 }
+
                 else if (!config.Rotations[rotation]) continue;
                 var img = dgrp.GetImage(1, 3, rotation);
-                
+
                 var zOff = (config.BlenderTweak) ? -57.5f : -55f;
 
                 var mat = Matrix.CreateTranslation(new Vector3(-72, -344, zOff));
@@ -379,13 +743,19 @@ namespace FSO.Files.RC
                 mat *= Matrix.CreateScale(1, -1, 1);
 
                 mat *= Matrix.CreateRotationX((float)Math.PI / -6);
-                mat *= Matrix.CreateRotationY(((float)Math.PI / 4) * (1+rotation*2));
+                mat *= Matrix.CreateRotationY(((float)Math.PI / 4) * (1 + rotation * 2));
 
                 var factor = (config.BlenderTweak) ? 0.40f : 0.39f;
+                bool isBack = (rotation == 0 || rotation == 3);
 
                 int curSpr = 0;
                 foreach (var sprite in img.Sprites)
                 {
+                    if (disableFlip && sprite.Flip)
+                    {
+                        continue;
+                    }
+
                     var sprMat = mat * Matrix.CreateTranslation(new Vector3(sprite.ObjectOffset.X, sprite.ObjectOffset.Z, sprite.ObjectOffset.Y) * new Vector3(1f / 16f, 1f / 5f, 1f / 16f));
                     var inv = Matrix.Invert(sprMat);
                     var tex = sprite.GetTexture(gd);
@@ -551,113 +921,94 @@ namespace FSO.Files.RC
                             }
                         }
 
-                                                if (config.CounterFix)
+                        if (config.Flags.HasFlag(DGRPRCFlags.IncreaseDensity))
                         {
-                            //x axis extrapolation
-                            //clip: -0.4 to 0.4
-
-                            //identify vertices very close to clipping range(border)
-                            //! for each vertex outwith clipping range
-                            //- idendify closest border pixel bp in image space
-                            //- result.zy = bp.zy
-                            //- result.x = (resultIMAGE.x - bpIMAGE.x) / 64;
-                            //- clip x to -0.5, 0.5f.
-
-                            var clip = 0.4;
-                            var bWidth = 0.02;
-                            var border1 = new List<Tuple<Vector2, Vector3>>();
-                            var invalid1 = new List<KeyValuePair<int, int>>();
-                            var border2 = new List<Tuple<Vector2, Vector3>>();
-                            var invalid2 = new List<KeyValuePair<int, int>>();
-                            foreach (var vert in dict) {
-                                var vpos = verts[vert.Value].Position;
-                                var dist = Math.Abs(vpos.X);
-                                if (dist > clip)
-                                {
-                                    if (vpos.X > 0)
-                                        invalid1.Add(vert);
-                                    else
-                                        invalid2.Add(vert);
-                                } else if (dist > (clip - bWidth))
-                                {
-                                    if (vpos.X > 0)
-                                        border1.Add(new Tuple<Vector2, Vector3>(new Vector2(vert.Key % w, vert.Key / w), vpos));
-                                    else
-                                        border2.Add(new Tuple<Vector2, Vector3>(new Vector2(vert.Key % w, vert.Key / w), vpos));
-                                }
-                            }
-
-                            var edge = 0.498f + 0.001f * (rotation % 2);
-
-                            if (border1.Count > 0)
-                            {
-                                foreach (var vert in invalid1)
-                                {
-                                    var vstr = verts[vert.Value];
-                                    var pos2d = new Vector2(vert.Key % w, vert.Key / w);
-                                    var vpos = vstr.Position;
-                                    var closest = border1.OrderBy(x => Vector2.DistanceSquared(x.Item1, pos2d)).First();
-
-                                    vpos.X = closest.Item2.X + Vector2.Distance(closest.Item1, pos2d) / 71.55f;
-                                    if (vpos.X > 0.5f)
-                                    {
-                                        vpos.X = edge;
-                                    }
-                                    else
-                                    {
-                                        vpos.Y = closest.Item2.Y;
-                                        vpos.Z = closest.Item2.Z;
-                                    }
-
-                                    vstr.Position = vpos;
-                                    verts[vert.Value] = vstr;
-                                }
-                            }
-
-                            if (border2.Count > 0)
-                            {
-                                foreach (var vert in invalid2)
-                                {
-                                    var vstr = verts[vert.Value];
-                                    var pos2d = new Vector2(vert.Key % w, vert.Key / w);
-                                    var vpos = vstr.Position;
-                                    var closest = border2.OrderBy(x => Vector2.DistanceSquared(x.Item1, pos2d)).First();
-
-                                    vpos.X = closest.Item2.X - Vector2.Distance(closest.Item1, pos2d) / 71.55f;
-                                    if (vpos.X < -0.5f)
-                                    {
-                                        vpos.X = -edge;
-                                    }
-                                    else
-                                    {
-                                        vpos.Y = closest.Item2.Y;
-                                        vpos.Z = closest.Item2.Z;
-                                    }
-
-                                    vstr.Position = vpos;
-                                    verts[vert.Value] = vstr;
-                                }
-                            }
+                            Extrude(indices, verts, xInc.Length() * 2f);
                         }
 
+                        int index = dgrp.ChunkID - obj.BaseGraphicID;
+
+                        bool mergeVertices = false;
+
+                        if (config.Flags.HasFlag(DGRPRCFlags.CounterFixBasic) || (config.Flags.HasFlag(DGRPRCFlags.CounterFix) && index == 0))
+                        {
+                            ExtrapolateEdges(verts, dict, rotation, w, true, false, true, false, false);
+                            mergeVertices = true;
+                        }
+                        else if (config.Flags.HasFlag(DGRPRCFlags.CounterFix) && index == 1)
+                        {
+                            ExtrapolateEdges(verts, dict, rotation, w, true, false, false, true, false);
+                            mergeVertices = true;
+                        }
+                        else if (config.Flags.HasFlag(DGRPRCFlags.TileFix) || config.Flags.HasFlag(DGRPRCFlags.ObjectFenceFix))
+                        {
+                            ExtrapolateEdges(verts, dict, rotation, w, true, true, true, true, config.Flags.HasFlag(DGRPRCFlags.ObjectFenceFix));
+                            mergeVertices = true;
+                        }
+                        else if (config.Flags.HasFlag(DGRPRCFlags.ObjectFence6Graphic))
+                        {
+                            mergeVertices = true;
+
+                            bool xp = false;
+                            bool yp = false;
+                            bool xn = false;
+                            bool yn = false;
+
+                            switch (index)
+                            {
+                                case 1:
+                                    xn = true;
+                                    break;
+                                case 2:
+                                    xn = true;
+                                    xp = true;
+                                    break;
+                                case 3:
+                                    xp = true;
+                                    yp = true;
+                                    break;
+                                case 4:
+                                    xp = true;
+                                    xn = true;
+                                    yp = true;
+                                    break;
+                                case 5:
+                                    xp = true;
+                                    xn = true;
+                                    yp = true;
+                                    yn = true;
+                                    break;
+                            }
+
+                            ExtrapolateEdges(verts, dict, rotation, w, xp, yp, xn, yn, true);
+                        }
 
                         lock (BoundPts) BoundPts.AddRange(boundPts);
-                        var useSimplification = config.Simplify;
+                        var useSimplification = config.Simplify && !config.Flags.HasFlag(DGRPRCFlags.IncreaseDensity);
 
                         if (useSimplification)
                         {
+                            if (mergeVertices)
+                            {
+                                //MergeVertices(verts, indices);
+                            }
+
                             var vertices = verts.Select(x => new MSVertex() { p = x.Position, t = x.TextureCoordinate }).ToArray();
                             var triangles = new MSTriangle[indices.Count / 3];
                             int ind = 0;
                             for (int t = 0; t < indices.Count; t += 3)
                             {
+                                var i1 = indices[t];
+                                var i2 = indices[t + 1];
+                                var i3 = indices[t + 2];
+
                                 triangles[ind++] = (new MSTriangle()
                                 {
-                                    v = new MSTriangleIndices(indices[t], indices[t + 1], indices[t + 2])
+                                    v = new MSTriangleIndices(i1, i2, i3)
                                 });
                             }
 
-                            var simple = new Simplify(triangles, vertices);
+                            var simple = new Simplify(triangles, vertices, ind);
 
                             simple.simplify_mesh(triangles.Length / triDivisor, agressiveness: aggressiveness, iterations: iterations);
 
@@ -678,50 +1029,39 @@ namespace FSO.Files.RC
                                 indices.Add(t.v.i1);
                                 indices.Add(t.v.i2);
                             }
-
-                            var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
-                            DGRP3DVert.GenerateNormals(!sprite.Flip, verts2, indices);
-
-                            AssetStreaming.InStreamUpdate(() =>
-                            {
-                                if (geom.SVerts == null)
-                                {
-                                    geom.SVerts = new List<DGRP3DVert>();
-                                    geom.SIndices = new List<int>();
-                                }
-
-                                var bID = geom.SVerts.Count;
-                                foreach (var id in indices) geom.SIndices.Add(id + bID);
-                                geom.SVerts.AddRange(verts2);
-
-                                lock (this)
-                                {
-                                    if (++CompletedCount == TotalSprites) Complete(gd);
-                                }
-                            });
                         }
-                        else
+
+                        var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
+                        DGRP3DVert.GenerateNormals(!sprite.Flip, verts2, indices);
+
+                        if (config.Flags.HasFlag(DGRPRCFlags.BackfaceAdjust) && isBack)
                         {
-                            var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
-                            DGRP3DVert.GenerateNormals(!sprite.Flip, verts2, indices);
-
-                            AssetStreaming.InStreamUpdate(() =>
+                            for (int j = 0; j < verts2.Count; j++)
                             {
-                                if (geom.SVerts == null)
-                                {
-                                    geom.SVerts = new List<DGRP3DVert>();
-                                    geom.SIndices = new List<int>();
-                                }
-
-                                var baseID = geom.SVerts.Count;
-                                foreach (var id in indices) geom.SIndices.Add(id + baseID);
-                                geom.SVerts.AddRange(verts2);
-                                lock (this)
-                                {
-                                    if (++CompletedCount == TotalSprites) Complete(gd);
-                                }
-                            });
+                                var vert = verts2[j];
+                                vert.Position.Z += 0.01f;
+                                verts2[j] = vert;
+                            }
                         }
+
+                        AssetStreaming.InStreamUpdate(() =>
+                        {
+                            if (geom.SVerts == null)
+                            {
+                                geom.SVerts = new List<DGRP3DVert>();
+                                geom.SIndices = new List<int>();
+                            }
+
+                            var bID = geom.SVerts.Count;
+                            foreach (var id in indices) geom.SIndices.Add(id + bID);
+                            geom.SVerts.AddRange(verts2);
+
+                            lock (this)
+                            {
+                                if (++CompletedCount == TotalSprites) Complete(gd);
+                            }
+                        });
+
                     });
                 }
             }

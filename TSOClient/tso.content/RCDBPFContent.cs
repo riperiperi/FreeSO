@@ -54,7 +54,7 @@ namespace FSO.Content
             return result;
         }
 
-        public DGRP3DMesh GetMesh(DGRP dgrp, GraphicsDevice gd, FSO3DRef reference)
+        public DGRP3DMesh GetMesh(DGRP dgrp, OBJD obj, GraphicsDevice gd, FSO3DRef reference)
         {
             lock (StreamLock)
             {
@@ -69,7 +69,7 @@ namespace FSO.Content
 
                     try
                     {
-                        result = new DGRP3DMesh(dgrp, meshStream, gd);
+                        result = new DGRP3DMesh(dgrp, obj, meshStream, gd);
                     }
                     catch (Exception e)
                     {
@@ -190,7 +190,7 @@ namespace FSO.Content
             Files.Add(file);
         }
 
-        public bool TryGetRemesh(DGRP dgrp, GraphicsDevice gd, string file, ushort chunkId, out DGRP3DMesh mesh)
+        public bool TryGetRemesh(DGRP dgrp, OBJD obj, GraphicsDevice gd, string file, ushort chunkId, out DGRP3DMesh mesh)
         {
             foreach (var collection in Files)
             {
@@ -201,7 +201,7 @@ namespace FSO.Content
                     continue;
                 }
 
-                mesh = collection.GetMesh(dgrp, gd, ref3d.Value);
+                mesh = collection.GetMesh(dgrp, obj, gd, ref3d.Value);
                 return true;
             }
 

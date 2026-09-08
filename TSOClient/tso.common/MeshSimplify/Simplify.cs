@@ -22,10 +22,10 @@ namespace FSO.Common.MeshSimplify
 
         public List<MSRef> refs = new List<MSRef>();
 
-        public Simplify(MSTriangle[] triangles, MSVertex[] vertices)
+        public Simplify(MSTriangle[] triangles, MSVertex[] vertices, int triangleCount = 0)
         {
             this.triangles = triangles;
-            this.triangleCount = triangles.Length;
+            this.triangleCount = triangleCount == 0 ? triangles.Length : triangleCount;
             this.vertices = vertices;
             this.vertexCount = vertices.Length;
         }
@@ -212,42 +212,6 @@ namespace FSO.Common.MeshSimplify
 
                 triangleCount = dst;
             }
-            //
-            // Init Quadrics by Plane & Edge Errors
-            //
-            // required at the beginning ( iteration == 0 )
-            // recomputing during the simplification is not required,
-            // but mostly improves the result for closed meshes
-            //
-            if (iteration == 0)
-            {
-                for (int i=0; i<vertexCount; i++)
-                    vertices[i].q = new SymmetricMatrix();
-
-                for (int i=0; i<triangleCount; i++)
-                {
-                    ref var t = ref triangles[i];
-                    Vector3 n;
-
-                    Vector3 p0 = vertices[t.v.i0].p;
-                    Vector3 p1 = vertices[t.v.i1].p;
-                    Vector3 p2 = vertices[t.v.i2].p;
-
-                    n = Vector3.Cross(p1 - p0, p2 - p0);
-                    n.Normalize();
-                    t.n = n;
-                    for (int j = 0; j < 3; j++) vertices[t.v.GetRef(j)].q =
-                         vertices[t.v.GetRef(j)].q + new SymmetricMatrix(n.X, n.Y, n.Z, -Vector3.Dot(n,p0));
-                }
-
-                for (int i = 0; i < triangleCount; i++)
-                {
-                    // Calc Edge Error
-                    ref var t = ref triangles[i]; Vector3 p = Vector3.Zero;
-                    for (int j = 0; j < 3; j++) t.err.GetRef(j) = calculate_error(t.v.GetRef(j), t.v.GetRef((j + 1) % 3), ref p);
-                    t.err.e3 = Math.Min(t.err.e0, Math.Min(t.err.e1, t.err.e2));
-                }
-            }
 
             // Init Reference ID list	
             for (int i = 0; i < vertexCount; i++)
@@ -329,6 +293,39 @@ namespace FSO.Common.MeshSimplify
                             vertices[vids[j]].border = true;
                     }
                 }
+
+                // Initialize errors
+                for (int i = 0; i < vertexCount; i++)
+                    vertices[i].q = new SymmetricMatrix();
+
+                for (int i = 0; i < triangleCount; i++)
+                {
+                    ref var t = ref triangles[i];
+                    Vector3 n;
+
+                    Vector3 p0 = vertices[t.v.i0].p;
+                    Vector3 p1 = vertices[t.v.i1].p;
+                    Vector3 p2 = vertices[t.v.i2].p;
+
+                    n = Vector3.Cross(p1 - p0, p2 - p0);
+                    n.Normalize();
+                    if (float.IsNaN(n.X))
+                    {
+                        n = Vector3.Up;
+                    }
+                    t.n = n;
+                    for (int j = 0; j < 3; j++) vertices[t.v.GetRef(j)].q =
+                         vertices[t.v.GetRef(j)].q + new SymmetricMatrix(n.X, n.Y, n.Z, -Vector3.Dot(n, p0));
+                }
+
+                for (int i = 0; i < triangleCount; i++)
+                {
+                    // Calc Edge Error
+                    ref var t = ref triangles[i]; Vector3 p = Vector3.Zero;
+
+                    for (int j = 0; j < 3; j++) t.err.GetRef(j) = calculate_error(t.v.GetRef(j), t.v.GetRef((j + 1) % 3), ref p);
+                    t.err.e3 = Math.Min(t.err.e0, Math.Min(t.err.e1, t.err.e2));
+                }
             }
         }
 
@@ -377,8 +374,16 @@ namespace FSO.Common.MeshSimplify
 
         double vertex_error(SymmetricMatrix q, double x, double y, double z)
         {
-            return q[0] * x * x + 2 * q[1] * x * y + 2 * q[2] * x * z + 2 * q[3] * x + q[4] * y * y
-                 + 2 * q[5] * y * z + 2 * q[6] * y + q[7] * z * z + 2 * q[8] * z + q[9];
+            return q[0] * x * x + 
+                2 * q[1] * x * y +
+                2 * q[2] * x * z +
+                2 * q[3] * x +
+                q[4] * y * y +
+                2 * q[5] * y * z +
+                2 * q[6] * y +
+                q[7] * z * z +
+                2 * q[8] * z +
+                q[9];
         }
 
         // Error for one edge
@@ -414,6 +419,7 @@ namespace FSO.Common.MeshSimplify
                 if (error2 == error) p_result = p2;
                 if (error3 == error) p_result = p3;
             }
+
             return error;
         }
 

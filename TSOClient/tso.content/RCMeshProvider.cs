@@ -49,7 +49,7 @@ namespace FSO.Content
                 // Does it exist in the loaded remesh packs?
                 string baseFile = obj.ChunkParent.Filename.Replace('.', '_').ToLowerInvariant();
 
-                if (Packages.TryGetRemesh(dgrp, GD, baseFile, dgrp.ChunkID, out result))
+                if (Packages.TryGetRemesh(dgrp, obj, GD, baseFile, dgrp.ChunkID, out result))
                 {
                     Cache[dgrp] = result;
 
@@ -62,7 +62,7 @@ namespace FSO.Content
                 {
                     try
                     {
-                        result = new DGRP3DMesh(dgrp, Path.Combine(repldir, name), GD);
+                        result = new DGRP3DMesh(dgrp, obj, Path.Combine(repldir, name), GD);
                     }
                     catch (Exception)
                     {
@@ -75,7 +75,7 @@ namespace FSO.Content
                     //does it exist in iff
                     try
                     {
-                        result = dgrp.ChunkParent.Get<FSOM>(dgrp.ChunkID)?.Get(dgrp, GD);
+                        result = dgrp.ChunkParent.Get<FSOM>(dgrp.ChunkID)?.Get(dgrp, obj, GD);
                     }
                     catch (Exception)
                     {
@@ -90,7 +90,7 @@ namespace FSO.Content
                         //does it exist in rc cache
                         try
                         {
-                            result = new DGRP3DMesh(dgrp, Path.Combine(dir, name), GD);
+                            result = new DGRP3DMesh(dgrp, obj, Path.Combine(dir, name), GD);
                         }
                         catch (Exception)
                         {
@@ -105,7 +105,7 @@ namespace FSO.Content
                 //create it anew
                 if (result == null)
                 {
-                    result = new DGRP3DMesh(dgrp, obj, GD, dir);
+                    result = new DGRP3DMesh(dgrp, obj, GD);
                     CacheFiles.Add(name);
                 }
                 Cache[dgrp] = result;
@@ -122,7 +122,7 @@ namespace FSO.Content
                 //does it exist in replacements
                 try
                 {
-                    result = new DGRP3DMesh(null, Path.Combine(repldir, name), GD);
+                    result = new DGRP3DMesh(null, null, Path.Combine(repldir, name), GD);
                 }
                 catch (Exception)
                 {
