@@ -61,6 +61,7 @@ namespace FSO.Content
 
                     string flagString = objectInfo.Attributes["f"]?.Value;
                     uint flags = flagString != null ? Convert.ToUInt32(flagString) : 0;
+                    string biasString = objectInfo.Attributes["b"]?.Value;
 
                     var ditem = new ObjectCatalogItem()
                     {
@@ -71,7 +72,8 @@ namespace FSO.Content
                         Tags = objectInfo.Attributes["t"]?.Value,
                         Flags = flags,
                         CatalogName = enrich?.CatalogName,
-                        DisableLevel = Convert.ToByte(objectInfo.Attributes["r"]?.Value ?? "0")
+                        DisableLevel = Convert.ToByte(objectInfo.Attributes["r"]?.Value ?? "0"),
+                        Bias = biasString == null ? (byte)0 : Convert.ToByte(biasString)
                     };
 
                     if (ditem.DisableLevel > 1)

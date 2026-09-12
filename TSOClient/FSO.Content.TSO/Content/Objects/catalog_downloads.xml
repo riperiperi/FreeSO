@@ -8,6 +8,16 @@
   16: Debug
 -->
 
+<!--
+  g: GUID
+  s: Category
+  t: Tags
+  n: Name
+  r: Disable level (optional, prevents trading at 2, no inventory placement at 3)
+  f: Event flags (optional, allows filtering out objects by season)
+  b: Bias (optional, pulls the object to the front of the category)
+-->
+
 <!-- SEASONAL CATALOG: SPRING -->
 
    <P g="0FE699E4" s="3" p="15" t="spring, toddy, fae, fairy, mushroom" n="Fly Agaric Fungi" f="1" />
@@ -33,15 +43,15 @@
 -->
 
 <!-- SPRING RARES -->
-   <P g="2D5A327D" s="29" p="0" t="spring, toddy, fae, fairy" n="Map of Firefly Forest" />
-   <P g="778A2D71" s="29" p="0" t="spring, toddy, fae, fairy" n="Statue of Aurelia" />
-   <P g="02B9B906" s="29" p="0" t="spring, toddy, fae, fairy" n="Vines Floor Lamp" />
-   <P g="4CCFCBE5" s="29" p="0" t="spring, toddy, fae, fairy, mushroom" n="Toadstool Famille Lamp" />
+   <P g="2D5A327D" s="29" p="0" t="spring, toddy, fae, fairy" n="Map of Firefly Forest" b="50" />
+   <P g="778A2D71" s="29" p="0" t="spring, toddy, fae, fairy" n="Statue of Aurelia" b="50" />
+   <P g="02B9B906" s="29" p="0" t="spring, toddy, fae, fairy" n="Vines Floor Lamp" b="50" />
+   <P g="4CCFCBE5" s="29" p="0" t="spring, toddy, fae, fairy, mushroom" n="Toadstool Famille Lamp" b="50" />
 
-   <P g="19A14FD3" s="29" p="0" t="spring, toddy, fae, fairy, costume props" n="The Calyx Jasper" />
+   <P g="19A14FD3" s="29" p="0" t="spring, toddy, fae, fairy, costume props" n="The Calyx Jasper" b="50" />
    <P g="4CCFC85B" s="19" p="10" t="spring, toddy, fae, fairy" n="Fireflies light effect" />
-   <P g="0DF8592E" s="29" p="0" n="Mini Sims Scaler" />
-   <P g="7D0BB6D6" s="29" p="0" t="spring, toddy, fae, fairy" n="Spring Mystery Chest" />
+   <P g="0DF8592E" s="29" p="0" n="Mini Sims Scaler" b="50" />
+   <P g="7D0BB6D6" s="29" p="0" t="spring, toddy, fae, fairy" n="Spring Mystery Chest" b="50" />
 
 <!-- PRIDE -->
 <!-- FREESO SAID TRANS RIGHTS -->
@@ -61,7 +71,7 @@
    <P g="05D4E7CD" s="17" p="150" t="summer" n="Decorative pool toy - Ring Float" f="2" />
    <P g="150C79EE" s="18" p="3000" t="summer, costume props" n="Summer 2020 Accessory Rack" f="2" />
 
-   <P g="1F2B80FB" s="29" p="0" n="Beach Cabana" />
+   <P g="1F2B80FB" s="29" p="0" n="Beach Cabana" b="50" />
 
 <!--
    <P g="0A2FC4D6" s="29" p="6000" t="summer, game, competion, battle" n="What-a-Balloon Box" />
@@ -73,23 +83,23 @@
    <P g="3E91FCC6" s="14" p="650" n="Public Outdoor Shower" />
 
 <!-- SUMMER CANDY -->
-   <P g="53EF5179" s="29" p="2021" t="toddy, candy, fructose monsoon, admin" n="Lucky 'Gumball' Machine" />
-   <P g="79EF56DB" s="29" p="0" t="toddy, biscuit, sweets, fructose monsoon" n="Cookies n' Candy Border" />
-   <P g="75054786" s="29" p="0" t="toddy, cookie, sweets, fructose monsoon" n="Sugar Biscuit Rug" />
-   <P g="6A17DCCC" s="29" p="0" t="toddy, candy, sweets, fructose monsoon, stool, chair, seat" n="Twisted Ottoman" />
-   <P g="10EF325D" s="29" p="0" t="toddy, cookie, biscuit, sweets, fructose monsoon, table" n="Crunchy Dinette" />
-   <P g="02B9C7CD" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="Larger than Life Lollipop Lamp" />
-   <P g="62F5027D" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="Spun Sugar Tree" />
-   <P g="674BC446" s="29" p="0" t="toddy, cookie, biscuit, sweets, fructose monsoon" n="Gingerbread Dreams Rug" />
-   <P g="62F503A5" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="3 Scoops Topiary" />
-   <P g="6A34476E" s="29" p="0" t="toddy, ice cream, fructose monsoon, column" n="Stack of Mac Pillar" />
-   <P g="4CCFC260" s="29" p="0" t="toddy" n="Beatin' Heart Lamp" />
-   <P g="431364B9" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="Choco Bear Tip Jar" />
-   <P g="4CCFB72A" s="29" p="0" t="toddy, cookie, fructose monsoon" n="I'm Seeing Stars Lamp" />
-   <P g="523E01DD" s="29" p="0" t="toddy, fructose monsoon" n="Milky Tipping Carton" />
-   <P g="4CCFBD88" s="29" p="2021" t="toddy, candy, sweets, fructose monsoon,admin" n="Gumball Float" />
-   <P g="4BFAEC55" s="29" p="2021" t="toddy, sweets, fructose monsoon, admin" n="Chonk Cake" />
-   <P g="2255081A" s="29" p="2021" t="toddy, fructose monsoon, admin" n="Hearts On Heads Spawner" />
+   <P g="53EF5179" s="29" p="2021" t="toddy, candy, fructose monsoon, admin" n="Lucky 'Gumball' Machine" b="75" />
+   <P g="79EF56DB" s="29" p="0" t="toddy, biscuit, sweets, fructose monsoon" n="Cookies n' Candy Border" b="50" />
+   <P g="75054786" s="29" p="0" t="toddy, cookie, sweets, fructose monsoon" n="Sugar Biscuit Rug" b="50" />
+   <P g="6A17DCCC" s="29" p="0" t="toddy, candy, sweets, fructose monsoon, stool, chair, seat" n="Twisted Ottoman" b="50" />
+   <P g="10EF325D" s="29" p="0" t="toddy, cookie, biscuit, sweets, fructose monsoon, table" n="Crunchy Dinette" b="50" />
+   <P g="02B9C7CD" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="Larger than Life Lollipop Lamp" b="50" />
+   <P g="62F5027D" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="Spun Sugar Tree" b="50" />
+   <P g="674BC446" s="29" p="0" t="toddy, cookie, biscuit, sweets, fructose monsoon" n="Gingerbread Dreams Rug" b="50" />
+   <P g="62F503A5" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="3 Scoops Topiary" b="50" />
+   <P g="6A34476E" s="29" p="0" t="toddy, ice cream, fructose monsoon, column" n="Stack of Mac Pillar" b="50" />
+   <P g="4CCFC260" s="29" p="0" t="toddy" n="Beatin' Heart Lamp" b="50" />
+   <P g="431364B9" s="29" p="0" t="toddy, candy, sweets, fructose monsoon" n="Choco Bear Tip Jar" b="50" />
+   <P g="4CCFB72A" s="29" p="0" t="toddy, cookie, fructose monsoon" n="I'm Seeing Stars Lamp" b="50" />
+   <P g="523E01DD" s="29" p="0" t="toddy, fructose monsoon" n="Milky Tipping Carton" b="50" />
+   <P g="4CCFBD88" s="29" p="2021" t="toddy, candy, sweets, fructose monsoon,admin" n="Gumball Float" b="50" />
+   <P g="4BFAEC55" s="29" p="2021" t="toddy, sweets, fructose monsoon, admin" n="Chonk Cake" b="50" />
+   <P g="2255081A" s="29" p="2021" t="toddy, fructose monsoon, admin" n="Hearts On Heads Spawner" b="50" />
 
    <P g="67B61F33" s="17" p="1000000" t="toddy, vehicle, limo"  n="The Pink Prowler" />
    <P g="67B60CFD" s="17" p="500000" t="toddy, vehicle" n="'So ICY' Ice Cream Van" />
@@ -105,8 +115,8 @@
    <P g="08D7E3DD" s="17" p="860" n="The Giant Pumpkin Patch" f="4" />
    <P g="92EF51A6" s="3" p="30" n="Dead Chic Tree" f="4" />
    <P g="92EF51A7" s="3" p="30" n="Dead Chic Tree Grouping" f="4" />
-   <P g="0DA95AAA" s="29" p="400" t="toddy" n="Spooktacular tip jar" f="4" />
-   <P g="01EF5101" s="29" p="3000" t="toddy, buffet" n="Scarefest Snack Table" f="4" />
+   <P g="0DA95AAA" s="29" p="400" t="toddy" n="Spooktacular tip jar" f="4" b="50" />
+   <P g="01EF5101" s="29" p="3000" t="toddy, buffet" n="Scarefest Snack Table" f="4" b="50" />
    <P g="38EF5112" s="17" p="100" n="Commemorative Mini-Mystery Chest" f="4" />
 
    <P g="7F495D9E" s="13" p="500" t="toddy, mushroom" n="Cursed Toadstool Table" f="4" />
@@ -171,127 +181,127 @@
    <P g="692304CA" s="29" p="200" t="winter, toddy" n="Dreaming of a Red Bow Tree" />
 -->
 
-   <P g="73192586" s="29" p="0" t="winter, christmas, admin" n="Snowball Event Present" />
-   <P g="3F91DD26" s="29" p="0" t="winter, christmas, toddy, costume props" n="O'lawn Ornate Chest" />
-   <P g="523DF5E7" s="29" p="0" t="winter, christmas, toddy, nutcracker" n="Nussknacker Tip Jar" />
+   <P g="73192586" s="29" p="0" t="winter, christmas, admin" n="Snowball Event Present" b="25" />
+   <P g="3F91DD26" s="29" p="0" t="winter, christmas, toddy, costume props" n="O'lawn Ornate Chest" b="50" />
+   <P g="523DF5E7" s="29" p="0" t="winter, christmas, toddy, nutcracker" n="Nussknacker Tip Jar" b="50" />
    <!-- fso_rc_car.iff -->
-   <P g="73DE055E" s="29" p="0" t="winter, christmas, game, competition, battle, rc car, remote" n="Robin-Carolled POWER Sleigh" />
+   <P g="73DE055E" s="29" p="0" t="winter, christmas, game, competition, battle, rc car, remote" n="Robin-Carolled POWER Sleigh" b="75" />
 
 <!-- spring_ceiling_high_pole.iff -->
-   <P g="0271206C" s="29" p="0" r="2" t="seasonal pole" n="'Fall on a Stick' seasonal beam" />
-   <P g="363407A0" s="29" p="0" r="2" t="seasonal pole" n="'Summer on a Stick' seasonal beam" />
-   <P g="671269D6" s="29" p="0" r="2" t="seasonal pole" n="'Spring on a Stick' seasonal beam" />
-   <P g="00B7AC83" s="29" p="0" r="2" t="seasonal pole" n="'Winter on a Stick' seasonal beam" />
+   <P g="0271206C" s="29" p="0" r="2" t="seasonal pole" n="'Fall on a Stick' seasonal beam" b="50" />
+   <P g="363407A0" s="29" p="0" r="2" t="seasonal pole" n="'Summer on a Stick' seasonal beam" b="50" />
+   <P g="671269D6" s="29" p="0" r="2" t="seasonal pole" n="'Spring on a Stick' seasonal beam" b="50" />
+   <P g="00B7AC83" s="29" p="0" r="2" t="seasonal pole" n="'Winter on a Stick' seasonal beam" b="50" />
    
 <!-- fso_1000day_prize.iff -->
-   <P g="4DB83BCD" s="29" p="0" r="2" n="FreeSO One Thousand days trophy" />
+   <P g="4DB83BCD" s="29" p="0" r="2" n="FreeSO One Thousand days trophy" b="50" />
    
 <!-- LIMITED GIFT -->
-   <P g="2A77EB8C" s="29" p="0" r="2" n="FreeSO.ml Statue" />
+   <P g="2A77EB8C" s="29" p="0" r="2" n="FreeSO.ml Statue" b="50" />
    
 <!-- LIMITED GIFT - April 1 2020 -->
-   <P g="1C3C0E17" s="29" p="0" n="Ultra XXL Toilet Paper" />
-   <P g="5902B87D" s="29" p="0" n="Y2K Survival Kit Vol. 1" />
+   <P g="1C3C0E17" s="29" p="0" n="Ultra XXL Toilet Paper" b="50" />
+   <P g="5902B87D" s="29" p="0" n="Y2K Survival Kit Vol. 1" b="50" />
 
 <!-- LIMITED GIFT - April 1 2021 -->
-   <P g="01C67AB2" s="29" p="0" n="C Sus2 Music Box" />
+   <P g="01C67AB2" s="29" p="0" n="C Sus2 Music Box" b="50" />
    
 <!--LIMITED GIFT? thinking.iff -->
-   <P g="7D14BA67" s="29" p="0" n="The Thinker" />
+   <P g="7D14BA67" s="29" p="0" n="The Thinker" b="52" />
 
 <!-- April 1 2024 -->
-   <P g="3718D2F8" s="29" p="0" n="Ball Flood" t="flood, af2024" />
+   <P g="3718D2F8" s="29" p="0" n="Ball Flood" t="flood, af2024" b="50" />
 
 <!-- HALLOWEEN EVENT GIFTS -->
-   <P g="4730F267" s="29" p="1" n="Trap - Tripwire" />
-   <P g="7313B325" s="29" p="0" t="crypt" n="Goth Family Private Mausoleum" />
-   <P g="6175921D" s="29" p="0" t="ritual, summoning, circle" n="Zombie Spawner" />
-   <P g="51C6BF13" s="29" p="0" t="spooky, painting, eyes" n="The Starlet from St. Petersburg" />
-   <P g="15B25377" s="29" p="2000" n="'Educational' Skeleton 'Replica'" />
-   <P g="4CCFBB1D" s="29" p="400" n="Dapper Ghosty Mini Lamp" />
-   <P g="221A47C9" s="29" p="6000" t="autumn, halloween, miha" n="Pumpkin Carving-O-Mat" />
-   <P g="53216F41" s="29" p="0" t="costume prop" n="Madge's Cedar Chest" />
-   <P g="06664601" s="29" p="0" r="2" n="Thank You!" />
-   <P g="2CFFD08A" s="29" p="0" n="Port-a-Pit" />
-   <P g="30A76C84" s="29" p="0" n="Obligatory Lever" />
-   <P g="60EAA2DB" s="29" p="0" n="Hey, Baby Jail!" />
-   <P g="6281CE78" s="29" p="0" t="vehicle" n="Vroom Broom" />
-   <P g="6C542B0C" s="29" p="0" t="magic, hiding, vanishing" n="The Book of Concealment" r="2" />
-   <P g="F0D9AE7F" s="29" p="320" r="2" n="Campfire" />
+   <P g="4730F267" s="29" p="1" n="Trap - Tripwire" b="52" />
+   <P g="7313B325" s="29" p="0" t="crypt" n="Goth Family Private Mausoleum" b="51" />
+   <P g="6175921D" s="29" p="0" t="ritual, summoning, circle" n="Zombie Spawner" b="51" />
+   <P g="51C6BF13" s="29" p="0" t="spooky, painting, eyes" n="The Starlet from St. Petersburg" b="51" />
+   <P g="15B25377" s="29" p="2000" n="'Educational' Skeleton 'Replica'" b="51" />
+   <P g="4CCFBB1D" s="29" p="400" n="Dapper Ghosty Mini Lamp" b="51" />
+   <P g="221A47C9" s="29" p="6000" t="autumn, halloween, miha" n="Pumpkin Carving-O-Mat" b="51" />
+   <P g="53216F41" s="29" p="0" t="costume prop" n="Madge's Cedar Chest" b="51" />
+   <P g="06664601" s="29" p="0" r="2" n="Thank You!" b="50" />
+   <P g="2CFFD08A" s="29" p="0" n="Port-a-Pit" b="52" />
+   <P g="30A76C84" s="29" p="0" n="Obligatory Lever" b="52" />
+   <P g="60EAA2DB" s="29" p="0" n="Hey, Baby Jail!" b="52" />
+   <P g="6281CE78" s="29" p="0" t="vehicle" n="Vroom Broom" b="51" />
+   <P g="6C542B0C" s="29" p="0" t="magic, hiding, vanishing" n="The Book of Concealment" r="2" b="51" />
+   <P g="F0D9AE7F" s="29" p="320" r="2" n="Campfire" b="51" />
 <!--fso-halloween-plant-tipjar.iff By Toddy 2021 -->
-   <P g="523CCB22" s="29" p="2021" t="toddy, tip jar, plant" n="Carnivorous Dionaea" />
+   <P g="523CCB22" s="29" p="2021" t="toddy, tip jar, plant" n="Carnivorous Dionaea" b="51" />
 <!-- cursebook_set_permission.iff by Daat and Heyty, Halloween 2022 -->
-   <P g="45A32988" s="29" p="2022" r="2"  t="heyty, daat, spell" n="The Book of Curses" />
+   <P g="45A32988" s="29" p="2022" r="2"  t="heyty, daat, spell" n="The Book of Curses" b="51" />
    
    <!-- WINTER EVENT GIFTS (DISTRIBUTED VIA THRU TREE)-->  
    <P g="3DEF51E9" s="29" p="0" n="food_s1_xmaspudding" />
    <P g="2CEF51D6" s="29" p="0" n="food_s1_xmaspudding" />
-   <P g="3563234B" s="29" p="0" t="winter, miha, lamp, snowman" n="lamp_cicd_snowman" />
+   <P g="3563234B" s="29" p="0" t="winter, miha, lamp, snowman" n="lamp_cicd_snowman" b="50" />
 	<!-- fso_holiday_EggNog.iff -->
-   <P g="C8EF51AE" s="29" p="0" t="punch bowl" n="Ho-Ho-Holiday Egg Nog" />
+   <P g="C8EF51AE" s="29" p="0" t="punch bowl" n="Ho-Ho-Holiday Egg Nog" b="50" />
 	<!-- fso_holiday_tipjar.iff -->
-   <P g="0DA95AA9" s="29" p="0" t="tip jar" n="'Blue Kettle' Begging Container" />
+   <P g="0DA95AA9" s="29" p="0" t="tip jar" n="'Blue Kettle' Begging Container" b="50" />
 	<!-- Christmas_Station.iff -->
-   <P g="01D69CDD" s="29" p="0" t="winter, miha" n="Ho-Ho-Holiday Cake Station" />
-   <P g="41D637B8" s="29" p="0" t="winter, miha" n="Gingerbread House" />
+   <P g="01D69CDD" s="29" p="0" t="winter, miha" n="Ho-Ho-Holiday Cake Station" b="50" />
+   <P g="41D637B8" s="29" p="0" t="winter, miha" n="Gingerbread House" b="50" />
 
 <!-- HALLOWEEN EVENT OBJECTS-->
-   <P g="4300E859" s="29" p="1" n="Treasure Chest - Halloween" />
+   <P g="4300E859" s="29" p="1" n="Treasure Chest - Halloween" b="51" />
 
    <P g="365399C1" s="29" p="0" n="Halloween Candy Stash" r="3" />
-   <P g="35216A28" s="29" p="0" n="Debug - Candy Token Test" />
-   <P g="426E6D73" s="29" p="0" n="Halloween Candy Well" />
+   <P g="35216A28" s="29" p="0" n="Debug - Candy Token Test" b="51" />
+   <P g="426E6D73" s="29" p="0" n="Halloween Candy Well" b="51" />
    <P g="4BA28DDD" s="18" p="15" n="Halloween Postcards" />
-   <P g="13416320" s="29" p="0" n="NPC Witch Spawner" />
-   <P g="480051DA" s="29" p="0" n="Event Tally Digit" />
-   <P g="58838A14" s="29" p="0" n="Event Soul Dispenser" />
-   <P g="6604E592" s="29" p="0" n="The Jar of Immortal Souls" />
+   <P g="13416320" s="29" p="0" n="NPC Witch Spawner" b="51" />
+   <P g="480051DA" s="29" p="0" n="Event Tally Digit" b="51" />
+   <P g="58838A14" s="29" p="0" n="Event Soul Dispenser" b="49" />
+   <P g="6604E592" s="29" p="0" n="The Jar of Immortal Souls" b="49" />
 
-   <P g="00EA051B" s="29" p="0" n="Souls of the Past" r="3" />
-   <P g="59B93D02" s="29" p="0" n="Souls of the Present" r="3" />
-   <P g="6D23C058" s="29" p="0" n="Souls of the Future" r="3" />
+   <P g="00EA051B" s="29" p="0" n="Souls of the Past" r="3" b="49" />
+   <P g="59B93D02" s="29" p="0" n="Souls of the Present" r="3" b="49" />
+   <P g="6D23C058" s="29" p="0" n="Souls of the Future" r="3" b="49" />
 
    <P g="1893399C" s="29" p="0" n="Team Trick!" r="3" />
    <P g="16DA45CA" s="29" p="0" n="Team Treat!" r="3" />
-   <P g="79C702EA" s="29" p="0" n="Automatic Candle Dispenser" />
+   <P g="79C702EA" s="29" p="0" n="Automatic Candle Dispenser" b="51" />
 
-   <P g="352A8ACE" s="29" p="23" n="&quot;OTD: Virtuous Just Desserts&quot; Control Center" t="game, door, escape, room, console, event" />
+   <P g="352A8ACE" s="29" p="23" n="&quot;OTD: Virtuous Just Desserts&quot; Control Center" t="game, door, escape, room, console, event" b="52" />
 
-   <P g="6FD746F5" s="29" p="24" n="2024 NPC Spawner" t="event" />
+   <P g="6FD746F5" s="29" p="24" n="2024 NPC Spawner" t="event" b="50" />
 
    <!-- fso_alarm_light.iff -->
-   <P g="12A4020A" s="29" p="0" n="Flashing Alarm Light" />
+   <P g="12A4020A" s="29" p="0" n="Flashing Alarm Light" b="51" />
 
    <!-- WINTER EVENT OBJECTS -->
    
-   <P g="4300E85A" s="29" p="1" n="Treasure Chest - Christmas" />
+   <P g="4300E85A" s="29" p="1" n="Treasure Chest - Christmas" b="51" />
    
 		<!-- The 2019 event introduced the Great Snowdown Showdown -->
    <P g="59C13807" s="29" p="0" r="3" n="Team Green Elf!" />
    <P g="795256E6" s="29" p="0" r="3" n="Team Red Reindeer!" />
-   <P g="4A85C7E2" s="29" p="0" r="2" n="Self-Driving Single-Seater Roadster" />
+   <P g="4A85C7E2" s="29" p="0" r="2" n="Self-Driving Single-Seater Roadster" b="52" />
 		<!-- The 2018 event introduced Santa's Workshop  -->
    <!-- fso_holiday_craftbench.iff -->
-   <P g="3CEF51A0" s="29" p="0" n="‘The Nimble Elf’ Portable Workshop" />
+   <P g="3CEF51A0" s="29" p="0" n="‘The Nimble Elf’ Portable Workshop" b="52" />
    <!-- GIVEN VIA CHESTS - fso_holiday_craftnotions.iff -->
-   <P g="60EF5199" s="29" p="0" n="Basket of Greenery" />
-   <P g="FFEF5141" s="29" p="0" n="Basket of Yarn" />
-   <P g="B3EF5156" s="29" p="0" n="Basket of Baubles" />
+   <P g="60EF5199" s="29" p="0" n="Basket of Greenery" b="50" />
+   <P g="FFEF5141" s="29" p="0" n="Basket of Yarn" b="50" />
+   <P g="B3EF5156" s="29" p="0" n="Basket of Baubles" b="50" />
    <!-- WINTER CRAFT - fso_holiday_festivegreenery.iff -->
-   <P g="2D5A41E7" s="29" p="0" n="Festive Florist’s Hanging Garland" />
-   <P g="2D5A41EA" s="29" p="0" n="Festive Florist’s Wreath o’ Greenery" />
+   <P g="2D5A41E7" s="29" p="0" n="Festive Florist’s Hanging Garland" b="51" />
+   <P g="2D5A41EA" s="29" p="0" n="Festive Florist’s Wreath o’ Greenery" b="51" />
    <!-- WINTER CRAFT - fso_holiday_mistletoe.iff -->
-   <P g="2DEF51E7" s="29" p="0" n="‘Just One Kiss’ Hanging Mistletoe" />
+   <P g="2DEF51E7" s="29" p="0" n="‘Just One Kiss’ Hanging Mistletoe" b="51" />
    <!-- WINTER CRAFT - fso_holiday_stringlights.iff -->
-   <P g="7C6B9286" s="29" p="0" n="‘Sweet Treats on a String’ by Polkadot the Elf" />
+   <P g="7C6B9286" s="29" p="0" n="‘Sweet Treats on a String’ by Polkadot the Elf" b="51" />
    <!-- WINTER CRAFT - Lamp_m97s_ChristmasCandle.iff -->
-   <P g="45C2DCAF" s="29" p="0" n="Cozy Candle Joy" />
+   <P g="45C2DCAF" s="29" p="0" n="Cozy Candle Joy" b="51" />
    <!-- WINTER CRAFT - rugs_bsj96_christmas2018.iff -->
-   <P g="DEEF5101" s="29" p="0" n="Mr Season’s ‘Indoor Snowman’ Rug" />
-   <P g="DEEF510D" s="29" p="0" n="‘Holly in the Hallway’ Noel Mat" />
-   <P g="DEEF5106" s="29" p="0" n="Peppermint Parlor Handsewn Carpeting" />
+   <P g="DEEF5101" s="29" p="0" n="Mr Season’s ‘Indoor Snowman’ Rug" b="51" />
+   <P g="DEEF510D" s="29" p="0" n="‘Holly in the Hallway’ Noel Mat" b="51" />
+   <P g="DEEF5106" s="29" p="0" n="Peppermint Parlor Handsewn Carpeting" b="51" />
    <!-- WINTER CRAFT - added 2021 -->
-   <P g="0E7548E8" s="29" p="0" t="toddy, holiday craft" n="Bow-Red-Gard" />
+   <P g="0E7548E8" s="29" p="0" t="toddy, holiday craft" n="Bow-Red-Gard" b="51" />
    
 <!-- ANNUAL FREESO AWARDS -->
 
@@ -509,17 +519,17 @@
 
 <!-- objects from Toddy -->
    <P g="04EF51D6" s="29" p="300" n="food - Halloween Cake" />
-   <P g="04EF51E9" s="29" p="70" n="Halloween Cake Slice" />
-   <P g="05FA2D97" s="29" p="70" n="food - Halloween CupCake" />
+   <P g="04EF51E9" s="29" p="70" n="Halloween Cake Slice" b="51" />
+   <P g="05FA2D97" s="29" p="70" n="food - Halloween CupCake" b="51" />
    <P g="02EF5120" s="12" p="435" n="Scarefest Dining Chair" />
    <P g="10EF5120" s="13" p="600" n="Scarefest Dining Table" />
    <P g="0A8117F0" s="17" p="850" n="Decorative Sunflower Pot" /> 
 
    <P g="1D4DE42A" s="13" p="950" n="Scarefest 'Square' Dining Table" />
-   <P g="44DEB354" s="29" p="2021" t="skeleton, candle, wall light, lamp" n="'Spirit From The Other Side' Wall Frame" />
-   <P g="12B9021B" s="29" p="2021" n="Skull Chandelier" />
-   <P g="44DEA269" s="29" p="2021" n="'Skelelabra' Candelabra" />
-   <P g="62F51101" s="29" p="2021" n="Pumpkin Pot" />
+   <P g="44DEB354" s="29" p="2021" t="skeleton, candle, wall light, lamp" n="'Spirit From The Other Side' Wall Frame" b="51" />
+   <P g="12B9021B" s="29" p="2021" n="Skull Chandelier" b="51" />
+   <P g="44DEA269" s="29" p="2021" n="'Skelelabra' Candelabra" b="51" />
+   <P g="62F51101" s="29" p="2021" n="Pumpkin Pot" b="51" />
    <P g="3BF27EB7" s="16" p="850" t="toddy, skill, charisma" n="Antique Wall Mirror" />
 
 <!-- objects from Andrew -->
@@ -552,19 +562,19 @@
    <P g="3CF7DA14" s="29" p="0" r="3" n="Vehicle Keys" />
 
 <!-- STUFF FOR MOMI TOWN HALL -->
-   <P g="66F727EF" s="29" p="0" n="3TileClock" />
+   <P g="66F727EF" s="29" p="0" n="3TileClock" b="50" />
    <P g="36E002AC" s="19" p="500" n="lighted_momi_logo" />
    <P g="36EF51AC" s="19" p="500" n="Lit Up DADDI Logo" />
-   <P g="3FEF51E9" s="29" p="0" n="npc_CaretakerAvery" />
-   <P g="50503A01" s="29" p="0" n="The MOMIStation" />
-<P g="7B270040" s="29" p="0" n="Event Prize Booth" />
+   <P g="3FEF51E9" s="29" p="0" n="npc_CaretakerAvery" b="52" />
+   <P g="50503A01" s="29" p="0" n="The MOMIStation" b="100" />
+<P g="7B270040" s="29" p="0" n="Event Prize Booth" b="99" />
 
 <!-- Oct 2024 Object Releases -->
     <!-- fso_decor_2-in-1_Racing_Banner.iff -->
     <P g="6378E9E6" s="17" p="150" n="&quot;2-In-1&quot; Racing Banner!" />
     
     <!-- fso_deco_easteregg.iff -->
-    <P g="5C6448CF" s="29" p="0" n="'Choco-rific' Easter Egg" />
+    <P g="5C6448CF" s="29" p="0" n="'Choco-rific' Easter Egg" b="50" />
     
     <!-- diningpodium.iff -->
     <P g="4AC83A4F" s="17" p="765" n="Bel-Air Series Podium" />
@@ -595,9 +605,11 @@
 <P g="4134CA89" s="29" p="0" r="3" n="Jams Completed" />
 <P g="09ABDD10" s="29" p="0" r="3" n="Money Objects Completed" />
 
-<P g="23B1B856" s="29" p="0" n="The Mystic Bomb" />
+<P g="23B1B856" s="29" p="0" n="The Mystic Bomb" b="97" />
 
-<P g="78306403" s="29" p="2017" n="The Freesy" />
+<P g="78306403" s="29" p="2017" n="The Freesy" b="96" />
+
+<P g="88704EDE" s="29" p="0" n="Conveyor Belt" b="98" />
    
 <!-- TSO PORTS 
 		These are objects were included in the TSO files but were not actually used in the game. They have been patched where necessary and introduced into the buymode catalog.  -->

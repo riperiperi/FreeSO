@@ -473,6 +473,9 @@ namespace FSO.Client.UI.Controls.Catalog
 
             public int Compare(UICatalogElement x, UICatalogElement y)
             {
+                if (x.Item.Bias > y.Item.Bias) return -1;
+                else if (x.Item.Bias < y.Item.Bias) return 1;
+
                 if (x.Item.Price > y.Item.Price) return 1;
                 else if (x.Item.Price < y.Item.Price) return -1;
                 else return 0;
