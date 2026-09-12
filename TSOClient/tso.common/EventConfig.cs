@@ -50,6 +50,7 @@
         public float? payoutScale;
         public float? singleplayerPenalty;
         public int? speedyJobProgression;
+        public bool? maxObjectLimit;
 
         public static EventConfig FromJson(string json)
         {

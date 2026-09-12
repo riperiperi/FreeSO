@@ -562,6 +562,11 @@ namespace FSO.SimAntics
                     Blueprint.MinOutMul = minLight.Value;
                 }
             }
+
+            if (VM.Tuning.GetTuning("special", 0, 4) != null)
+            {
+                VMBuildableAreaInfo.UpdateOverbudgetObjects(VM);
+            }
         }
 
         private void WallsChanged(VMArchitecture caller)

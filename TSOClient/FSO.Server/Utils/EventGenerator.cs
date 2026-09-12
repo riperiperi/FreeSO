@@ -310,6 +310,19 @@ namespace FSO.Server.Utils
                 });
             }
 
+            if (config.maxObjectLimit ?? false == true)
+            {
+                dynTuning.Add(new DbTuning()
+                {
+                    tuning_type = "special",
+                    tuning_table = 0,
+                    tuning_index = 4,
+                    value = 2400,
+                    owner_type = DbTuningType.DYNAMIC,
+                    owner_id = 2
+                });
+            }
+
             da.DynPayouts.ReplaceDynTuning(dynTuning, 2);
         }
 

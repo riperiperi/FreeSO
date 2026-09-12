@@ -272,6 +272,8 @@ Some objects may not correctly report multiplied payouts - keep an eye on your b
 305 ^Singleplayer Penalty: ^
 306 ^Speedy Job Progression^
 307 ^One full day of work at any job promotes you to the next level, as long as you have the skill. No friend requirements.^
+308 ^Force Max Object Limit^
+309 ^Increases the object limit of all properties to 2400, regardless of number of roommates or property size.^
 
 310 ^Events^
 311 ^Event schedule:^

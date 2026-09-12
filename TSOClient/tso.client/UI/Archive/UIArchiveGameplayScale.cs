@@ -20,6 +20,7 @@ namespace FSO.Client.UI.Archive
         public UILabel PenaltyDisplay;
 
         public UIButton SpeedyJobCheck;
+        public UIButton ObjectLimitCheck;
 
         public UIButton HelpButton;
         public UIButton ResetButton;
@@ -167,22 +168,10 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(penaltyBox);
 
-            var jobBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
-
-            jobBox.Add(SpeedyJobCheck = new UIButton(GetTexture(0x0000083600000001))
-            {
-                Tooltip = GetString("307")
-            });
-
-            jobBox.Add(new UILabel()
-            {
-                Caption = GetString("306"),
-                Tooltip = GetString("307")
-            });
-
             vbox.Add(new UISpacer(10));
 
-            vbox.Add(jobBox);
+            SpeedyJobCheck = AddCheckbox(vbox, GetString("306"), GetString("307"));
+            ObjectLimitCheck = AddCheckbox(vbox, GetString("308"), GetString("309"));
 
             vbox.Add(new UISpacer(10));
 
@@ -209,11 +198,13 @@ namespace FSO.Client.UI.Archive
             PayoutSlider.OnChange += PayoutSlider_OnChange;
             PenaltySlider.OnChange += PenaltySlider_OnChange;
             SpeedyJobCheck.OnButtonClick += SpeedyJobCheck_OnButtonClick;
+            ObjectLimitCheck.OnButtonClick += ObjectLimitCheck_OnButtonClick;
 
             UpdateDisplay(SkillDisplay, SkillSlider);
             UpdateDisplay(PayoutDisplay, PayoutSlider);
             UpdateDisplay(PenaltyDisplay, PenaltySlider, true);
             SpeedyJobCheck.Selected = Events.speedyJobProgression == 1;
+            ObjectLimitCheck.Selected = Events.maxObjectLimit ?? false;
 
             vbox.AutoSize();
             vbox.Position = new Vector2(20, 35);
@@ -231,6 +222,36 @@ namespace FSO.Client.UI.Archive
 
                 UIScreen.RemoveDialog(this);
             };
+        }
+
+        private UIButton AddCheckbox(UIContainer parent, string caption, string tooltip)
+        {
+            var box = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
+            UIButton check;
+
+            box.Add(check = new UIButton(GetTexture(0x0000083600000001))
+            {
+                Tooltip = tooltip
+            });
+
+            box.Add(new UILabel()
+            {
+                Caption = caption,
+                Tooltip = tooltip
+            });
+
+            parent.Add(box);
+
+            return check;
+        }
+
+        private void ObjectLimitCheck_OnButtonClick(UIElement button)
+        {
+            IsChanged = true;
+
+            Events.maxObjectLimit = !ObjectLimitCheck.Selected;
+
+            ObjectLimitCheck.Selected = !ObjectLimitCheck.Selected;
         }
 
         private void SpeedyJobCheck_OnButtonClick(UIElement button)
@@ -281,6 +302,7 @@ namespace FSO.Client.UI.Archive
             events.payoutScale = tso ? null : 5;
             events.singleplayerPenalty = tso ? null : 0;
             events.speedyJobProgression = tso ? 0 : 1;
+            events.maxObjectLimit = tso ? null : true;
         }
 
         private void UpdateAll()
@@ -289,6 +311,7 @@ namespace FSO.Client.UI.Archive
             PayoutSlider.Value = Events.payoutScale ?? 1;
             PenaltySlider.Value = Events.singleplayerPenalty ?? 1;
             SpeedyJobCheck.Selected = Events.speedyJobProgression == 1;
+            ObjectLimitCheck.Selected = Events.maxObjectLimit ?? false;
 
             UpdateDisplay(SkillDisplay, SkillSlider);
             UpdateDisplay(PayoutDisplay, PayoutSlider);
@@ -339,6 +362,5 @@ namespace FSO.Client.UI.Archive
             Events.singleplayerPenalty = PenaltySlider.Value;
             UpdateDisplay(PenaltyDisplay, PenaltySlider, true);
         }
-
     }
 }

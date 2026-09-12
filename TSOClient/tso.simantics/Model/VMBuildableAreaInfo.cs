@@ -105,6 +105,14 @@ namespace FSO.SimAntics.Model
         {
             if (vm.TSOState.PropertyCategory == 255) return 10000;
             else if (vm.TSOState.CommunityLot) return 100;
+            else
+            {
+                var limitOverride = vm.Tuning?.GetTuning("special", 0, 4);
+                if (limitOverride != null)
+                {
+                    return (int)limitOverride.Value;
+                }
+            }
             var lotInfo = vm.TSOState;
             var lotSize = lotInfo.Size & 255;
             var lotFloors = (lotInfo.Size >> 8) & 255;
