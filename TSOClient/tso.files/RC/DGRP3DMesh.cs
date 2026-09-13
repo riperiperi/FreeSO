@@ -378,7 +378,7 @@ namespace FSO.Files.RC
 
                         if (geom.Pixel != null)
                         {
-                            d.Add(geom.Pixel, geom);
+                            d[geom.Pixel] = geom;
                         }
                     }
 
