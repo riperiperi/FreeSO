@@ -591,6 +591,12 @@ namespace FSO.Client
 
                     UIScreen.GlobalShowDialog(ShutdownDialog, true);
                 }
+                else
+                {
+                    // Clicked close more than once. (forcibly close the game)
+                    Environment.Exit(0);
+                    return true;
+                }
 
                 return false;
             }

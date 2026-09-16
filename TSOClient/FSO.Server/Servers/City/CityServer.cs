@@ -150,11 +150,16 @@ namespace FSO.Server.Servers.City
 
         public override void Shutdown()
         {
-            Shutdown(ShutdownType.SHUTDOWN).RunSynchronously();
+            _ = Shutdown(ShutdownType.SHUTDOWN).Result;
         }
 
         public async Task<bool> Shutdown(ShutdownType type)
         {
+            if (ShuttingDown)
+            {
+                return false;
+            }
+
             Liveness.Stop();
             ShuttingDown = true;
             var lotServers = Kernel.Get<LotServerPicker>();

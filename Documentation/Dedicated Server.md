@@ -4,6 +4,8 @@ You can find download links for the Dedicated Server [immeditately below the cli
 
 Note that right now, the server software doesn't have an automated update system... you'll need to download and extract game updates manually with the server offline.
 
+To safely shut down the server (eject all players and save the lots) send a `CTRL-C` interrupt once - the process should exit once everything is cleaned up.
+
 # Dedicated Archive Server
 
 ![The button that gets you to the config export dialog](./media/configexportbutton.png)

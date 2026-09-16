@@ -19,6 +19,7 @@ using Ninject.Parameters;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Caching;
 using System.Threading;
@@ -323,6 +324,10 @@ namespace FSO.Server
 
             HostPool.Start();
 
+            LOG.Info("Ready! Press CTRL-C at any time to safely shut down.");
+
+            Console.CancelKeyPress += ConsoleClose;
+
             //Hacky reference to maek sure the assembly is included
             FSO.Common.DatabaseService.Model.LoadAvatarByIDRequest x;
 
@@ -366,6 +371,26 @@ namespace FSO.Server
                 }
             }
             return 1;
+        }
+
+        private bool HasTriedConsoleClose = false;
+        private void ConsoleClose(object sender, ConsoleCancelEventArgs e)
+        {
+            if (!HasTriedConsoleClose)
+            {
+                LOG.Fatal("== CTRL-C detected, attempting to shut down server safely ==");
+                LOG.Info("(if you want to forcibly shut down the server right now, try again)");
+
+                RequestedShutdown(0, ShutdownType.SHUTDOWN);
+
+                e.Cancel = true;
+                HasTriedConsoleClose = true;
+            }
+            else
+            {
+                e.Cancel = false;
+                Environment.Exit(0);
+            }
         }
 
         private int[] ShutdownAlertTimings = new int[]
