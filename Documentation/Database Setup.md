@@ -46,7 +46,7 @@ In the config.json file, near the top you'll see the field `database.connectionS
 
 Once the server has been configured, you can run the `db-init` scripts to initialize the database. Use the following command:
 
-`dotnet exec FSO.Server.Core.dll db-init`
+`./FSO.Server.Core db-init`
 
 This tool runs a bunch of scripts in the `DatabaseScripts` folder to set up the initial state of core tables in the database, then runs a sequence of "change" scripts found in the `DatabaseScripts/changes` folder to apply changes that have been made to the database structure since the scripts were first added to FreeSO. This includes everything from new fields to entirely new tables, so it's important that they all run.
 

@@ -82,8 +82,8 @@ Using the plus button at the bottom right, you can manually run any task that th
 
 Note that the options "Multiaccount Analysis" and "Prune Abandoned Lots" are not implemented. The first was done using an external tool developed by Sim, and a system to do the second was never devised.
 
-## Updates
+## Updates (Legacy)
 
 ![](./media/updatedelta.png)
 
-See the Updates documentation for more information.
+Before FreeSO archive, the game server was in charge of building and publishing client updates, but this has since moved to GitHub Actions CI, so you can largely ignore these sections of the webapp. See the Updates documentation for more information.

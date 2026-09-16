@@ -6,7 +6,7 @@ This document will go over each section of the config JSON, describing what the 
 
 ## Core Configuration
 
-See `Initial Setup`, `Database Setup` for more information.
+See `Dedicated Server`, `Database Setup` for more information.
 
 ```json
 {
@@ -380,6 +380,6 @@ Lot servers run lot simulation on behalf of city servers, and users connect dire
 
 The server was originally developed with TLS support for interoperability with the original TSO client. However, that didn't last long and a lot of FreeSO's networking became custom, leaving this path behind. We only had SSL on authentication, using an HTTPS proxy that ran in front of the server using auto-renewing certificates from LetsEncrypt.
 
-You can find some information on how to set up certificates in the `FSO.Server.Core` `Readme.md` file. However, TLS support has been untested for a while, Gluon (server to server) connections don't use it at all, and making your own root certificates will probably cause TLS authentication to fail on other machines.
+You can find some information on how to set up certificates in the `FSO.Server.Core` `Readme.md` file. However, this currently doesn't work due to some issues with the Mina.NET SSL filter.
 
 It might be a good thing to try and fix TLS with LetsEncrypt renewal support, though.

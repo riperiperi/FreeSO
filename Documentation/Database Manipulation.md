@@ -65,7 +65,7 @@ A user's `is_moderator` field also affects the `moderation_level` of any avatars
 
 ### Chat commands
 
-TODO
+[Check out the wiki page for chat commands.](https://github.com/riperiperi/FreeSO/wiki/Chat-Debug-Cheat-Commands)
 
 ## Events
 

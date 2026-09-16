@@ -1,45 +1,26 @@
 # Building FreeSO
 
-FreeSO is typically built with Windows and Visual Studio, even on CI. Running the client/server on Linux and Mac has always been done by running the Windows binaries with mono or `dotnet exec` for the client and server respectively.
+FreeSO is typically built with Windows and Visual Studio, though you can build for any platform with the .NET CLI.
 
 ## Requirements
 
-- Visual Studio 2019/2022
+- Visual Studio 2026
 - Git (downloading the project as zip may not include submodules like monogame)
-- .NET Framework 4.5 Targeting Pack (client/server)
-- .NET Core 2.2 (server)
-
-## Visual Studio 2022 setup
-
-Visual Studio 2022 doesn't come with a .NET Framework targeting pack, and at a glance it has been removed from the page that it directs you to. However, you can still source and add support manually, as shown by [this StackOverflow question](https://stackoverflow.com/questions/70022194/open-net-framework-4-5-project-in-vs-2022-is-there-any-workaround):
-
-- Download the [Microsoft.NETFramework.ReferenceAssemblies.net45](https://www.nuget.org/packages/microsoft.netframework.referenceassemblies.net45) package from nuget.org
-- Open the package as a zip (you may have to rename it to .zip)
-- Copy the files from `build\.NETFramework\v4.5\` to `C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5`
-- Reopen Visual Studio
-
-After all this, you should be able to build the project without it complaining about a missing targeting pack.
-
-This trick might work with future Visual Studio, but eventually it might just be a better idea to port to modern .NET and x64. This will drop support for Windows Vista, Windows 7 and Windows 8, though that's probably a good thing as nobody should be using those OS in <current year> for security reasons.
+- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) 
 
 ## Build Process (Windows)
-
-First, make sure you have cloned FreeSO _with_ submodules. If the folder `./Other/libs/FSOMonoGame/` is empty, you haven't don it right.
-
-![Protobuild running in PowerShell](./media/protobuild.png)
-
-Next, you want to run `.\Protobuild.exe --generate` from the directory `./Other/libs/FSOMonoGame/`. This will generate the Monogame projects that FreeSO uses.
-
-You can now open the FreeSO solution and build it in Visual Studio. Open `./TSOClient/FreeSO.sln`, and you should be ready to go.
+Open `./TSOClient/FreeSO.sln` in Visual Studio, and you should be ready to go.
 
 Change the active project to change which aspect you build:
 - `FSO.Windows`: The FreeSO client, targeting windows.
-- `FSO.IDE`: The FreeSO client with Volcanic.
+- `FSO.Unix`: The FreeSO client, targeting mac and linux.
+- `FSO.IDE`: The FreeSO client with Volcanic IDE. Windows only.
   - This is the version distributed to players on the official server, though most players just launched via FreeSO.exe (FSO.Windows, which is included in this project) rather than `Volcanic.exe`.
   - Don't always use this startup project - the IDE can crash on server by running out of memory very quickly, or simply because it's not meant to be used in Multiplayer.
-- `FSO.Server.Core`: The FreeSO server, running under .NET Core 2.2. This builds `FSO.Server.Core.dll`, which you must launch with `dotnet exec` or via Visual Studio.
+- `FSO.Server.Core`: The FreeSO dedicated server.
 - `FSOFacadeWorker`: A worker application that builds 3D thumbnails for properties that have been updated since their last thumbnail upload. A bit memory hungry, so closes itself after processing a few.
-- `FSO.Server.Watchdog`: A helper application that tries to self-update using update data downloaded by the main server. Launch with `--core` for FSO.Server.Core.
+  - With changes added alongside the archive mode, 3D lot facades should automatically populate without running this tool, but you can still use it to refresh thumbnails and facades.
+- `FSO.Server.Watchdog`: A helper application that tries to self-update using update data downloaded by the main server. Launch with `--core` for FSO.Server.Core. Not really used anymore.
 
 Building in Debug does make it a lot easier to make changes and debug when anything goes wrong, but it impacts performance very significantly. Don't distribute a debug build to players.
 
@@ -47,7 +28,10 @@ Building in Debug does make it a lot easier to make changes and debug when anyth
 
 ![MonoGame Pipeline Tool](./media/pipeline.png)
 
-The FreeSO repository includes built versions of Monogame content for DX, OGL and iOS, but if you make any changes to shaders or fonts you'll need to rebuild them. You can build these yourself by building and running the MonoGame Pipeline Tool by opening `./Other/libs/FSOMonoGame/Monogame.Framework.Windows.sln`, selecting `Pipeline.Windows` as the startup project and running it.
+The FreeSO repository includes built versions of Monogame content for DX, OGL and iOS, but if you make any changes to shaders or fonts you'll need to rebuild them. You can build these yourself by building running the MonoGame Pipeline Tool. 
+
+- Open the `TSOClient/` folder in a terminal, and run `dotnet tool restore`. 
+- Run `dotnet tool run mgcb-editor` to open the pipeline tool.
 
 You can find the FreeSO content projects for each target in `TSOClient/tso.content/ContentSrc/`:
 
@@ -57,12 +41,6 @@ You can find the FreeSO content projects for each target in `TSOClient/tso.conte
 
 ## CI
 
-FreeSO has an Azure pipeline for automated builds - the configuration is located here:
+FreeSO uses GitHub Actions to build client and server executables for Windows, Mac and Linux. There are some additional scripts that help publish builds as updates with delta patches and installers: `FSO.UpdateBuilder` and `FSO.UpdateWorker`.
 
-https://github.com/riperiperi/FreeSO/blob/master/azure-pipelines.yml
-
-Particularly important is the VM image `windows-2019`, used to avoid the targeting pack issue that occurs with newer versions of Visual Studio. It's possible a similar workaround could be used on later images, but I just froze it to make sure it didn't break again.
-
-These were part of the update pipeline for the official FreeSO server, and is still active and building any changes made now.
-
-It would probably be a good idea to get something similar running under GitHub Actions.
+Check out the [Updates](./Updates.md) page for more information on setting up an update channel from a GitHub repository.

@@ -1,3 +1,5 @@
+_This page explains how to set up the 2024 FreeSO server before the archive client release. For information on the latest dedicated server, see [Dedicated Server.](./Dedicated%20Server.md)_
+
 # Initial Setup
 
 Setting up the FreeSO server is very similar to setting up the FreeSO client, to a point. You need the following to run it at all:

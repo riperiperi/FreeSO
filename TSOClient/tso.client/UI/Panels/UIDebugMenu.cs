@@ -82,7 +82,7 @@ namespace FSO.Client.UI.Panels
             Add(cityPainterBtn);
 
             var ngbhBtn = new UIButton();
-            ngbhBtn.Caption = "Ngbh Editor";
+            ngbhBtn.Caption = "Neighborhood Editor (local)";
             ngbhBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 130);
             ngbhBtn.Width = 300;
             ngbhBtn.OnButtonClick += x =>

@@ -144,6 +144,8 @@ Some tuning has special behaviour coded directly into the game, rather than inte
   - `0 3`: Force Advanced Lighting
     - When equal to 1, the user's setting for lighting is forced to at least enable lightmaps.
     - This was used to ensure the candles lit up the darkness in Halloween event lots.
+  - `0 4`: Force Object Limit
+    - Sets the object limit to the given value. Keep in mind that having over 32767 single tile parts on a lot will likely crash the property, so don't go too crazy with object limits over FreeSO's 2400 maximum.
 - `city`
   - `0 0`: Force Terrain
     - `null`: City terrain is unaffected.
@@ -173,3 +175,13 @@ Some tuning has special behaviour coded directly into the game, rather than inte
   - `0 0`: Enable libsm64 integration when set to 1.
     - Assuming either the server or client has `sm64.z64` in the `Content/` folder, spawns a character with SM64 movement for anyone with a visible xinput controller, that they can use to explore the lot.
     - The latest version of the client doesn't have this feature, as it intrusively modifies some core behaviour. It is available on the `finale` branch.
+
+## Automated Event Schedule
+
+![Event Schedule in FreeSO Archive](./media/eventschedule.png)
+
+FreeSO Archive adds automated event scheduling to the server configuration, which automatically schedules yearly events when starting the server.
+
+These are provided via the `events` property in `config.json`. You can check out the empty city template for an `events.json` that contains just the important yearly events (halloween, christmas, april fools) or the Sunrise Crater version that includes the lot links from the payphone as pictured above. Of course, you need to write your own lot IDs to have it work in another city.
+
+You can copy the root JSON object of `events.json` right into a `config.json`'s `events` property for an MMO server and it'll follow the schedule the same way an Archive server would. You just need to restart your server more than once a year to give it a chance to move your event to the next year after it completes, which is probably a given anyways.

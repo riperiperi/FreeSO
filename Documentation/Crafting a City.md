@@ -6,13 +6,59 @@ The original Cities in The Sims Online are notably less decorated than Sunrise C
 
 You can see all of these original cities at `Maxis\The Sims Online\TSOClient\cities\`. Have a good look at how the map data is structured.
 
-You should have a server fully set up to get started, as you need to be able to enter city view to use the City Painter and Neighbourhood Editor tools.
+The best way to experiment with editing a city is to create a new Archive save, and enable the City Editor. This will let you edit the city terrain ingame, and even allows you to collaborate with others. Your custom city map will be saved to the `City1` folder within the save data, so you can extract it for use on an MMO server.
 
-![](./media/debugtools.png)
+## Neighbourhood Editor
 
-Accessing these tools can be done by pressing CTRL-F1 while in the city view. You can see two buttons for the City Painter and Neighbourhood Editor tools. Clicking on one will activate it on the city view, which replaces its normal interaction of selecting/purchasing properties.
+![](./media/nhoodedit.png)
 
-## City Painter
+The Neighbourhood Editor is a simple tool that lets you define and preview the boundaries for neighbourhoods in your city. Each neighbourhood has a single origin point, and every single tile on the map will pick the closest neighbourhood origin to be its assigned one.
+
+![](./media/debugtools2.png)
+
+The Neighborhood Editor is an experimental tool that can only be accessed from the debug menu. You can do this by pressing CTRL-F1 while in the city view, then clicking the button for the Neighbourhood Editor tool. This will activate it on the city view, which replaces its normal interaction of selecting/purchasing properties.
+
+There are a few things you can do in the neighbourhood editor:
+
+- Click & Drag any point
+  - Move a neighbourhood's origin point to the mouse position. The neighbourhood visualization will update to show you what area of the city belongs to which neighbourhood.
+- Hold shift & Click
+  - Create a new neighbourhood at the mouse position.
+- Hold ctrl & Click
+  - Delete the neighbourhood at the mouse position. Needs to be pretty close.
+- Press "R"
+  - Rename the neighbourhood closest to the mouse position.
+- Press "C"
+  - Change the color of the neighbourhood closest to the mouse position
+- Press F10
+  - Load the neighbourhood data from `Content/edit_neigh.json`. 
+- Press Shift + F10
+  - Save the neighbourhood data to `Content/edit_neigh.json`.
+
+Similar to the City Painter, this tool is currently pretty user unfriendly, so improvements would definitely be welcome.
+
+Descriptions for neighbourhoods also can't be edited ingame. Add a `description` field to each object in the JSON to give your neighbourhoods a description that appears in their nhood page. You can also do this in the database after importing.
+
+### Importing into your server
+
+Like the City Painter, changes are made entirely locally and saved to a local file. To use these neighbourhoods on your server, you should copy over the `edit_neigh.json` file to the server, and then run the `import-nhood` tool:
+
+`./FSO.Server.Core import-nhood <shardId> <nhoodJson>`
+
+Replacing the arguments with your target shard ID and JSON path as necessary.
+
+This tool will enter your neighbourhoods into the database for you, automatically updating existing lots to point to the new neighbourhoods. Any additional configuration for the neighbourhood, such as whether it is reserved (only admins can purchase property) and forced mayors will have to be done after the fact.
+
+## Upgrades
+
+Upgrades are a feature added by FreeSO that allows users to upgrade objects with Simoleons to improve or add to their functionality. These upgrades essentially work by modifying a bunch of tuning parameters in the object itself, which are used by the scripts to determine things like how much motive gain an object should give when you use it.
+
+The `upgrades.json` file in `Content/` will be automatically distributed to clients when they log into the server - no need to bundle this one with your client. The final version of this file from the FreeSO server's run is included in the content directory of both the client and server, and can be edited using Volcanic.
+
+
+## City Painter (Legacy)
+
+_This section describes the legacy version of the City Editor, present in the 2024 release of FreeSO. The City Editor has been expanded and fully integrated into Archive mode, and cities created there can be exported for use in MMO servers._
 
 ![](./media/citypainter.png)
 
@@ -98,46 +144,3 @@ It's pretty obvious that changing the map from under a server with existing lots
 Moving these properties can resolve this issue, as then the property will re-initialize its terrain to match the new location. You can move properties _in place_ by setting `move_flags` to `1` on the `fso_lots` table, though this will still flatten the buildable area of the lot, similar to moving to another location.
 
 I would recommend only opening your city when you're happy with how the map looks, to avoid any issues caused by changes you make in the future.
-
-## Neighbourhood Editor
-
-![](./media/nhoodedit.png)
-
-The Neighbourhood Editor is a simple tool that lets you define and preview the boundaries for neighbourhoods in your city. Each neighbourhood has a single origin point, and every single tile on the map will pick the closest neighbourhood origin to be its assigned one.
-
-There are a few things you can do in the neighbourhood editor:
-
-- Click & Drag any point
-  - Move a neighbourhood's origin point to the mouse position. The neighbourhood visualization will update to show you what area of the city belongs to which neighbourhood.
-- Hold shift & Click
-  - Create a new neighbourhood at the mouse position.
-- Hold ctrl & Click
-  - Delete the neighbourhood at the mouse position. Needs to be pretty close.
-- Press "R"
-  - Rename the neighbourhood closest to the mouse position.
-- Press "C"
-  - Change the color of the neighbourhood closest to the mouse position
-- Press F10
-  - Load the neighbourhood data from `Content/edit_neigh.json`. 
-- Press Shift + F10
-  - Save the neighbourhood data to `Content/edit_neigh.json`.
-
-Similar to the City Painter, this tool is currently pretty user unfriendly, so improvements would definitely be welcome.
-
-Descriptions for neighbourhoods also can't be edited ingame. Add a `description` field to each object in the JSON to give your neighbourhoods a description that appears in their nhood page. You can also do this in the database after importing.
-
-### Importing into your server
-
-Like the City Painter, changes are made entirely locally and saved to a local file. To use these neighbourhoods on your server, you should copy over the `edit_neigh.json` file to the server, and then run the `import-nhood` tool:
-
-`dotnet exec FSO.Server.Core.dll import-nhood <shardId> <nhoodJson>`
-
-Replacing the arguments with your target shard ID and JSON path as necessary.
-
-This tool will enter your neighbourhoods into the database for you, automatically updating existing lots to point to the new neighbourhoods. Any additional configuration for the neighbourhood, such as whether it is reserved (only admins can purchase property) and forced mayors will have to be done after the fact.
-
-## Upgrades
-
-Upgrades are a feature added by FreeSO that allows users to upgrade objects with Simoleons to improve or add to their functionality. These upgrades essentially work by modifying a bunch of tuning parameters in the object itself, which are used by the scripts to determine things like how much motive gain an object should give when you use it.
-
-The `upgrades.json` file in `Content/` will be automatically distributed to clients when they log into the server - no need to bundle this one with your client. The final version of this file from the FreeSO server's run is included in the content directory of both the client and server, and can be edited using Volcanic.
