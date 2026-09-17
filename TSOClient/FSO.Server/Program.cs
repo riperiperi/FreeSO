@@ -1,14 +1,17 @@
 ﻿using CommandLine;
+using FSO.Common;
 using FSO.Server.Database;
 using FSO.Server.DataService;
 using FSO.Server.Utils;
 using Ninject;
 using Ninject.Parameters;
+using NLog;
 
 namespace FSO.Server
 {
     public class Program
     {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
         private readonly struct ToolInfo(Type toolType, object toolOptions)
         {
             public readonly Type ToolType = toolType;
@@ -17,6 +20,10 @@ namespace FSO.Server
 
         public static int Main(string[] args)
         {
+            var version = FSOVersionInfo.Current;
+            Console.Title = $"FreeSO Server ({version.id})";
+            LOG.Info($"=== FreeSO Server - {version.channel} {version.id} ===");
+
             ToolInfo? toolInfo = null;
 
             string[] a2 = args;

@@ -7,6 +7,7 @@
     <IsAotCompatible>True</IsAotCompatible>
     <!-- disable apphost for self-contained builds to avoid conflicts when referenced as dependency -->
     <UseAppHost Condition="'$(SelfContained)' != 'true'">false</UseAppHost>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
