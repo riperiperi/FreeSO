@@ -291,6 +291,9 @@ namespace FSO.Server
             if (Config.Archive != null)
             {
                 LOG.Info("=== RUNNING IN ARCHIVE MODE! Only archive authentication will work! ===");
+
+                Config.Archive.Flags &= ~FSO.Common.ArchiveConfigFlags.Offline;
+                Config.Archive.Flags |= FSO.Common.ArchiveConfigFlags.DedicatedServer;
             }
 
             //TODO: Some content preloading
