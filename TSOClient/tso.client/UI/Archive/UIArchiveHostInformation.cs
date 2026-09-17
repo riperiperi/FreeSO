@@ -291,6 +291,7 @@ namespace FSO.Client.UI.Archive
                 Texture = CopyButtonTexture,
                 Caption = GetString("33"), // Copy
                 CaptionStyle = CopyStyle,
+                Disabled = !ClipboardHandler.Default.Supported
             };
 
             btn.OnButtonClick += (elem) =>

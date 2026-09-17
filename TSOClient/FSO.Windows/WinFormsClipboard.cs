@@ -6,6 +6,8 @@ namespace FSO.Windows
 {
     public class WinFormsClipboard : ClipboardHandler
     {
+        public override bool Supported => true;
+
         public override string Get()
         {
             var wait = new AutoResetEvent(false);

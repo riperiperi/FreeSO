@@ -198,11 +198,22 @@ namespace FSO.Client.UI.Archive
 
         private void CopyIP(UIJoinServerEntry server)
         {
-            ClipboardHandler.Default.Set(server.Address);
-            UIScreen.GlobalShowAlert(new UIAlertOptions()
+            if (ClipboardHandler.Default.Supported)
             {
-                Message = GetString("34"), // Copied to clipboard
-            }, true);
+                ClipboardHandler.Default.Set(server.Address);
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = GetString("34"), // Copied to clipboard
+                }, true);
+            }
+            else
+            {
+                // Hopefully nobody gets jumpscared by this.
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = server.Address
+                }, true);
+            }
         }
 
         private void OpenActions(UIElement anchor, UIJoinServerEntry server)

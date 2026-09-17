@@ -6,5 +6,6 @@
 
         public virtual string Get() { return ""; }
         public virtual void Set(string text) { }
+        public virtual bool Supported => false;
     }
 }

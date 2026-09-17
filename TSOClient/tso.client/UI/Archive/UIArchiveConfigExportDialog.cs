@@ -7,12 +7,14 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.Server.Embedded;
 using FSO.UI.Controls;
 using Microsoft.Xna.Framework;
+using System.Diagnostics;
 
 namespace FSO.Client.UI.Archive
 {
     internal class UIArchiveConfigExportDialog : UIArchiveDialog
     {
         public UITextBox PathInput;
+        public UIButton OpenFolderButton;
         public UIButton ExportButton;
         private bool ArchiveAbsolute;
         private bool TSOAbsolute = true;
@@ -60,18 +62,23 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(flagsVbox);
 
-            var vbox2 = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Right };
+            var buttonsBox = new UIHBoxContainer();
 
             vbox.Add(new UISpacer(1, 8));
 
-            vbox2.Add(ExportButton = new UIButton()
+            buttonsBox.Add(OpenFolderButton = new UIButton()
+            {
+                Caption = GetString("288")
+            });
+
+            buttonsBox.Add(ExportButton = new UIButton()
             {
                 Caption = GetString("40")
             });
 
-            vbox2.AutoSize(); //TODO: somehow force horiz size from parent?
+            buttonsBox.AutoSize(); //TODO: somehow force horiz size from parent?
 
-            vbox.Add(vbox2);
+            vbox.Add(buttonsBox);
 
             Add(vbox);
 
@@ -89,6 +96,7 @@ namespace FSO.Client.UI.Archive
             };
 
             ExportButton.OnButtonClick += Export;
+            OpenFolderButton.OnButtonClick += OpenFolder;
         }
 
         private void Export(UIElement button)
@@ -122,14 +130,17 @@ namespace FSO.Client.UI.Archive
                             writer.Write(json);
                         }
 
-                        bool clipboardSuccess = true;
-                        try
+                        bool clipboardSuccess = false;
+                        if (ClipboardHandler.Default.Supported)
                         {
-                            ClipboardHandler.Default.Set(path);
-                        }
-                        catch (Exception)
-                        {
-                            clipboardSuccess = false;
+                            try
+                            {
+                                ClipboardHandler.Default.Set(path);
+                                clipboardSuccess = true;
+                            }
+                            catch
+                            {
+                            }
                         }
 
                         UIAlert.Alert(
@@ -143,6 +154,28 @@ namespace FSO.Client.UI.Archive
                     }
                 }
             });
+        }
+
+        private void OpenFolder(UIElement button)
+        {
+            var path = PathInput.CurrentText;
+            var ext = Path.GetExtension(path);
+
+            string folder = ext == null ? path : Path.GetDirectoryName(path);
+
+            try
+            {
+                Process.Start(new ProcessStartInfo()
+                {
+                    FileName = Path.GetFullPath(folder),
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+            }
+            catch
+            {
+                // Just fail silently for now.
+            }
         }
 
         private void CreateCheck(UIContainer target, string label, bool defaultValue, Action<bool> onChanged)
