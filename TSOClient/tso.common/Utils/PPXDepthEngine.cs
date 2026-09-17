@@ -20,13 +20,29 @@ namespace FSO.Common.Utils
         public static void InitScreenTargets()
         {
             if (GD == null) return;
+
+            int width = SSAA * GD.Viewport.Width;
+            int height = SSAA * GD.Viewport.Height;
+
+            // If the target is already a match, don't do anything.
+
+            if (Backbuffer != null && Backbuffer.MultiSampleCount == MSAA && Backbuffer.Width == width && Backbuffer.Height == height &&
+                (FSOEnvironment.Enable3D ? BackbufferDepth == null : (
+                    BackbufferDepth != null &&
+                    BackbufferDepth.MultiSampleCount == MSAA &&
+                    BackbufferDepth.Width == width &&
+                    BackbufferDepth.Height == height
+                )))
+            {
+                return;
+            }
+
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
             BackbufferDepth = null;
             if (Backbuffer != null) Backbuffer.Dispose();
-            var scale = 1;//FSOEnvironment.DPIScaleFactor;
             if (!FSOEnvironment.Enable3D)
-                BackbufferDepth = CreateRenderTarget(GD, 1, MSAA, SurfaceFormat.Color, SSAA * GD.Viewport.Width / scale, SSAA * GD.Viewport.Height / scale, DepthFormat.None);
-            Backbuffer = CreateRenderTarget(GD, 1, MSAA, SurfaceFormat.Color, SSAA * GD.Viewport.Width / scale, SSAA * GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
+                BackbufferDepth = CreateRenderTarget(GD, 1, MSAA, SurfaceFormat.Color, width, height, DepthFormat.None);
+            Backbuffer = CreateRenderTarget(GD, 1, MSAA, SurfaceFormat.Color, width, height, DepthFormat.Depth24Stencil8);
         }
 
         private static RenderTarget2D ActiveColor;

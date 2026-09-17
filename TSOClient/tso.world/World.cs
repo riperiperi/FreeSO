@@ -1024,6 +1024,11 @@ namespace FSO.LotView
 
         public void ChangeAAMode(GraphicsDevice gd)
         {
+            if (!GameThread.IsInGameThread())
+            {
+                return;
+            }
+
             var lastm = PPXDepthEngine.MSAA;
             var lasts = PPXDepthEngine.SSAA;
             PPXDepthEngine.SSAAFunc = SSAADownsample.Draw;
@@ -1108,7 +1113,11 @@ namespace FSO.LotView
                     Blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
                 }
             }
-            ChangeAAMode(gd);
+
+            if (Platform != null)
+            {
+                ChangeAAMode(gd);
+            }
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)
