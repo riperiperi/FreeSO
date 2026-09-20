@@ -500,7 +500,7 @@ namespace FSO.Client.UI.Screens
                         VisualWorld.State.PreciseZoom = scale;
                     } else
                     {
-                        VisualWorld.Opacity = (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)?1f:0f;
+                        VisualWorld.Opacity = (CityRenderer.m_Zoomed == TerrainZoomMode.Lot && CityRenderer.m_LotZoomProgress != 0) ?1f:0f;
                     }
                 }
                 else if (CityRenderer.m_LotZoomProgress > 0)
