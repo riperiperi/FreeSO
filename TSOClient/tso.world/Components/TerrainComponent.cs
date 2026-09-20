@@ -438,9 +438,17 @@ namespace FSO.LotView.Components
             }
             if (VertexBuffer == null) return;
             if (world.Light != null) LightVec = world.Light.LightVec;
-            var weights = (world.Camera as CameraControllers)?.TransitionWeights;
-            var transitionIntensity = weights?.Count == 1 ? weights[0].Percent : 0f;
-            Alpha = 1 - (float)Math.Pow(transitionIntensity, 150f);
+            var camControl = world.Camera as CameraControllers;
+            if (camControl.TryGetActiveExternalTransition(out var transition))
+            {
+                // For the city transition, the terrain fades out as the camera gets further from the lot.
+                var transitionIntensity = transition.Percent;
+                Alpha = 1 - (float)Math.Pow(transitionIntensity, 150f);
+            }
+            else
+            {
+                Alpha = 1;
+            }
 
             device.DepthStencilState = DepthStencilState.Default;
             device.BlendState = BlendState.NonPremultiplied;

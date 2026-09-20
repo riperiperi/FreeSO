@@ -135,6 +135,18 @@ namespace FSO.LotView.Utils.Camera
             else return _ExternalTransition.Percent > 0;
         }
 
+        public bool TryGetActiveExternalTransition(out CameraTransition transition)
+        {
+            if (ExternalTransitionActive())
+            {
+                transition = _ExternalTransition;
+                return true;
+            }
+
+            transition = null;
+            return false;
+        }
+
         public CameraTransition GetExternalTransition()
         {
             if (_ExternalTransition == null)
