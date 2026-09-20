@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 namespace FSO.Common
 {
     [Flags]
-    public enum ArchiveConfigFlags
+    public enum ArchiveConfigFlags : uint
     {
         None = 0,
         Offline = 1 << 0,

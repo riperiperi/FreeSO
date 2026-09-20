@@ -25,7 +25,7 @@ namespace FSO.Server.Protocol.Aries.Packets
 
             ServerKey = input.GetPascalVLCString();
             Nonce = input.GetPascalVLCString();
-            ArchiveConfig = input.GetEnum<ArchiveConfigFlags>();
+            ArchiveConfig = (ArchiveConfigFlags)input.GetUInt32();
             ShardId = input.GetUInt32();
             ShardName = input.GetPascalVLCString();
             ShardMap = input.GetPascalVLCString();
@@ -44,7 +44,7 @@ namespace FSO.Server.Protocol.Aries.Packets
 
             output.PutPascalVLCString(ServerKey);
             output.PutPascalVLCString(Nonce);
-            output.PutEnum(ArchiveConfig);
+            output.PutUInt32((uint)ArchiveConfig);
             output.PutUInt32(ShardId);
             output.PutPascalVLCString(ShardName);
             output.PutPascalVLCString(ShardMap);
