@@ -260,7 +260,7 @@ namespace FSO.LotView.Utils.Camera
                 {
                     trans.Percent -= (1 / trans.Duration) / FSOEnvironment.RefreshRate;
                 }
-                if (trans.Percent <= 0f)
+                if (trans.Percent <= 0f || DisableTransitions)
                 {
                     if (trans == _ExternalTransition) _ExternalTransition = null;
                     TransitionWeights.RemoveAt(i);

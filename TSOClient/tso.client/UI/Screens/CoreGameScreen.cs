@@ -854,6 +854,7 @@ namespace FSO.Client.UI.Screens
                 var lastWorld = TransitionWorld;
                 CameraControllers newCameras = World.State.Cameras;
 
+                bool prevSmoothRotationDisable = World.State.DisableSmoothRotation;
                 World.State.DisableSmoothRotation = true;
 
                 float heightDiff = 0;
@@ -973,7 +974,7 @@ namespace FSO.Client.UI.Screens
                     }
                 }
 
-                World.State.DisableSmoothRotation = false;
+                World.State.DisableSmoothRotation = prevSmoothRotationDisable;
                 LotControl.ResetTargetZoom();
 
                 if (info.Type == LotTransitionType.Teleport)

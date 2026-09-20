@@ -59,6 +59,7 @@ namespace FSO.LotView
         protected bool HasInitGPU;
         protected bool HasInitBlueprint;
         protected bool HasInit;
+        private bool AAModeDirty;
         
         public WorldStatic Static;
         public WorldArchitecture Architecture;
@@ -656,6 +657,11 @@ namespace FSO.LotView
         {
             base.PreDraw(device);
             if (HasInit == false) { return; }
+            if (AAModeDirty)
+            {
+                ChangeAAMode(device);
+            }
+
             State.Cameras.PreDraw(this);
             BoundView();
             State._2D.PreciseZoom = State.PreciseZoom;
@@ -1024,10 +1030,13 @@ namespace FSO.LotView
 
         public void ChangeAAMode(GraphicsDevice gd)
         {
-            if (!GameThread.IsInGameThread())
+            if (Platform == null || !GameThread.IsInGameThread() || gd == null)
             {
+                AAModeDirty = true;
                 return;
             }
+
+            AAModeDirty = false;
 
             var lastm = PPXDepthEngine.MSAA;
             var lasts = PPXDepthEngine.SSAA;
@@ -1114,10 +1123,7 @@ namespace FSO.LotView
                 }
             }
 
-            if (Platform != null)
-            {
-                ChangeAAMode(gd);
-            }
+            ChangeAAMode(gd);
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)
