@@ -1002,6 +1002,17 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private void UpdateMouseParams()
+        {
+            //handling smooth scaled zoom
+            var camType = World.State.Cameras.ActiveType;
+            Touch._3D = camType != LotView.Utils.Camera.CameraControllerType._2D;
+            Touch.MinZoom = Touch._3D ? -0.75f : 0.25f;
+            Touch.MaxZoom = Touch._3D ? 2 : 2 * FSOEnvironment.DPIScaleFactor;
+
+            Touch.DisableScroll = camType == CameraControllerType.Direct || camType == CameraControllerType.FirstPerson;
+        }
+
         private WorldZoom LastZoom;
         public override void Update(UpdateState state)
         {
@@ -1009,11 +1020,7 @@ namespace FSO.Client.UI.Panels
 
             if (!vm.Ready || vm.Context.Architecture == null) return;
 
-            //handling smooth scaled zoom
-            var camType = World.State.Cameras.ActiveType;
-            Touch._3D = camType != LotView.Utils.Camera.CameraControllerType._2D;
-            Touch.MinZoom = Touch._3D ? -0.75f : 0.25f;
-            Touch.MaxZoom = Touch._3D ? 2 : 2 * FSOEnvironment.DPIScaleFactor;
+            UpdateMouseParams();
 
             var rate = 60f / FSOEnvironment.RefreshRate;
             if (World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType._3D)

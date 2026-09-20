@@ -78,6 +78,7 @@ namespace FSO.Client.UI.Panels
         public float MinZoom = -0.75f;
         public float MaxZoom = 2f;
         public bool _3D;
+        public bool DisableScroll;
 
         private bool MouseIsOn => Master.MouseIsOn;
 
@@ -85,12 +86,11 @@ namespace FSO.Client.UI.Panels
         {
             var _3d = _3D;
             base.Update(state);
-            bool rotated = false;
 
-            var invalidNow = !Master.TVisible || !UIScreen.Current.Visible || !state.ProcessMouseEvents || state.MouseState.ScrollWheelValue == 0;
+            var invalidNow = DisableScroll || !Master.TVisible || !UIScreen.Current.Visible || !state.ProcessMouseEvents || state.MouseState.ScrollWheelValue == 0;
             if (invalidNow) ScrollWheelInvalid = invalidNow;
 
-            if (!FSOEnvironment.SoftwareKeyboard)
+            if (!FSOEnvironment.SoftwareKeyboard && !DisableScroll)
             {
                 //if (!state.WindowFocused) ScrollWheelInvalid = true;
                 if (ScrollWheelInvalid)
@@ -300,7 +300,6 @@ namespace FSO.Client.UI.Panels
                     }
 
                     HITVM.Get().PlaySoundEvent(UISounds.ObjectRotate);
-                    rotated = true;
                 }
                 RotateAngle = 0;
             }
