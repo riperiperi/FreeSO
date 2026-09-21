@@ -154,7 +154,7 @@ namespace FSO.LotView.Model
             }
             else
             {
-                if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100 && enabled == LastEnabled) return null;
+                if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100 && enabled == LastEnabled && (!enabled || Current != null)) return null;
 
                 var curInt = GetAutoWeatherIntensity(now);
                 var lastInt = GetAutoWeatherIntensity(now - new TimeSpan(1, 0, 0));

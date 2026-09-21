@@ -37,7 +37,8 @@ namespace FSO.LotView.Components
             LoadFinalIfNeeded(GD);
 
             InitArrays();
-            BuildSkyDome(GD, time);
+
+            LastSkyPos = float.PositiveInfinity;
         }
 
         public void LoadFinalIfNeeded(GraphicsDevice GD)
@@ -127,7 +128,7 @@ namespace FSO.LotView.Components
             IndexData = new int[indexCount];
         }
 
-        public void BuildSkyDome(GraphicsDevice GD, float time)
+        public void BuildSkyDome(GraphicsDevice GD, float time, Vector3 sunVector)
         {
             LoadFinalIfNeeded(GD);
 
@@ -146,11 +147,15 @@ namespace FSO.LotView.Components
             var range = 1 - yGap;
             var topRange = 0.9f * range;
             var btmRange = 0.1f * range;
+            float skyEffect = 0.07f;
+
+            var sunPos = new Vector2(-sunVector.Z, sunVector.X) * MathF.Sin(time * MathF.PI * 2);
+            var sunOffset = sunPos.Length() * (time > 0.5f ? -1 : 1);
 
             int vi = 0;
             int ii = 0;
 
-            verts[vi++] = new VertexPositionTexture(new Vector3(0, 1, 0), new Vector2(skyPos, yGap));
+            verts[vi++] = new VertexPositionTexture(new Vector3(0, 1, 0), new Vector2(skyPos - sunOffset * skyEffect, yGap));
 
             for (int y = 1; y < subdivs; y++)
             {
@@ -158,6 +163,8 @@ namespace FSO.LotView.Components
                 var angley = (float)Math.PI * y / ((float)subdivs - 1);
                 var radius = (float)Math.Sin(angley);
                 var height = Math.Cos(angley);
+
+                var sunDotEffect = MathF.Sqrt(1f - MathF.Abs((float)height));
                 //var aheight = (height < -0.6f)?((-0.12f) - height):height;
                 //var tpos = (0.9f - (float)Math.Sqrt(Math.Abs(aheight)) * 0.9f);
                 
@@ -167,7 +174,12 @@ namespace FSO.LotView.Components
                 {
                     var anglex = (float)Math.PI * x * 2 / (float)subdivs;
                     var colLerp = Math.Min(1, Math.Abs(((y - 2) / (float)subdivs) - 0.60f) * 4);
-                    verts[vi++] = new VertexPositionTexture(new Vector3((float)Math.Sin(anglex) * radius, (float)height, (float)Math.Cos(anglex) * radius), new Vector2(skyPos, tpos));
+
+                    var pos = new Vector2(MathF.Sin(anglex), MathF.Cos(anglex));
+
+                    var sunDot = (Vector2.Dot(pos, sunPos)) * sunDotEffect + sunOffset;
+
+                    verts[vi++] = new VertexPositionTexture(new Vector3(pos.X * radius, (float)height, pos.Y * radius), new Vector2(skyPos - sunDot * skyEffect, tpos));
                     if (x < subdivs)
                     {
                         if (y != 1)
@@ -208,7 +220,8 @@ namespace FSO.LotView.Components
             var ocolor = outsideColor.ToVector4();
             var effect = WorldContent.GetBE(gd);
 
-            if (LastSkyPos != time) BuildSkyDome(gd, time);
+            var night = Night((float)FinaleUtils.BiasSunTime(time));
+            if (LastSkyPos != time) BuildSkyDome(gd, time, night ? -sunVector : sunVector);
 
             var color = (ocolor - new Vector4(0.35f)) * 1.5f + new Vector4(0.35f);
             color.W = 1;
@@ -246,7 +259,6 @@ namespace FSO.LotView.Components
             }
 
             gd.BlendState = BlendState.NonPremultiplied;
-            var night = Night((float)FinaleUtils.BiasSunTime(time));
             //draw the sun or moon
             var pos = sunVector;
             var z = -pos.X;
