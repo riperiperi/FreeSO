@@ -1,5 +1,4 @@
 ﻿using FSO.Common.Rendering.Framework.Camera;
-using System;
 using FSO.Client.Controllers;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.LotView;
@@ -139,6 +138,8 @@ namespace FSO.Client.Rendering.City
 
             }
         }
+
+        private bool FPFollowTerrain = true;
 
         public CityCamera3D() : base(GameFacade.GraphicsDevice, new Vector3(256, 0, 256), new Vector3(256, 0, 256), Vector3.Up)
         {
@@ -287,6 +288,79 @@ namespace FSO.Client.Rendering.City
         private Vector3 FPCamVelocity;
         private Terrain Parent;
 
+        private void SetFPCamHeightClamped(float terrainHeight, float value)
+        {
+            if (FPFollowTerrain)
+            {
+                FPCamHeight = Math.Min(600, Math.Max((terrainHeight - CamHeight) - 0.25f, value));
+            }
+            else
+            {
+                FPCamHeight = Math.Min(600, Math.Max(terrainHeight - 0.25f, value));
+            }
+        }
+
+        private bool LastPressedFPToggle;
+
+        private void ApplyControllerMovement(float terrainHeight, float power)
+        {
+            var gamepad = GamePad.GetState(0);
+            bool fpToggle = false;
+            if (gamepad.IsConnected)
+            {
+                var leftStick = gamepad.ThumbSticks.Left;
+                var rightStick = gamepad.ThumbSticks.Right;
+
+                //if (rightStick.Length() > 0.1f)
+                {
+                    RotationX -= rightStick.X * power * 0.05f;
+                    RotationY -= rightStick.Y * power * 0.05f;
+                }
+
+                power *= 0.5f + FPCamHeight / 10f;
+
+                //if (leftStick.Length() > 0.1f)
+                {
+                    Scroll(leftStick * new Vector2(1, -1) * power * 0.3f, false);
+                }
+
+                float heightVel = 0;
+
+                //if (gamepad.Triggers.Right > 0.03f)
+                {
+                    heightVel += gamepad.Triggers.Right * 0.5f;
+                }
+
+                //if (gamepad.Triggers.Left > 0.03f)
+                {
+                    heightVel -= gamepad.Triggers.Left * 0.5f;
+                }
+
+                fpToggle = gamepad.Buttons.LeftShoulder == ButtonState.Pressed;
+                if (fpToggle && !LastPressedFPToggle)
+                {
+                    SetFollowTerrain(!FPFollowTerrain);
+                }
+
+                if (heightVel != 0)
+                {
+                    SetFPCamHeightClamped(terrainHeight, FPCamHeight + heightVel * power);
+                }
+            }
+
+            LastPressedFPToggle = fpToggle;
+        }
+
+        private void SetFollowTerrain(bool value)
+        {
+            if (FPFollowTerrain != value)
+            {
+                FPCamHeight += value ? -CamHeight : CamHeight;
+
+                FPFollowTerrain = value;
+            }
+        }
+
         public void Update(UpdateState state, Terrain city)
         {
             Focused = state.WindowFocused;
@@ -430,8 +504,10 @@ namespace FSO.Client.Rendering.City
                     LastFP = false;
                 }
 
+                ApplyControllerMovement(terrainHeight, 60f / FSOEnvironment.RefreshRate);
+
                 Scroll(new Vector2(FPCamVelocity.X / FSOEnvironment.RefreshRate, FPCamVelocity.Z / FSOEnvironment.RefreshRate), false);
-                FPCamHeight = Math.Min(600, Math.Max((terrainHeight - CamHeight) - 0.25f, FPCamHeight + (FPCamVelocity.Y * 3) / FSOEnvironment.RefreshRate));
+                SetFPCamHeightClamped(terrainHeight, FPCamHeight + (FPCamVelocity.Y * 3) / FSOEnvironment.RefreshRate);
                 for (int i = 0; i < FSOEnvironment.RefreshRate / 60; i++)
                     FPCamVelocity *= 0.9f;
 
@@ -629,6 +705,11 @@ namespace FSO.Client.Rendering.City
             if (CameraMode)
             {
                 //if (FixedCam) return;
+                if (!FPFollowTerrain)
+                {
+                    baseHeight = 0;
+                }
+
                 Position = new Vector3(CenterTile.X, baseHeight + 0.5f + FPCamHeight, CenterTile.Y);
 
                 var mat = Matrix.CreateRotationZ((_RotationY - (float)Math.PI / 2) * 0.99f) * Matrix.CreateRotationY(_RotationX);

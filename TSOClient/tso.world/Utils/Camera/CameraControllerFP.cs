@@ -1,7 +1,6 @@
-﻿using System;
-using FSO.Common;
+﻿using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
-using FSO.Common.Utils;
+using FSO.LotView.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,6 +15,7 @@ namespace FSO.LotView.Utils.Camera
         public float SavedYRot;
         public bool FixedCam;
         public bool CaptureMouse;
+        private bool FollowTerrain = true;
 
         private GraphicsDevice GD;
 
@@ -26,11 +26,83 @@ namespace FSO.LotView.Utils.Camera
 
         public override void InvalidateCamera(WorldState state)
         {
-            var baseHeight = CamHeight + 3;
+            var baseHeight = FollowTerrain ? CamHeight + 3 : 3;
+
             Camera.Position = new Vector3(state.CenterTile.X * WorldSpace.WorldUnitsPerTile, baseHeight + FPCamHeight, state.CenterTile.Y * WorldSpace.WorldUnitsPerTile);
 
             var mat = Matrix.CreateRotationZ((_RotationY - (float)Math.PI / 2) * 0.99f) * Matrix.CreateRotationY(_RotationX);
             Camera.Target = Camera.Position + Vector3.Transform(new Vector3(-10, 0, 0), mat);
+        }
+
+        private void SetFPCamHeightClamped(float terrainHeight, float value)
+        {
+            if (FollowTerrain)
+            {
+                FPCamHeight = Math.Max((terrainHeight - CamHeight) - 2, value);
+            }
+            else
+            {
+                FPCamHeight = Math.Max(terrainHeight - 2, value);
+            }
+        }
+
+        private bool LastPressedFPToggle;
+
+        private void ApplyControllerMovement(World world, float terrainHeight, float power)
+        {
+            var gamepad = GamePad.GetState(0);
+            bool fpToggle = false;
+            if (gamepad.IsConnected && !SM64Component.Allowed)
+            {
+                var leftStick = gamepad.ThumbSticks.Left;
+                var rightStick = gamepad.ThumbSticks.Right;
+
+                //if (leftStick.Length() > 0.1f)
+                {
+                    world.Scroll(leftStick * new Vector2(1, -1) * power * 0.2f);
+                }
+
+                //if (rightStick.Length() > 0.1f)
+                {
+                    RotationX -= rightStick.X * power * 0.05f;
+                    RotationY -= rightStick.Y * power * 0.05f;
+                }
+
+                float heightVel = 0;
+
+                //if (gamepad.Triggers.Right > 0.03f)
+                {
+                    heightVel += gamepad.Triggers.Right * 0.5f;
+                }
+
+                //if (gamepad.Triggers.Left > 0.03f)
+                {
+                    heightVel -= gamepad.Triggers.Left * 0.5f;
+                }
+
+                fpToggle = gamepad.Buttons.LeftShoulder == ButtonState.Pressed;
+                if (fpToggle && !LastPressedFPToggle)
+                {
+                    SetFollowTerrain(!FollowTerrain);
+                }
+
+                if (heightVel != 0)
+                {
+                    SetFPCamHeightClamped(terrainHeight, FPCamHeight + heightVel * power);
+                }
+            }
+
+            LastPressedFPToggle = fpToggle;
+        }
+
+        private void SetFollowTerrain(bool value)
+        {
+            if (FollowTerrain != value)
+            {
+                FPCamHeight += value ? -CamHeight : CamHeight;
+
+                FollowTerrain = value;
+            }
         }
 
         public override void Update(UpdateState state, World world)
@@ -90,6 +162,8 @@ namespace FSO.LotView.Utils.Camera
                     if (state.KeyboardState.IsKeyDown(Keys.E))
                         FPCamVelocity.Y += speed;
 
+                    ApplyControllerMovement(world, terrainHeight, power);
+
                     LastFP = true;
                 }
                 else
@@ -98,7 +172,8 @@ namespace FSO.LotView.Utils.Camera
                 }
 
                 world.Scroll(new Vector2(FPCamVelocity.X / FSOEnvironment.RefreshRate, FPCamVelocity.Z / FSOEnvironment.RefreshRate));
-                FPCamHeight = Math.Max((terrainHeight - CamHeight) - 2, FPCamHeight + (FPCamVelocity.Y * 3) / FSOEnvironment.RefreshRate);
+                SetFPCamHeightClamped(terrainHeight, FPCamHeight + (FPCamVelocity.Y * 3) / FSOEnvironment.RefreshRate);
+
                 for (int i = 0; i < FSOEnvironment.RefreshRate / 60; i++)
                     FPCamVelocity *= 0.9f;
             }
