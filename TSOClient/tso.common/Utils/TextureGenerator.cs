@@ -457,12 +457,12 @@ namespace FSO.Common.Utils
             return Sun;
         }
 
-        private static Texture2D Moon;
-        public static Texture2D GetMoon(GraphicsDevice gd)
+        private static Texture2D Star;
+        public static Texture2D GetStar(GraphicsDevice gd)
         {
-            if (Moon == null)
+            if (Star == null)
             {
-                Moon = new Texture2D(gd, 64, 64);
+                Star = new Texture2D(gd, 64, 64, true, SurfaceFormat.Color);
                 Color[] data = new Color[64 * 64];
                 int offset = 0;
                 for (int y = 0; y < 64; y++)
@@ -470,21 +470,68 @@ namespace FSO.Common.Utils
                     for (int x = 0; x < 64; x++)
                     {
                         var distance = Math.Sqrt((y - 32) * (y - 32) + (x - 32) * (x - 32));
-                        var intensity = Math.Min(1, Math.Max(0, 32 - distance));
+                        var intensity = (1 - (distance - 2) / 28f);
+                        if (intensity < 0) data[offset++] = Color.Transparent;
+                        else
+                        {
+                            intensity = Math.Pow(intensity, 4f);
+                            data[offset++] = new Color(1, 1, 1, (float)intensity);
+                        }
+                    }
+                }
 
-                        if (intensity > 0)
+                TextureUtils.UploadWithAvgMips(Star, gd, data);
+            }
+
+            return Star;
+        }
+
+        private static Texture2D Moon;
+        public static Texture2D GetMoon(GraphicsDevice gd)
+        {
+            if (Moon == null)
+            {
+                var shadowColor = new Color(47, 66, 89);
+
+                Moon = new Texture2D(gd, 64, 64, true, SurfaceFormat.Color);
+                Color[] data = new Color[64 * 64];
+                int offset = 0;
+                for (int y = 0; y < 64; y++)
+                {
+                    for (int x = 0; x < 64; x++)
+                    {
+                        var distance = Math.Sqrt((y - 32) * (y - 32) + (x - 32) * (x - 32));
+                        var alpha = Math.Min(1, Math.Max(0, 32 - (float)distance));
+
+                        if (alpha > 0)
+                        {
+                            //calculate crescent
+                            if (x < 32) distance = 0;
+                            else distance = Math.Sqrt((y - 32) * (y - 32) + (x - 32) * 2 * (x - 32) * 2);
+
+                            alpha *= 0.2f + (1 - Math.Min(1, Math.Max(0, 32 - (float)distance))) * 0.8f;
+                        }
+
+                        data[offset++] = new Color(1, 1, 1, (float)alpha);
+
+                        /* Opaque version (doesn't blend as well with the sky)
+                        float intensity = 1;
+
+                        //if (alpha > 0)
                         {
                             //calculate crescent
                             if (x < 32) distance = 0;
                             else distance = Math.Sqrt((y - 32) * (y - 32) + (x - 32)*2 * (x - 32)*2);
                             
-                            intensity *= 0.2f+(1-Math.Min(1, Math.Max(0, 32 - distance)))*0.8f;
+                            intensity = (1-Math.Min(1, Math.Max(0, 32 - (float)distance)));
                         }
 
-                        data[offset++] = new Color(1, 1, 1, (float)intensity);
+                        data[offset++] = new Color(Color.Lerp(shadowColor, Color.White, intensity), alpha);
+                        */
                     }
                 }
-                Moon.SetData<Color>(data);
+
+                TextureUtils.UploadWithAvgMips(Moon, gd, data);
             }
 
             return Moon;

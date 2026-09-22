@@ -6,11 +6,15 @@ using FSO.Files;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Runtime.CompilerServices;
 
 namespace FSO.LotView.Components
 {
     public class AbstractSkyDome : IDisposable
     {
+        private const int StarCount = 14397;
+        private const int StarSeed = 130654;
+        private const float StarSize = 0.002f;
         private static string DefaultSkyCol = "Textures/skycol.png";
         private static string FinalSkyCol = "Textures/skycolfinal.png";
 
@@ -22,6 +26,13 @@ namespace FSO.LotView.Components
 
         private VertexPositionTexture[] VertexData;
         private int[] IndexData;
+
+        private static VertexBuffer StarVerts;
+        private static IndexBuffer StarInds;
+        private static float ActiveStarSpeed;
+        private static float ActiveStarMultiplier;
+
+        public float StarSpeed;
 
         private bool IsFinal;
 
@@ -39,6 +50,104 @@ namespace FSO.LotView.Components
             InitArrays();
 
             LastSkyPos = float.PositiveInfinity;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector3 GetStarVector(Random random)
+        {
+            // Transform from uniform uv onto a spherical surface with unit size.
+            float u = random.NextSingle();
+            float v = random.NextSingle();
+            float theta = u * 2f * MathF.PI;
+            float phi = MathF.Acos(2f * v - 1f);
+
+            return new Vector3(
+                MathF.Sin(phi) * MathF.Cos(theta),
+                MathF.Sin(phi) * MathF.Sin(theta),
+                MathF.Cos(phi)
+                );
+        }
+
+        private static float ApplyStarMultiplier(float opacity, float starMul)
+        {
+            if (starMul >= 1f)
+            {
+                return opacity;
+            }
+
+            // Based on the current multiplier, only show the brightest stars. (with a super quick fade)
+
+            float opacityDiff = starMul - (1f - opacity);
+
+            if (opacityDiff < 0)
+            {
+                return 0;
+            }
+
+            return Math.Min(1, opacityDiff * 50) * opacity;
+        }
+
+        private static void GenerateStarGeo(GraphicsDevice gd, float speed = 0f, float starMul = 1f)
+        {
+            var verts = new VertexPositionColorTexture[StarCount * 4];
+            var inds = new int[StarCount * 6];
+
+            var random = new Random(StarSeed);
+
+            int verti = 0;
+            int indi = 0;
+            for (int i = 0; i < StarCount; i++)
+            {
+                var vec = GetStarVector(random);
+                var size = (0.85f + random.NextSingle() * 0.3f) * StarSize;
+                var opacity = ApplyStarMultiplier(1f - random.NextSingle() * 0.9f, starMul);
+
+                float mySpeed = speed * MathF.Abs(MathF.Sqrt(vec.Y * vec.Y + vec.Z * vec.Z));
+
+                inds[indi++] = verti;
+                inds[indi++] = verti + 1;
+                inds[indi++] = verti + 2;
+
+                inds[indi++] = verti + 2;
+                inds[indi++] = verti + 3;
+                inds[indi++] = verti + 0;
+
+                // Need to build a bit of a basis to billboard the star towards the (biasing y towards the rotation direction)
+
+                Vector3 starY = Vector3.Cross(vec, Vector3.Left);
+                starY.Normalize();
+                Vector3 starX = Vector3.Cross(vec, starY);
+                starX.Normalize();
+
+                var color = new Color(1, 1, 1, opacity);
+
+                // With the basis, construct the billboarded star.
+
+                verts[verti++] = new VertexPositionColorTexture(vec + starX * -size + starY * -(size + mySpeed), color, new Vector2(0, 0));
+                verts[verti++] = new VertexPositionColorTexture(vec + starX * size + starY * -(size + mySpeed), color, new Vector2(1, 0));
+                verts[verti++] = new VertexPositionColorTexture(vec + starX * size + starY * (size + mySpeed), color, new Vector2(1, 1));
+                verts[verti++] = new VertexPositionColorTexture(vec + starX * -size + starY * (size + mySpeed), color, new Vector2(0, 1));
+            }
+
+            StarVerts?.Dispose();
+            StarInds?.Dispose();
+
+            StarVerts = new VertexBuffer(gd, typeof(VertexPositionColorTexture), verti, BufferUsage.None);
+            StarInds = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indi, BufferUsage.None);
+
+            StarVerts.SetData(verts);
+            StarInds.SetData(inds);
+
+            ActiveStarMultiplier = starMul;
+            ActiveStarSpeed = speed;
+        }
+
+        private void EnsureStarGeo(GraphicsDevice gd, float starMul)
+        {
+            if (StarVerts == null || ActiveStarSpeed != StarSpeed || ActiveStarMultiplier != starMul)
+            {
+                GenerateStarGeo(gd, StarSpeed, starMul);
+            }
         }
 
         public void LoadFinalIfNeeded(GraphicsDevice GD)
@@ -215,21 +324,61 @@ namespace FSO.LotView.Components
             DepthClipEnable = false
         };
 
+        private float GetStarOpacity(Color outsideColor)
+        {
+            var avg = (outsideColor.R + outsideColor.G + outsideColor.B) / (3 * 255f);
+
+            return Math.Max(0, Math.Min(1.30f - avg * avg * 6.5f, 1f));
+        }
+
+        private Matrix StarBaseRotation = Matrix.CreateRotationZ(MathF.PI / 2f);
+        private Matrix StarPostRotation = Matrix.CreateRotationZ(MathF.PI * (45f / 180f)) * //Sun is at an angle of 45 degrees to horizon at it's peak. idk why, it's winter maybe? looks nice either way
+            Matrix.CreateRotationY(MathF.PI * 0.3f) * //Offset from front-back a little. This might need some adjusting for the nicest sunset/sunrise locations.
+            Matrix.CreateRotationY(MathF.PI / 2f);
+
+        private Matrix GetStarRotationAxis(double tod)
+        {
+            double modTime;
+            var offStart = 1 - (DayOffset + DayDuration);
+            if (tod < DayOffset)
+            {
+                modTime = (offStart + tod) * 0.5 / (1 - DayDuration);
+            }
+            else if (tod > DayOffset + DayDuration)
+            {
+                modTime = (tod - (1 - offStart)) * 0.5 / (1 - DayDuration);
+            }
+            else
+            {
+                modTime = ((tod - DayOffset) * 0.5 / DayDuration) + 0.5;
+            }
+
+            Matrix Transform = StarBaseRotation;
+
+            Transform *= Matrix.CreateRotationY((float)((modTime + 0.5) * Math.PI * 2.0));
+            Transform *= StarPostRotation;
+
+            return Transform;
+        }
+
         public void Draw(GraphicsDevice gd, Color outsideColor, Matrix view, Matrix projection, float time, WeatherController weather, Vector3 sunVector, float scale)
         {
             var ocolor = outsideColor.ToVector4();
             var effect = WorldContent.GetBE(gd);
 
-            var night = Night((float)FinaleUtils.BiasSunTime(time));
+            var tod = FinaleUtils.BiasSunTime(time);
+            var night = Night((float)tod);
             if (LastSkyPos != time) BuildSkyDome(gd, time, night ? -sunVector : sunVector);
 
             var color = (ocolor - new Vector4(0.35f)) * 1.5f + new Vector4(0.35f);
             color.W = 1;
             var wint = Math.Min(1f, weather.WeatherIntensity);
 
+            float skyboxOpacity = (1 - (float)Math.Sqrt(wint) * 0.75f);
+
             effect.LightingEnabled = false;
             effect.Texture = GradTex;
-            effect.Alpha = (1 - (float)Math.Sqrt(wint) * 0.75f);
+            effect.Alpha = skyboxOpacity;
             effect.DiffuseColor = Vector3.One;
             effect.AmbientLightColor = Vector3.One;
             //effect.DiffuseColor = new Vector3(Math.Min(1, color.X), Math.Min(1, color.Y), Math.Min(1, color.Z));
@@ -259,11 +408,41 @@ namespace FSO.LotView.Components
             }
 
             gd.BlendState = BlendState.NonPremultiplied;
-            //draw the sun or moon
+
+            // Draw the stars
+
             var pos = sunVector;
             var z = -pos.X;
             pos.X = pos.Z;
             pos.Z = z;
+
+            float starAlpha = GetStarOpacity(outsideColor) * skyboxOpacity;
+
+            if (starAlpha > 0)
+            {
+                EnsureStarGeo(gd, FinaleUtils.GetStarMultiplier(time));
+                effect.Alpha = starAlpha;
+                effect.VertexColorEnabled = true;
+                effect.Texture = TextureGenerator.GetStar(gd);
+                gd.BlendState = BlendState.Additive;
+
+                var starMat = Matrix.CreateScale(5f * scale) * GetStarRotationAxis(tod);
+                starMat.Translation = Vector3.Zero;
+                effect.World = starMat;
+
+                foreach (var pass in effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    gd.Indices = StarInds;
+                    gd.SetVertexBuffer(StarVerts);
+                    gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, StarInds.IndexCount / 3);
+                }
+
+                effect.VertexColorEnabled = false;
+                effect.Alpha = skyboxOpacity;
+            }
+
+            //draw the sun or moon
             var dist = 0.5f + pos.Y * 2;
             dist *= dist;
             dist += 0.5f;

@@ -84,5 +84,20 @@ namespace FSO.Common.Rendering
         {
             return IsFinale() ? FinaleColors : colors;
         }
+
+        public static float GetStarMultiplier(float time)
+        {
+            if (IsFinale())
+            {
+                if (time > 0.5f)
+                {
+                    return 0;
+                }
+
+                return Math.Clamp((time - 0.002f) * 200f, 0, 1);
+            }
+
+            return 1;
+        }
     }
 }
