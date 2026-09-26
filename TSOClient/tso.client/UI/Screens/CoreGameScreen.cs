@@ -15,6 +15,7 @@ using FSO.Client.Utils;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Model;
+using FSO.Common.Rendering;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.IO;
@@ -508,7 +509,11 @@ namespace FSO.Client.UI.Screens
                     CityRenderer.m_LotZoomProgress = 0;
                 }
 
-                if (InLot) //if we're in a lot, use the VM's more accurate time!
+                if (FakeTimeOfDay.IsActive())
+                {
+                    CityRenderer.SetTimeOfDay(FakeTimeOfDay.GetTime());
+                }
+                else if (InLot) //if we're in a lot, use the VM's more accurate time!
                     CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
                 else
                 {

@@ -20,6 +20,8 @@ using FSO.Client.UI.Model;
 using FSO.LotView.Utils.Camera;
 using FSO.LotView.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Rendering;
 
 namespace FSO.Client.UI.Panels
 {
@@ -378,6 +380,8 @@ namespace FSO.Client.UI.Panels
             var tsoTime = TSOTime.FromUTC(time);
             int min = tsoTime.Item2;
             int hour = tsoTime.Item1;
+
+            //UpdateFakeTimeMode(state);
 
             if (MoneyHighlightFrames > 0)
             {
@@ -821,6 +825,69 @@ namespace FSO.Client.UI.Panels
             LastZoom = Game.ZoomLevel;
         }
 
+        private float GetTime()
+        {
+            if (FakeTimeOfDay.IsActive())
+            {
+                return FakeTimeOfDay.GetTime();
+            }
+            else if (Game.InLot)
+            {
+                return (Game.vm.Context.Clock.Hours / 24f) + (Game.vm.Context.Clock.Minutes / 1440f) + (Game.vm.Context.Clock.Seconds / 86400f);
+            }
+            else
+            {
+                var time = DateTime.UtcNow;
+                var tsoTime = TSOTime.FromUTC(time);
+                return (tsoTime.Item1 / 24f) + (tsoTime.Item2 / 1440f) + (tsoTime.Item3 / 86400f);
+            }
+        }
+
+        private void UpdateFakeTimeMode(UpdateState state)
+        {
+            if (FakeTimeOfDay.IsActive())
+            {
+                FakeTimeOfDay.TickAnimation(1f / FSOEnvironment.RefreshRate);
+
+                if (Game.InLot && Game.ZoomLevel < 4)
+                {
+                    Game.vm?.Context.Architecture?.SetTimeOfDay();
+                }
+            }
+
+            float maxSpeed = 1f; // One day a second
+
+            foreach (var key in state.NewKeys)
+            {
+                switch (key)
+                {
+                    case Keys.NumPad0:
+                        {
+                            // Disable
+                            FakeTimeOfDay.Clear();
+                            break;
+                        }
+                    case Keys.NumPad1:
+                        {
+                            // Set speed to Normal
+                            FakeTimeOfDay.SetFakeTimeOfDaySpeedTarget(GetTime(), 1f/(60*60*2));
+                            break;
+                        }
+                    case Keys.NumPad2:
+                        {
+                            // Set speed to Max
+                            FakeTimeOfDay.SetFakeTimeOfDaySpeedTarget(GetTime(), maxSpeed);
+                            break;
+                        }
+                    case Keys.NumPad3:
+                        {
+                            // Toggle Fake Finale
+                            FinaleUtils.SetFakeFinale(!FinaleUtils.IsFinale());
+                            break;
+                        }
+                }
+            }
+        }
 
         public enum UCPMode
         {

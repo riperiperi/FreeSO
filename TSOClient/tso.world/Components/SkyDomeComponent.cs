@@ -15,6 +15,7 @@ namespace FSO.LotView.Components
         public SkyDomeComponent(GraphicsDevice GD, Blueprint bp) : base(GD, (float)bp.OutsideTime)
         {
             BP = bp;
+            StarsBasis = Matrix.CreateScale(5f);
         }
 
 

@@ -155,7 +155,12 @@ namespace FSO.SimAntics
         public void SetTimeOfDay()
         {
             var clock = Context.Clock;
-            SetTimeOfDay(clock.Hours / 24.0 + clock.Minutes / (24.0 * 60) + clock.Seconds / (24.0 * 60 * 60));
+
+            double time = FakeTimeOfDay.IsActive() ?
+                FakeTimeOfDay.GetTime() :
+                (clock.Hours / 24.0 + clock.Minutes / (24.0 * 60) + clock.Seconds / (24.0 * 60 * 60));
+
+            SetTimeOfDay(time);
         }
 
         private Color PowColor(Color col, float pow)

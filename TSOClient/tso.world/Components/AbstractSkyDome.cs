@@ -18,6 +18,8 @@ namespace FSO.LotView.Components
         private static string DefaultSkyCol = "Textures/skycol.png";
         private static string FinalSkyCol = "Textures/skycolfinal.png";
 
+        protected Matrix StarsBasis = Matrix.CreateScale(5f) * Matrix.CreateRotationY(MathF.PI / -2);
+
         private VertexBuffer Verts;
         private IndexBuffer Indices;
         private Texture2D GradTex;
@@ -38,18 +40,23 @@ namespace FSO.LotView.Components
 
         public AbstractSkyDome(GraphicsDevice GD, float time)
         {
-            float? customSky = DynamicTuning.Global?.GetTuning("city", 0, 2);
-
-            if (!customSky.HasValue || !TryLoadSkyColor(GD, $"Textures/skycol_alt{(int)customSky}.png"))
-            {
-                TryLoadSkyColor(GD, DefaultSkyCol);
-            }
+            LoadDefaultSkyColor(GD);
 
             LoadFinalIfNeeded(GD);
 
             InitArrays();
 
             LastSkyPos = float.PositiveInfinity;
+        }
+
+        private void LoadDefaultSkyColor(GraphicsDevice GD)
+        {
+            float? customSky = DynamicTuning.Global?.GetTuning("city", 0, 2);
+
+            if (!customSky.HasValue || !TryLoadSkyColor(GD, $"Textures/skycol_alt{(int)customSky}.png"))
+            {
+                TryLoadSkyColor(GD, DefaultSkyCol);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,6 +151,8 @@ namespace FSO.LotView.Components
 
         private void EnsureStarGeo(GraphicsDevice gd, float starMul)
         {
+            StarSpeed = FakeTimeOfDay.IsActive() ? FakeTimeOfDay.GetSpeed() * 40f * StarSize : 0f;
+
             if (StarVerts == null || ActiveStarSpeed != StarSpeed || ActiveStarMultiplier != starMul)
             {
                 GenerateStarGeo(gd, StarSpeed, starMul);
@@ -154,14 +163,22 @@ namespace FSO.LotView.Components
         {
             bool needsFinal = FinaleUtils.IsFinale();
 
-            if (!IsFinal && needsFinal)
+            if (IsFinal != needsFinal)
             {
-                using (var file = File.OpenRead(Path.Combine(FSOEnvironment.ContentDir, FinalSkyCol)))
+                if (needsFinal)
                 {
-                    GradTex = ImageLoader.FromStream(GD, file);
-                };
+                    TryLoadSkyColor(GD, FinalSkyCol);
+                    using (var file = File.OpenRead(Path.Combine(FSOEnvironment.ContentDir, FinalSkyCol)))
+                    {
+                        GradTex = ImageLoader.FromStream(GD, file);
+                    }
+                }
+                else
+                {
+                    LoadDefaultSkyColor(GD);
+                }
 
-                IsFinal = true;
+                IsFinal = needsFinal;
             }
         }
 
@@ -426,7 +443,7 @@ namespace FSO.LotView.Components
                 effect.Texture = TextureGenerator.GetStar(gd);
                 gd.BlendState = BlendState.Additive;
 
-                var starMat = Matrix.CreateScale(5f * scale) * GetStarRotationAxis(tod);
+                var starMat = GetStarRotationAxis(tod) * StarsBasis;
                 starMat.Translation = Vector3.Zero;
                 effect.World = starMat;
 

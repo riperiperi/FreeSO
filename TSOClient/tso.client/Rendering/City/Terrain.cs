@@ -1441,7 +1441,7 @@ namespace FSO.Client.Rendering.City
 
             if (ShadowsEnabled)
             {
-                if (--ShadowRegenTimer < 0 || (m_ZoomProgress > 0.1f && m_ZoomProgress < 0.9f))
+                if ((--ShadowRegenTimer < 0 || FakeTimeOfDay.IsActive()) || (m_ZoomProgress > 0.1f && m_ZoomProgress < 0.9f))
                 {
                     RecalculateShadows();
 

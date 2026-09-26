@@ -28,6 +28,8 @@ namespace FSO.Common.Rendering
 
         private static double TargetEnd = 1.04;
 
+        private static bool FakeFinale;
+
         public static double BiasSunTime(double modTime)
         {
             if (IsFinale())
@@ -68,8 +70,18 @@ namespace FSO.Common.Rendering
             return intensity;
         }
 
+        public static void SetFakeFinale(bool value)
+        {
+            FakeFinale = value;
+        }
+
         public static bool IsFinale()
         {
+            if (FakeFinale)
+            {
+                return true;
+            }
+
             var time = DateTime.UtcNow;
             // NOTE: intentional
             return time.Month == 12 && ((time.Day == 8 && time.Hour == 23) || (time.Day == 9 && time.Hour == 0));
