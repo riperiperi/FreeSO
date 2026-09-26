@@ -380,7 +380,7 @@ namespace FSO.LotView.Utils
             var effect = WorldContent.RCObject;
 
             var mat = World;
-            mat.M42 = ((Level - level) - 1) * 2.95f + yOff; //set y translation to 0
+            mat.M42 = (((Level - level) - 1) * 2.95f + yOff) * 3; //set y translation to 0
             effect.World = mat;
 
             int i = 0;
