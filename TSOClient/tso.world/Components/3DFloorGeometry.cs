@@ -273,9 +273,10 @@ namespace FSO.LotView.Components
             return mat;
         }
 
-        public void DrawFloor(GraphicsDevice gd, GrassEffect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
+        public bool DrawFloor(GraphicsDevice gd, GrassEffect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
             Matrix? lightWorld = null, WorldState state = null, int minFloor = 0, bool screenAlignUV = false, bool withCeilings = false)
         {
+            bool drewAny = false;
             bool is3D = state?.CameraMode == CameraRenderMode._3D;
             var parallax = WorldConfig.Current.Complex;
             var buggedTex = WorldConfig.Current.AdvancedLighting ? 1 : 0;
@@ -337,6 +338,7 @@ namespace FSO.LotView.Components
                         e.TexMatrix = tmat;
                         e.ScreenAlignUV = screenAlignUV;
                         e.Bias = -999;
+                        drewAny = true;
                         continue;
                     }
                     var dat = type.Value.GPUData;
@@ -493,6 +495,7 @@ namespace FSO.LotView.Components
                         gd.SamplerStates[buggedTex] = CustomWrap;
                     }
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
+                    drewAny = true;
 
                     if (f > 1 && is3D && withCeilings)
                     {
@@ -525,6 +528,8 @@ namespace FSO.LotView.Components
             Alt = !Alt;
 
             gd.RasterizerState = baseRS;
+
+            return drewAny;
         }
 
         /*

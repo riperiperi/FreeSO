@@ -380,7 +380,7 @@ namespace FSO.LotView.RC
             ColorWriteChannels = ColorWriteChannels.Green | ColorWriteChannels.Alpha
         };
 
-        public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
+        public bool DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
         {
             var effect = WorldContent.RCObject;
 
@@ -399,6 +399,8 @@ namespace FSO.LotView.RC
             effect.SideMask = 0f;
             effect.ViewProjection = projection;
 
+            bool drewAny = false;
+
             //dont care about base texture or offset here.
             for (int i = light.Level; i < GroupsByTexture.Count; i++)
             {
@@ -407,6 +409,7 @@ namespace FSO.LotView.RC
                 {
                     if (g.PrimCount == 0) continue;
                     effect.MaskTex = g.Mask;
+                    drewAny = true;
 
                     if (lastSideMask != g.UseOffset)
                     {
@@ -425,6 +428,8 @@ namespace FSO.LotView.RC
             }
             //gd.DepthStencilState = DepthStencilState.None;
             //gd.BlendState = BlendState.AlphaBlend;
+
+            return drewAny;
         }
 
         public WallGroupRC Fetch(Texture2D pixel, Texture2D mask, ushort maskId, Dictionary<Tuple<Texture2D, Texture2D>, WallGroupRC> grp)

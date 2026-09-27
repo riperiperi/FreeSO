@@ -831,21 +831,21 @@ namespace FSO.LotView.LMap
 
                 GD.BlendState = MaxBlendRed;
 
-                WallComp.DrawLMap(GD, pointLight, Projection, mat);
+                bool drewAny = WallComp.DrawLMap(GD, pointLight, Projection, mat);
 
                 GD.BlendState = MaxBlendRed;
-                Blueprint.Terrain.DrawLMap(GD, pointLight, Projection, mat);
-                Blueprint.RoofComp.DrawLMap(GD, pointLight, Projection, mat);
+                drewAny |= Blueprint.Terrain.DrawLMap(GD, pointLight, Projection, mat);
+                drewAny |= Blueprint.RoofComp.DrawLMap(GD, pointLight, Projection, mat);
 
                 effect.CurrentTechnique = effect.Techniques[0];
                 EffectPassCollection passes = effect.Techniques[0].Passes;
                 passes[2].Apply();
 
-                if (WorldConfig.Current.UltraLighting) Draw3DObjShadows(pointLight, false);
+                if (WorldConfig.Current.UltraLighting) drewAny |= Draw3DObjShadows(pointLight, false);
 
                 //blit outside shadows onto post target (for blur)
 
-                if (OutsideShadowTargPost != null)
+                if (OutsideShadowTargPost != null && drewAny)
                 {
                     var blend = GD.BlendState;
                     var rast = GD.RasterizerState;
@@ -946,8 +946,9 @@ namespace FSO.LotView.LMap
             }
         }
 
-        public void Draw3DObjShadows(LightData pointLight, bool clear)
+        public bool Draw3DObjShadows(LightData pointLight, bool clear)
         {
+            bool drewAny = false;
             var effect = WorldContent.RCObject;
 
             //we doubled the shadow resolution, so this is different.
@@ -994,9 +995,12 @@ namespace FSO.LotView.LMap
             {
                 if ((outside && obj.Level > pointLight.Level) || (Math.Abs(obj.Position.X - lp16.X) + Math.Abs(obj.Position.Y - lp16.Y) < li16))
                 {
+                    drewAny = true;
                     obj.DrawLMap(GD, pointLight.Level);
                 }
             }
+
+            return drewAny;
         }
 
         public RenderTarget2D DebugLightMap()

@@ -928,7 +928,7 @@ namespace FSO.LotView.Components
             }
         }
 
-        public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
+        public bool DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
         {
             if (ShapeDirty)
             {
@@ -948,6 +948,8 @@ namespace FSO.LotView.Components
             s.M23 = 1;
             s.M32 = 1;
 
+            bool drewAny = false;
+
             for (int i = light.Level; i < Drawgroups.Length; i++)
             {
                 Effect.Level = (float)i + 1;
@@ -955,6 +957,8 @@ namespace FSO.LotView.Components
                 {
                     var dg = Drawgroups[i];
                     if (dg.NumPrimitives == 0) continue;
+
+                    drewAny = true;
 
                     Effect.UseTexture = false;
                     Effect.Projection = projection;
@@ -977,6 +981,8 @@ namespace FSO.LotView.Components
                     }
                 }
             }
+
+            return drewAny;
         }
     }
 

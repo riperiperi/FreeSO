@@ -682,10 +682,10 @@ namespace FSO.LotView.Components
             });
         }
 
-        public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
+        public bool DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
         {
             if (TerrainDirty || VertexBuffer == null) RegenTerrain(gd, Bp);
-            if (VertexBuffer == null) return;
+            if (VertexBuffer == null) return false;
             //light.Normalize();
             Effect.UseTexture = false;
             Effect.Projection = projection;
@@ -712,7 +712,7 @@ namespace FSO.LotView.Components
             var pass = Effect.CurrentTechnique.Passes[0];
             var floors = new HashSet<sbyte>();
             for (sbyte i = (sbyte)(light.Level + 1); i < 5; i++) floors.Add(i);
-            Bp.FloorGeom.DrawFloor(gd, Effect, WorldZoom.Near, WorldRotation.TopLeft, null, floors, pass, lightWorld: worldmat, minFloor: light.Level);
+            return Bp.FloorGeom.DrawFloor(gd, Effect, WorldZoom.Near, WorldRotation.TopLeft, null, floors, pass, lightWorld: worldmat, minFloor: light.Level);
         }
 
         public BlendState Multiply = new BlendState()
