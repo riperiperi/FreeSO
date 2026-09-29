@@ -77,7 +77,7 @@ namespace FSO.LotView
         {
             get
             {
-                return Blueprint.Stories;
+                return Blueprint?.Stories ?? 5;
             }
         }
 

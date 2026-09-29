@@ -237,7 +237,7 @@ namespace FSO.Client.UI.Screens
         {
             get
             {
-                if (World == null) return 2;
+                if (World == null) return 5;
                 return World.Stories;
             }
         }
