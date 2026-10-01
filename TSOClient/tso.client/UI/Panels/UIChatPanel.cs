@@ -224,7 +224,7 @@ namespace FSO.Client.UI.Panels
             var puppets = SurroundPuppets?.GetAll();
 
             var avatarCount = avatars.Count;
-            var requiredCount = avatarCount + puppets?.Count ?? 0;
+            var requiredCount = avatarCount + (puppets?.Count ?? 0);
 
             while (requiredCount < Labels.Count)
             {
