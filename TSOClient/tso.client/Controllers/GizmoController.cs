@@ -54,7 +54,7 @@ namespace FSO.Client.Controllers
 
         private void HandleFilterList(ImmutableList<uint> lots)
         {
-            if (Gizmo.CurrentAvatar.Value != null && Gizmo.CurrentAvatar.Value.Avatar_Top100ListFilter.Top100ListFilter_Top100ListID == (uint)LotCategory.archive_welcome && lots.Count == 1)
+            if (Gizmo.CurrentAvatar.Value != null && Gizmo.CurrentAvatar.Value.Avatar_Top100ListFilter.Top100ListFilter_Top100ListID == (uint)LotCategory.archive_welcome && lots.Count > 0)
             {
                 // If the player isn't currently on a lot, and this archive_welcome lot has a hint that hasn't been seen yet, then make them automatically join it.
                 uint targetLot = lots[0];

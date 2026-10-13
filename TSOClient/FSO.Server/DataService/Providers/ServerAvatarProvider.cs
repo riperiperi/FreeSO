@@ -149,15 +149,21 @@ namespace FSO.Server.DataService.Providers
                             var filter = db.Lots.GetCommunityLocations(ShardId);
                             avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter);
                         }
-                        else if (Config.Archive != null)
-                        {
-                            var filter = db.ArchiveFeatured.GetByCategory(ShardId, cat);
-                            avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter.Select(x => (uint)x.location));
-                        }
                         else
                         {
-                            var filter = db.LotClaims.Top100Filter(ShardId, cat, 10);
-                            avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter.Select(x => x.location));
+                            var filter = cat == LotCategory.archive_welcome ? db.LotClaims.Top100Filter(ShardId, 10) : db.LotClaims.Top100Filter(ShardId, cat, 10);
+
+                            if (Config.Archive != null)
+                            {
+                                var filter2 = db.ArchiveFeatured.GetByCategory(ShardId, cat);
+
+                                avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList([..filter2.Select(x => x.location), ..filter.Select(x => x.location)]);
+                            }
+                            else
+                            {
+
+                                avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter.Select(x => x.location));
+                            }
                         }
                     }
 
