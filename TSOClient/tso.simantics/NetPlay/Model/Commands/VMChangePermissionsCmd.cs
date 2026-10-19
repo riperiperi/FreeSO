@@ -111,7 +111,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 }
                 if (level >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Add(obj.PersistID);
                 if (level == VMTSOAvatarPermissions.Owner) vm.TSOState.OwnerID = pid;
-                else if (vm.TSOState.OwnerID == pid) vm.TSOState.OwnerID = 0;
+                else if (vm.TSOState.OwnerID == pid && level < VMTSOAvatarPermissions.Admin) vm.TSOState.OwnerID = 0;
 
                 if (Debug != null)
                 {
