@@ -196,7 +196,7 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            bool allowDebug = (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Flags.HasFlag(VMTSOAvatarFlags.Debug) ?? false;
+            bool allowDebug = ((LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Flags.HasFlag(VMTSOAvatarFlags.Debug) ?? false) && !RoofButton.Selected;
 
             if (DebugButton.Visible != allowDebug)
             {
