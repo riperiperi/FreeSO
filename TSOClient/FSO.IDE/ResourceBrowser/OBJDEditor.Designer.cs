@@ -458,7 +458,8 @@
             // MotiveRoom
             // 
             MotiveRoom.Location = new Point(178, 62);
-            MotiveRoom.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            MotiveRoom.Minimum = new decimal(new int[] { 32768, 0, 0, int.MinValue });
+            MotiveRoom.Maximum = new decimal(new int[] { 32767, 0, 0, 0 });
             MotiveRoom.Name = "MotiveRoom";
             MotiveRoom.Size = new Size(51, 22);
             MotiveRoom.TabIndex = 61;
@@ -475,7 +476,8 @@
             // MotiveFun
             // 
             MotiveFun.Location = new Point(178, 40);
-            MotiveFun.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            MotiveFun.Minimum = new decimal(new int[] { 32768, 0, 0, int.MinValue });
+            MotiveFun.Maximum = new decimal(new int[] { 32767, 0, 0, 0 });
             MotiveFun.Name = "MotiveFun";
             MotiveFun.Size = new Size(51, 22);
             MotiveFun.TabIndex = 59;
@@ -492,7 +494,8 @@
             // MotiveEnergy
             // 
             MotiveEnergy.Location = new Point(178, 18);
-            MotiveEnergy.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            MotiveEnergy.Minimum = new decimal(new int[] { 32768, 0, 0, int.MinValue });
+            MotiveEnergy.Maximum = new decimal(new int[] { 32767, 0, 0, 0 });
             MotiveEnergy.Name = "MotiveEnergy";
             MotiveEnergy.Size = new Size(51, 22);
             MotiveEnergy.TabIndex = 57;
@@ -509,7 +512,8 @@
             // MotiveBladder
             // 
             MotiveBladder.Location = new Point(63, 84);
-            MotiveBladder.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            MotiveBladder.Minimum = new decimal(new int[] { 32768, 0, 0, int.MinValue });
+            MotiveBladder.Maximum = new decimal(new int[] { 32767, 0, 0, 0 });
             MotiveBladder.Name = "MotiveBladder";
             MotiveBladder.Size = new Size(51, 22);
             MotiveBladder.TabIndex = 55;
@@ -526,7 +530,8 @@
             // MotiveHygiene
             // 
             MotiveHygiene.Location = new Point(63, 62);
-            MotiveHygiene.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            MotiveHygiene.Minimum = new decimal(new int[] { 32768, 0, 0, int.MinValue });
+            MotiveHygiene.Maximum = new decimal(new int[] { 32767, 0, 0, 0 });
             MotiveHygiene.Name = "MotiveHygiene";
             MotiveHygiene.Size = new Size(51, 22);
             MotiveHygiene.TabIndex = 53;
@@ -543,7 +548,8 @@
             // MotiveComfort
             // 
             MotiveComfort.Location = new Point(63, 40);
-            MotiveComfort.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            MotiveComfort.Minimum = new decimal(new int[] { 32768, 0, 0, int.MinValue });
+            MotiveComfort.Maximum = new decimal(new int[] { 32767, 0, 0, 0 });
             MotiveComfort.Name = "MotiveComfort";
             MotiveComfort.Size = new Size(51, 22);
             MotiveComfort.TabIndex = 51;
@@ -560,7 +566,8 @@
             // MotiveHunger
             // 
             MotiveHunger.Location = new Point(63, 18);
-            MotiveHunger.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            MotiveHunger.Minimum = new decimal(new int[] { 32768, 0, 0, int.MinValue });
+            MotiveHunger.Maximum = new decimal(new int[] { 32767, 0, 0, 0 });
             MotiveHunger.Name = "MotiveHunger";
             MotiveHunger.Size = new Size(51, 22);
             MotiveHunger.TabIndex = 49;
