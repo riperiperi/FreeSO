@@ -7,20 +7,12 @@ using System.Reflection;
 
 namespace FSO.Client
 {
-    public struct FSODisplayInfo(float dpi, int refreshRate = 0)
-    {
-        public float Dpi = dpi;
-        public int RefreshRate = refreshRate;
-    }
 
     public class FSOProgram : IFSOProgram
     {
         public bool UseDX { get; set; }
 
         public static Action<string> ShowDialog = DefaultShowDialog;
-
-        public static Action<nint, Action<string>> RegisterDragCallback = (window, func) => { };
-        public static Func<nint, FSODisplayInfo> GetDisplayInfo = (window) => new FSODisplayInfo(1f);
 
         public static void DefaultShowDialog(string text)
         {

@@ -14,6 +14,7 @@ using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
 using FSO.Common.Utils;
+using FSO.Common.Utils.Interop;
 using FSO.Server.Clients;
 using FSO.Server.Embedded;
 using FSO.Server.Protocol.CitySelector;
@@ -71,7 +72,7 @@ namespace FSO.Client
         public void Start()
         {
             var version = Content.Content.Get().VersionString;
-            FSOProgram.RegisterDragCallback(GameFacade.Game.Window.Handle, DragDrop);
+            NativeWindow.RegisterDragCallback(GameFacade.Game.Window.Handle, DragDrop);
             if (FSOEnvironment.MissingTSO)
             {
                 TsoInstaller();

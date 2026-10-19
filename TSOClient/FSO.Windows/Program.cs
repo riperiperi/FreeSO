@@ -58,7 +58,7 @@ namespace FSO.Windows
 
                 // On linux and macos, timers are a lot more precise.
 
-                FSOProgram.GetDisplayInfo = (window) =>
+                Common.Utils.Interop.NativeWindow.GetDisplayInfo = (window) =>
                 {
                     try
                     {
@@ -79,7 +79,7 @@ namespace FSO.Windows
                     }
                 };
 
-                FSOProgram.RegisterDragCallback = (window, callback) =>
+                Common.Utils.Interop.NativeWindow.RegisterDragCallback = (window, callback) =>
                 {
                     var bindThread = new Thread(x =>
                     {
@@ -88,7 +88,7 @@ namespace FSO.Windows
                         form?.BeginInvoke(() =>
                         {
                             form.AllowDrop = true;
-                            form.DragEnter += (sender, e) =>
+                            form.DragEnter += (object sender, DragEventArgs e) =>
                             {
                                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                                 {
@@ -99,7 +99,7 @@ namespace FSO.Windows
                                     e.Effect = DragDropEffects.None;
                                 }
                             };
-                            form.DragDrop += (sender, e) =>
+                            form.DragDrop += (object sender, DragEventArgs e) =>
                             {
                                 var path = (e.Data.GetData(DataFormats.FileDrop) as string[])[0];
                                 callback(path);

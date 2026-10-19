@@ -42,7 +42,7 @@ namespace FSO.Client
         {
             if (!FSOEnvironment.DirectX)
             {
-                FSOProgram.GetDisplayInfo = GetSDLDisplayInfo;
+                NativeWindow.GetDisplayInfo = GetSDLDisplayInfo;
             }
 
             GameFacade.Game = this;
@@ -125,7 +125,7 @@ namespace FSO.Client
             }
             catch
             {
-                FSOProgram.GetDisplayInfo = (ptr) => new(1f);
+                NativeWindow.GetDisplayInfo = (ptr) => new(1f);
 
                 return new(1f);
             }
@@ -146,7 +146,7 @@ namespace FSO.Client
         public bool UpdateDisplayMode()
         {
             bool dpiChanged = false;
-            var info = FSOProgram.GetDisplayInfo(Window.Handle);
+            var info = NativeWindow.GetDisplayInfo(Window.Handle);
 
             if (GlobalSettings.Default.DPIAuto)
             {
