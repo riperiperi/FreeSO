@@ -65,6 +65,11 @@ namespace FSO.Client.Controllers
                 targetComplete = 1;
                 LoginRegulator.Logout();
             }
+            else if (CityConnectionRegulator.Mode == CityConnectionMode.ARCHIVE)
+            {
+                targetComplete = 1;
+                this.onDisconnected = (_) => FSOFacade.Controller.ReturnToSASArchive();
+            }
 
             CityConnectionRegulator.Disconnect();
             LotConnectionRegulator.Disconnect();
@@ -74,11 +79,6 @@ namespace FSO.Client.Controllers
                 if (CityConnectionRegulator.Mode != CityConnectionMode.ARCHIVE)
                 {
                     LoginRegulator.AsyncTransition("AvatarData");
-                }
-                else
-                {
-                    targetComplete = 1;
-                    this.onDisconnected = (_) => FSOFacade.Controller.ReturnToSASArchive();
                 }
             }
         }
