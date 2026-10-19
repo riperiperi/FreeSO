@@ -3,7 +3,7 @@
 // A cross platform targa reader, for use with Monogame generally.
 //
 // Extended to not use System.Drawing by
-// - Rhys Simpson (RHY3756547)
+// - riperiperi
 //
 // Design and implementation by
 // - David Polomis (paloma_sw@cox.net)

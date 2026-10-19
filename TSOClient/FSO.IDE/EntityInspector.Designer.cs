@@ -28,118 +28,123 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.EntityView = new System.Windows.Forms.ListView();
-            this.IDColumn = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.NameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.MTLeadHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.ContainerHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.ContSlotHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.RefreshButton = new System.Windows.Forms.Button();
-            this.TracerButton = new System.Windows.Forms.Button();
-            this.DeleteButton = new System.Windows.Forms.Button();
-            this.OpenResource = new System.Windows.Forms.Button();
-            this.SuspendLayout();
+            EntityView = new ListView();
+            IDColumn = new ColumnHeader();
+            NameHeader = new ColumnHeader();
+            MTLeadHeader = new ColumnHeader();
+            ContainerHeader = new ColumnHeader();
+            ContSlotHeader = new ColumnHeader();
+            RefreshButton = new Button();
+            TracerButton = new Button();
+            DeleteButton = new Button();
+            OpenResource = new Button();
+            panel1 = new Panel();
+            panel1.SuspendLayout();
+            SuspendLayout();
             // 
             // EntityView
             // 
-            this.EntityView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.EntityView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.IDColumn,
-            this.NameHeader,
-            this.MTLeadHeader,
-            this.ContainerHeader,
-            this.ContSlotHeader});
-            this.EntityView.FullRowSelect = true;
-            this.EntityView.HideSelection = false;
-            this.EntityView.Location = new System.Drawing.Point(3, 3);
-            this.EntityView.Name = "EntityView";
-            this.EntityView.Size = new System.Drawing.Size(615, 452);
-            this.EntityView.TabIndex = 0;
-            this.EntityView.UseCompatibleStateImageBehavior = false;
-            this.EntityView.View = System.Windows.Forms.View.Details;
-            this.EntityView.DoubleClick += new System.EventHandler(this.EntityView_DoubleClick);
+            EntityView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            EntityView.Columns.AddRange(new ColumnHeader[] { IDColumn, NameHeader, MTLeadHeader, ContainerHeader, ContSlotHeader });
+            EntityView.FullRowSelect = true;
+            EntityView.Location = new Point(3, 3);
+            EntityView.Name = "EntityView";
+            EntityView.Size = new Size(615, 452);
+            EntityView.TabIndex = 0;
+            EntityView.UseCompatibleStateImageBehavior = false;
+            EntityView.View = View.Details;
+            EntityView.DoubleClick += EntityView_DoubleClick;
             // 
             // IDColumn
             // 
-            this.IDColumn.Text = "ID";
+            IDColumn.Text = "ID";
             // 
             // NameHeader
             // 
-            this.NameHeader.Text = "Name";
-            this.NameHeader.Width = 270;
+            NameHeader.Text = "Name";
+            NameHeader.Width = 270;
             // 
             // MTLeadHeader
             // 
-            this.MTLeadHeader.Text = "Multitile Lead";
-            this.MTLeadHeader.Width = 83;
+            MTLeadHeader.Text = "Multitile Lead";
+            MTLeadHeader.Width = 83;
             // 
             // ContainerHeader
             // 
-            this.ContainerHeader.Text = "Container";
+            ContainerHeader.Text = "Container";
             // 
             // ContSlotHeader
             // 
-            this.ContSlotHeader.Text = "Slot #";
-            this.ContSlotHeader.Width = 45;
+            ContSlotHeader.Text = "Slot #";
+            ContSlotHeader.Width = 45;
             // 
             // RefreshButton
             // 
-            this.RefreshButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.RefreshButton.Location = new System.Drawing.Point(624, 3);
-            this.RefreshButton.Name = "RefreshButton";
-            this.RefreshButton.Size = new System.Drawing.Size(103, 23);
-            this.RefreshButton.TabIndex = 1;
-            this.RefreshButton.Text = "Refresh";
-            this.RefreshButton.UseVisualStyleBackColor = true;
-            this.RefreshButton.Click += new System.EventHandler(this.RefreshButton_Click);
+            RefreshButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            RefreshButton.Location = new Point(624, 3);
+            RefreshButton.Name = "RefreshButton";
+            RefreshButton.Size = new Size(103, 23);
+            RefreshButton.TabIndex = 1;
+            RefreshButton.Text = "Refresh";
+            RefreshButton.UseVisualStyleBackColor = true;
+            RefreshButton.Click += RefreshButton_Click;
             // 
             // TracerButton
             // 
-            this.TracerButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.TracerButton.Location = new System.Drawing.Point(624, 432);
-            this.TracerButton.Name = "TracerButton";
-            this.TracerButton.Size = new System.Drawing.Size(103, 23);
-            this.TracerButton.TabIndex = 2;
-            this.TracerButton.Text = "Open Tracer";
-            this.TracerButton.UseVisualStyleBackColor = true;
-            this.TracerButton.Click += new System.EventHandler(this.EntityView_DoubleClick);
+            TracerButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            TracerButton.Location = new Point(624, 432);
+            TracerButton.Name = "TracerButton";
+            TracerButton.Size = new Size(103, 23);
+            TracerButton.TabIndex = 2;
+            TracerButton.Text = "Open Tracer";
+            TracerButton.UseVisualStyleBackColor = true;
+            TracerButton.Click += EntityView_DoubleClick;
             // 
             // DeleteButton
             // 
-            this.DeleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.DeleteButton.Location = new System.Drawing.Point(624, 374);
-            this.DeleteButton.Name = "DeleteButton";
-            this.DeleteButton.Size = new System.Drawing.Size(103, 23);
-            this.DeleteButton.TabIndex = 3;
-            this.DeleteButton.Text = "Delete";
-            this.DeleteButton.UseVisualStyleBackColor = true;
-            this.DeleteButton.Click += new System.EventHandler(this.DeleteButton_Click);
+            DeleteButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            DeleteButton.Location = new Point(624, 374);
+            DeleteButton.Name = "DeleteButton";
+            DeleteButton.Size = new Size(103, 23);
+            DeleteButton.TabIndex = 3;
+            DeleteButton.Text = "Delete";
+            DeleteButton.UseVisualStyleBackColor = true;
+            DeleteButton.Click += DeleteButton_Click;
             // 
             // OpenResource
             // 
-            this.OpenResource.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.OpenResource.Location = new System.Drawing.Point(624, 403);
-            this.OpenResource.Name = "OpenResource";
-            this.OpenResource.Size = new System.Drawing.Size(103, 23);
-            this.OpenResource.TabIndex = 4;
-            this.OpenResource.Text = "Open Resource";
-            this.OpenResource.UseVisualStyleBackColor = true;
-            this.OpenResource.Click += new System.EventHandler(this.OpenResource_Click);
+            OpenResource.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            OpenResource.Location = new Point(624, 403);
+            OpenResource.Name = "OpenResource";
+            OpenResource.Size = new Size(103, 23);
+            OpenResource.TabIndex = 4;
+            OpenResource.Text = "Open Resource";
+            OpenResource.UseVisualStyleBackColor = true;
+            OpenResource.Click += OpenResource_Click;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(EntityView);
+            panel1.Controls.Add(OpenResource);
+            panel1.Controls.Add(RefreshButton);
+            panel1.Controls.Add(DeleteButton);
+            panel1.Controls.Add(TracerButton);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(0, 0);
+            panel1.Margin = new Padding(0);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(730, 458);
+            panel1.TabIndex = 5;
             // 
             // EntityInspector
             // 
-            this.AutoScaleDimensions = new SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.Controls.Add(this.OpenResource);
-            this.Controls.Add(this.DeleteButton);
-            this.Controls.Add(this.TracerButton);
-            this.Controls.Add(this.RefreshButton);
-            this.Controls.Add(this.EntityView);
-            this.Name = "EntityInspector";
-            this.Size = new System.Drawing.Size(730, 458);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            Controls.Add(panel1);
+            Name = "EntityInspector";
+            Size = new Size(730, 458);
+            panel1.ResumeLayout(false);
+            ResumeLayout(false);
 
         }
 
@@ -155,5 +160,6 @@
         private System.Windows.Forms.Button TracerButton;
         private System.Windows.Forms.Button DeleteButton;
         private System.Windows.Forms.Button OpenResource;
+        private Panel panel1;
     }
 }

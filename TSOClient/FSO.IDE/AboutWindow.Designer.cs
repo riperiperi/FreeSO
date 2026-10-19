@@ -65,7 +65,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(126, 18);
             this.label2.TabIndex = 2;
-            this.label2.Text = "By Rhys Simpson";
+            this.label2.Text = "By riperiperi";
             // 
             // label3
             // 
@@ -93,7 +93,7 @@
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(170, 52);
             this.label5.TabIndex = 5;
-            this.label5.Text = "Simon Gay - Project Supervisor\r\nddfczm - FreeSO contributor\r\nAndrew D\'Addesio - N" +
+            this.label5.Text = "ddfczm - FreeSO contributor\r\nAndrew D\'Addesio - N" +
     "IOTSO Wiki\r\nMats Vederhus - Project Dollhouse";
             // 
             // AboutWindow

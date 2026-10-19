@@ -140,9 +140,9 @@
             // AppearanceTab
             // 
             AppearanceTab.Controls.Add(DrawgroupEdit);
-            AppearanceTab.Location = new Point(4, 24);
+            AppearanceTab.Location = new Point(4, 22);
             AppearanceTab.Name = "AppearanceTab";
-            AppearanceTab.Size = new Size(192, 72);
+            AppearanceTab.Size = new Size(762, 459);
             AppearanceTab.TabIndex = 4;
             AppearanceTab.Text = "Appearance";
             AppearanceTab.UseVisualStyleBackColor = true;
@@ -153,7 +153,7 @@
             DrawgroupEdit.Location = new Point(0, 0);
             DrawgroupEdit.Margin = new Padding(4, 3, 4, 3);
             DrawgroupEdit.Name = "DrawgroupEdit";
-            DrawgroupEdit.Size = new Size(192, 72);
+            DrawgroupEdit.Size = new Size(762, 459);
             DrawgroupEdit.TabIndex = 0;
             // 
             // tabPage3

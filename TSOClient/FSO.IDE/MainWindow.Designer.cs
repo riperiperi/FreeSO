@@ -417,7 +417,7 @@
             ChangesView.AfterCheck += ChangesView_AfterCheck;
             // 
             // BrowserTab
-            // 
+            //
             BrowserTab.Controls.Add(NewOBJButton);
             BrowserTab.Controls.Add(CreateButton);
             BrowserTab.Controls.Add(CloneButton);
@@ -464,7 +464,7 @@
             // 
             // entityInspector1
             // 
-            entityInspector1.Dock = DockStyle.Fill;
+            entityInspector1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             entityInspector1.Location = new Point(3, 3);
             entityInspector1.Margin = new Padding(4, 3, 4, 3);
             entityInspector1.Name = "entityInspector1";

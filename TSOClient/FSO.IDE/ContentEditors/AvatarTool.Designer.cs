@@ -157,7 +157,6 @@
             AnimationsPage.Controls.Add(AnimationSearch);
             AnimationsPage.Location = new Point(4, 22);
             AnimationsPage.Name = "AnimationsPage";
-            AnimationsPage.Padding = new Padding(3);
             AnimationsPage.Size = new Size(218, 371);
             AnimationsPage.TabIndex = 0;
             AnimationsPage.Text = "Animations";
@@ -166,7 +165,7 @@
             // AnimationAdd
             // 
             AnimationAdd.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            AnimationAdd.Location = new Point(-1, 346);
+            AnimationAdd.Location = new Point(0, 346);
             AnimationAdd.Name = "AnimationAdd";
             AnimationAdd.Size = new Size(218, 23);
             AnimationAdd.TabIndex = 16;
@@ -203,7 +202,6 @@
             AccessoriesPage.Controls.Add(AccessoryRemove);
             AccessoriesPage.Location = new Point(4, 22);
             AccessoriesPage.Name = "AccessoriesPage";
-            AccessoriesPage.Padding = new Padding(3);
             AccessoriesPage.Size = new Size(218, 371);
             AccessoriesPage.TabIndex = 1;
             AccessoriesPage.Text = "Accessories";
@@ -243,7 +241,7 @@
             // AccessoryAdd
             // 
             AccessoryAdd.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            AccessoryAdd.Location = new Point(-1, 346);
+            AccessoryAdd.Location = new Point(0, 346);
             AccessoryAdd.Name = "AccessoryAdd";
             AccessoryAdd.Size = new Size(56, 23);
             AccessoryAdd.TabIndex = 8;
@@ -297,7 +295,7 @@
             // OutfitSet
             // 
             OutfitSet.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            OutfitSet.Location = new Point(-1, 346);
+            OutfitSet.Location = new Point(0, 346);
             OutfitSet.Name = "OutfitSet";
             OutfitSet.Size = new Size(218, 23);
             OutfitSet.TabIndex = 11;

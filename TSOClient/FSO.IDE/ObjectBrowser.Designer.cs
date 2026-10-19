@@ -46,12 +46,14 @@
             SearchDescribe = new Label();
             ObjMultitileLabel = new Label();
             ObjThumbnail = new FSO.IDE.Common.ObjThumbnailControl();
+            panel1 = new Panel();
+            panel1.SuspendLayout();
             SuspendLayout();
             // 
             // ObjectSearch
             // 
             ObjectSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            ObjectSearch.Location = new Point(12, 13);
+            ObjectSearch.Location = new Point(12, 12);
             ObjectSearch.Name = "ObjectSearch";
             ObjectSearch.Size = new Size(210, 22);
             ObjectSearch.TabIndex = 7;
@@ -67,7 +69,7 @@
             ObjectTree.ImeMode = ImeMode.Off;
             ObjectTree.Indent = 15;
             ObjectTree.ItemHeight = 16;
-            ObjectTree.Location = new Point(12, 39);
+            ObjectTree.Location = new Point(12, 38);
             ObjectTree.Name = "ObjectTree";
             treeNode1.Name = "Node2";
             treeNode1.Text = "Accessory Rack - Cheap";
@@ -102,7 +104,7 @@
             ObjNameLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ObjNameLabel.AutoEllipsis = true;
             ObjNameLabel.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            ObjNameLabel.Location = new Point(294, 204);
+            ObjNameLabel.Location = new Point(294, 203);
             ObjNameLabel.Name = "ObjNameLabel";
             ObjNameLabel.Size = new Size(186, 17);
             ObjNameLabel.TabIndex = 12;
@@ -112,7 +114,7 @@
             // ObjDescLabel
             // 
             ObjDescLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            ObjDescLabel.Location = new Point(294, 222);
+            ObjDescLabel.Location = new Point(294, 221);
             ObjDescLabel.Name = "ObjDescLabel";
             ObjDescLabel.Size = new Size(186, 17);
             ObjDescLabel.TabIndex = 14;
@@ -122,7 +124,7 @@
             // SearchButton
             // 
             SearchButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            SearchButton.Location = new Point(228, 11);
+            SearchButton.Location = new Point(228, 10);
             SearchButton.Name = "SearchButton";
             SearchButton.Size = new Size(56, 23);
             SearchButton.TabIndex = 15;
@@ -133,7 +135,7 @@
             // SearchDescribe
             // 
             SearchDescribe.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            SearchDescribe.Location = new Point(12, 357);
+            SearchDescribe.Location = new Point(12, 356);
             SearchDescribe.Name = "SearchDescribe";
             SearchDescribe.Size = new Size(234, 23);
             SearchDescribe.TabIndex = 16;
@@ -142,7 +144,7 @@
             // ObjMultitileLabel
             // 
             ObjMultitileLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            ObjMultitileLabel.Location = new Point(294, 237);
+            ObjMultitileLabel.Location = new Point(294, 236);
             ObjMultitileLabel.Name = "ObjMultitileLabel";
             ObjMultitileLabel.Size = new Size(186, 17);
             ObjMultitileLabel.TabIndex = 17;
@@ -152,28 +154,38 @@
             // ObjThumbnail
             // 
             ObjThumbnail.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            ObjThumbnail.Location = new Point(294, 13);
+            ObjThumbnail.Location = new Point(294, 12);
             ObjThumbnail.Name = "ObjThumbnail";
             ObjThumbnail.Size = new Size(186, 186);
             ObjThumbnail.TabIndex = 19;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(ObjectSearch);
+            panel1.Controls.Add(ObjThumbnail);
+            panel1.Controls.Add(ObjectTree);
+            panel1.Controls.Add(ObjMultitileLabel);
+            panel1.Controls.Add(ObjNameLabel);
+            panel1.Controls.Add(SearchDescribe);
+            panel1.Controls.Add(ObjDescLabel);
+            panel1.Controls.Add(SearchButton);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(0, 0);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(492, 382);
+            panel1.TabIndex = 20;
             // 
             // ObjectBrowser
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            Controls.Add(ObjThumbnail);
-            Controls.Add(ObjMultitileLabel);
-            Controls.Add(SearchDescribe);
-            Controls.Add(SearchButton);
-            Controls.Add(ObjDescLabel);
-            Controls.Add(ObjNameLabel);
-            Controls.Add(ObjectSearch);
-            Controls.Add(ObjectTree);
+            Controls.Add(panel1);
             Name = "ObjectBrowser";
             Size = new Size(492, 382);
             Load += ObjectBrowser_Load;
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ResumeLayout(false);
-            PerformLayout();
 
         }
 
@@ -186,5 +198,6 @@
         private System.Windows.Forms.Label SearchDescribe;
         private System.Windows.Forms.Label ObjMultitileLabel;
         private Common.ObjThumbnailControl ObjThumbnail;
+        private Panel panel1;
     }
 }
