@@ -17,5 +17,6 @@
         public int avatar_count { get; set; }
         public string display_name { get; set; } // Archive exclusive
         public bool is_verified { get; set; } // Archive exclusive
+        public bool shared_user { get; set; } // Archive exclusive
     }
 }

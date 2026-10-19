@@ -22,10 +22,13 @@ namespace FSO.Client.UI.Archive.Management
         private ArchiveDbAvatar Avatar;
         private List<ArchiveDbUser> Data;
 
-        public UIArchiveAvatarMigrateDialog(ArchiveManagement management, ArchiveDbAvatar avatar) : base(UIDialogStyle.Close, true)
+        private Action OnAction;
+
+        public UIArchiveAvatarMigrateDialog(ArchiveManagement management, ArchiveDbAvatar avatar, Action onAction) : base(UIDialogStyle.Close, true)
         {
             Avatar = avatar;
             Management = management;
+            OnAction = onAction;
 
             var gd = GameFacade.GraphicsDevice;
 
@@ -123,6 +126,7 @@ namespace FSO.Client.UI.Archive.Management
                     try
                     {
                         Management.MigrateAvatar((int)Avatar.ID, (int)user.ID);
+                        OnAction?.Invoke();
                     }
                     catch
                     {

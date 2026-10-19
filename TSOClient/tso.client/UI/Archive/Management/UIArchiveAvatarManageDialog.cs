@@ -23,10 +23,13 @@ namespace FSO.Client.UI.Archive.Management
 
         private ArchiveDbUser User;
         private List<ArchiveDbAvatar> Data;
-        public UIArchiveAvatarManageDialog(ArchiveManagement management, ArchiveDbUser user) : base(UIDialogStyle.Close, true)
+        private Action OnAction;
+
+        public UIArchiveAvatarManageDialog(ArchiveManagement management, ArchiveDbUser user, Action onAction) : base(UIDialogStyle.Close, true)
         {
             User = user;
             Management = management;
+            OnAction = onAction;
 
             var gd = GameFacade.GraphicsDevice;
 
@@ -160,14 +163,20 @@ namespace FSO.Client.UI.Archive.Management
                         return;
                     }
 
-                    Fetch();
+                    Update();
                 }
             });
         }
 
+        private void Update()
+        {
+            Fetch();
+            OnAction?.Invoke();
+        }
+
         private void TransferAvatar(ArchiveDbAvatar avatar)
         {
-            UIScreen.GlobalShowDialog(new UIArchiveAvatarMigrateDialog(Management, avatar), true);
+            UIScreen.GlobalShowDialog(new UIArchiveAvatarMigrateDialog(Management, avatar, Update), true);
         }
 
         private void OpenActions(UIElement anchor, ArchiveDbAvatar avatar)

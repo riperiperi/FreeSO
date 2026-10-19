@@ -140,7 +140,7 @@ namespace FSO.Client.UI.Archive.Management
                             OpenActions(element, x);
                         };
 
-                        return new UIListBoxItem(x, new object[] { x.Name, x.AvatarCount.ToString(), GetStatusIcon(x.Status), actionButton })
+                        return new UIListBoxItem(x, [x.SharedUser ? GetString("155") : x.Name, x.AvatarCount.ToString(), GetStatusIcon(x.Status), actionButton])
                         {
                             CustomStyle = ListBoxColors,
                         };
@@ -157,7 +157,7 @@ namespace FSO.Client.UI.Archive.Management
 
         private void ViewAvatars(ArchiveDbUser user)
         {
-            UIScreen.GlobalShowDialog(new UIArchiveAvatarManageDialog(Management, user), true);
+            UIScreen.GlobalShowDialog(new UIArchiveAvatarManageDialog(Management, user, Fetch), true);
         }
 
         private void ShowIP(ArchiveDbUser user)

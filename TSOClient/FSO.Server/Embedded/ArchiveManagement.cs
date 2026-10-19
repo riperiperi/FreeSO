@@ -61,6 +61,7 @@ namespace FSO.Server.Embedded
                 Status = status,
                 Name = summary.display_name,
                 IP = summary.last_ip,
+                SharedUser = summary.shared_user,
             };
         }
 
@@ -78,7 +79,7 @@ namespace FSO.Server.Embedded
             {
                 var users = da.Users.AllSummaries();
 
-                return [.. users.Select(UserFromSummary)];
+                return [.. users.Select(UserFromSummary).Where(x => !x.SharedUser)];
             }
         }
 
@@ -149,6 +150,7 @@ namespace FSO.Server.Embedded
                 }
 
                 da.Bans.Remove((uint)userId);
+                da.Users.UpdateBanned((uint)userId, false);
                 da.Bans.RemoveByIp(user.last_ip);
             }
         }
@@ -209,7 +211,7 @@ namespace FSO.Server.Embedded
             {
                 var users = da.Users.AllSummaries().Where((x) => x.last_ip == ip);
 
-                return [.. users.Select(UserFromSummary)];
+                return [.. users.Select(UserFromSummary).Where(x => !x.SharedUser)];
             }
         }
 

@@ -195,6 +195,7 @@ Add to the server list?^
 153 ^FreeSO has detected that you're short on disk space on the installation drive (%s needed, %s available). It's likely that it will run out of disk space while downloading and extracting this archive save. Are you sure you want to continue?^
 154 ^Low Disk Space^
 
+155 ^Archive User^
 
 200 ^Offline Mode^
 201 ^Use UPnP^
