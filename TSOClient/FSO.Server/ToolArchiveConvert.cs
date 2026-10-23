@@ -42,6 +42,27 @@ CREATE INDEX fso_archive_featured_category_shard_idx ON fso_archive_featured (ca
 CREATE INDEX fso_archive_recents_user_idx ON fso_archive_recents (user_id);
 ";
 
+        private string ArchiveTop100Create = @"CREATE TABLE `fso_archive_top100` (
+	`shard_id` INTEGER NOT NULL,
+	`lot_id` INTEGER NOT NULL,
+	`minutes` INTEGER NOT NULL,
+	`category` INTEGER NOT NULL,
+	`rank` INTEGER NOT NULL,
+	PRIMARY KEY(`lot_id`)
+	CONSTRAINT `fso_archive_top100_shard_fk` FOREIGN KEY(`shard_id`) REFERENCES `fso_shards`(`shard_id`) ON DELETE CASCADE
+	CONSTRAINT `fso_archive_top100_lot_id_fk` FOREIGN KEY(`lot_id`) REFERENCES `fso_lots`(`lot_id`) ON DELETE CASCADE
+);
+";
+        
+        private string ArchiveTop100AvatarCreate = @"CREATE TABLE `fso_archive_top100_avatar` (
+	`shard_id` INTEGER NOT NULL,
+	`avatar_id` INTEGER NOT NULL,
+	`minutes` INTEGER NOT NULL,
+	CONSTRAINT `fso_archive_top100_avatar_shard_fk` FOREIGN KEY(`shard_id`) REFERENCES `fso_shards`(`shard_id`) ON DELETE CASCADE
+	CONSTRAINT `fso_archive_top100_avatar_id_fk` FOREIGN KEY(`avatar_id`) REFERENCES `fso_avatars`(`avatar_id`) ON DELETE CASCADE
+);
+";
+
         private string ArchiveLotsFlags = @"ALTER TABLE `fso_lots`
 ADD COLUMN `archive_flags` tinyint(3) NOT NULL DEFAULT 0;";
 
@@ -85,6 +106,11 @@ ADD COLUMN `archive_flags` tinyint(3) NOT NULL DEFAULT 0;";
                 LOG.Info("Adding recent avatars table");
 
                 RunCommand(da, ArchiveRecentsCreate);
+
+                LOG.Info("Adding top 100 lots tables");
+
+                RunCommand(da, ArchiveTop100Create);
+                RunCommand(da, ArchiveTop100AvatarCreate);
 
                 LOG.Info("Adding lot archive flags");
 

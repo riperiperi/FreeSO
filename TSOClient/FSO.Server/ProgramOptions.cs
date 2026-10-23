@@ -20,6 +20,8 @@ namespace FSO.Server
         public DataTrimOptions ArchiveConvertVerb { get; set; }
 
         public ImportArchiveFeaturedOptions ImportArchiveFeaturedVerb { get; set; }
+
+        public ImportArchiveTop100Options ImportArchiveTop100Verb { get; set; }
     }
 
     [Verb("db-init", HelpText = "Initialize the database.")]
@@ -60,6 +62,15 @@ namespace FSO.Server
         public int ShardId { get; set; }
         [Value(1)]
         public string JSON { get; set; }
+    }
+
+    [Verb("import-archive-top100", HelpText = "Import lot visit metrics from server logs to the specified shard.")]
+    public class ImportArchiveTop100Options
+    {
+        [Value(0)]
+        public int ShardId { get; set; }
+        [Value(1)]
+        public string LogDirectory { get; set; }
     }
 
     [Verb("import-nhood", HelpText = "Import the neighborhood stored in the given JSON file to the specified shard.")]

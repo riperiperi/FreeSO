@@ -41,13 +41,37 @@ namespace FSO.Server.Domain
 
                     if (category.IsLotCategory())
                     {
-                        results = db.LotTop100.GetByCategory(Context.ShardId, category.ToLotCategory()).Select(x => new Top100Entry()
+                        var top100 = db.LotTop100.GetByCategory(Context.ShardId, category.ToLotCategory()).Select(x => new Top100Entry()
                         {
                             Rank = x.rank,
                             //Data service uses lot location as the ID
                             TargetId = (uint?)x.lot_location,
                             TargetName = x.lot_name
                         }).ToList();
+
+                        if (Context.Config.Archive != null)
+                        {
+                            // In archive mode, try to get the top 100.
+
+                            try
+                            {
+                                var top100Archive = db.ArchiveTop100.GetTop100(Context.ShardId, category.ToLotCategory()).Select(x => new Top100Entry()
+                                {
+                                    Rank = (byte)(x.rank + top100.Count),
+                                    //Data service uses lot location as the ID
+                                    TargetId = (uint?)x.location,
+                                    TargetName = x.name
+                                }).ToList();
+
+                                top100 = [.. top100, .. top100Archive.Skip(top100.Count)];
+                            }
+                            catch
+                            {
+                                // Just in case there's older save data out there without this...
+                            }
+                        }
+
+                        results = top100;
                     }else{
                         //TODO:
                         results = new List<Top100Entry>();

@@ -8,11 +8,13 @@ using FSO.Common.Enum;
 using FSO.Common.Security;
 using FSO.Common.Utils;
 using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.ArchiveTop100;
 using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.LotVisits;
 using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Servers.City;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Ninject;
@@ -32,12 +34,13 @@ namespace FSO.Server.DataService.Providers
         private int ShardId;
         private IDAFactory DAFactory;
         private IServerNFSProvider NFS;
+        private CityServerContext Context;
 
         private ServerLotProvider Lots;
 
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
-        public ServerNeighborhoodProvider([Named("ShardId")] int shardId, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs)
+        public ServerNeighborhoodProvider([Named("ShardId")] int shardId, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs, CityServerContext context)
         {
             OnMissingLazyLoad = true;
             OnLazyLoadCacheValue = false;
@@ -47,6 +50,7 @@ namespace FSO.Server.DataService.Providers
             Realestate = realestate.GetByShard(shardId);
             DAFactory = daFactory;
             NFS = nfs;
+            Context = context;
         }
 
         public void BindCityRep(ServerLotProvider lots)
@@ -68,6 +72,28 @@ namespace FSO.Server.DataService.Providers
                     AddFailsafeNhood(db, ShardId);
 
                     nhoods = db.Neighborhoods.All(ShardId);
+                }
+
+                List<DbArchiveTop100WithLot> top100Archive;
+                List<DbArchiveTop100Avatar> top100ArchiveAvatar;
+                if (Context.Config.Archive != null)
+                {
+                    try
+                    {
+                        top100Archive = db.ArchiveTop100.All(ShardId);
+                        top100ArchiveAvatar = db.ArchiveTop100.AllAvatars(ShardId);
+                    }
+                    catch
+                    {
+                        // Might not be supported
+                        top100Archive = [];
+                        top100ArchiveAvatar = [];
+                    }
+                }
+                else
+                {
+                    top100Archive = [];
+                    top100ArchiveAvatar = [];
                 }
 
                 var midnight = LotVisitUtils.Midnight(); //gets this morning's midnight (basically current date, with day reset)
@@ -98,7 +124,8 @@ namespace FSO.Server.DataService.Providers
                     var avatars = db.Avatars.GetLivingInNhood((uint)item.neighborhood_id);
                     var townHall = db.Lots.Get(item.town_hall_id ?? 0)?.location ?? 0;
                     var cycle = (item.election_cycle_id == null) ? null : db.Elections.GetCycle(item.election_cycle_id.Value);
-                    var converted = HydrateOne(item, avatars, lots, townHall, cycle, visits, order);
+
+                    var converted = HydrateOne(item, avatars, lots, townHall, cycle, visits, order, top100Archive, top100ArchiveAvatar);
                     var intId = (uint)item.neighborhood_id;
                     appender(intId, converted);
                 }
@@ -135,7 +162,7 @@ namespace FSO.Server.DataService.Providers
                     var avatars = db.Avatars.GetLivingInNhood((uint)nhood.neighborhood_id);
                     var townHall = db.Lots.Get(nhood.town_hall_id ?? 0)?.location ?? 0;
                     var cycle = (nhood.election_cycle_id == null) ? null : db.Elections.GetCycle(nhood.election_cycle_id.Value);
-                    return HydrateOne(nhood, avatars, lots, townHall, cycle, null, null);
+                    return HydrateOne(nhood, avatars, lots, townHall, cycle, null, null, null, null);
                 }
             }
         }
@@ -181,7 +208,13 @@ namespace FSO.Server.DataService.Providers
             nhood.Neighborhood_ElectionCycle = result;
         }
 
-        public void SetTop10s(Neighborhood nhood, List<uint> avatars, List<DbLotVisitNhood> visits, List<KeyValuePair<uint, double>> order)
+        private uint FallbackLocation(uint location, uint fallback)
+        {
+            if (location == 0) return fallback;
+            else return location;
+        }
+
+        public void SetTop10s(Neighborhood nhood, List<uint> avatars, List<DbLotVisitNhood> visits, List<KeyValuePair<uint, double>> order, List<DbArchiveTop100WithLot> top100Archive, List<DbArchiveTop100Avatar> top100ArchiveAvatar)
         {
             var midnight = LotVisitUtils.Midnight(); //gets this morning's midnight (basically current date, with day reset)
             var activityBeginning = midnight - new TimeSpan(7, 0, 0, 0);
@@ -212,11 +245,20 @@ namespace FSO.Server.DataService.Providers
             var ordered = lotHours.OrderByDescending(x => x.Value);
 
             //TOP 10 OVERALL
-            nhood.Neighborhood_TopLotOverall = ImmutableList.Create(ordered.Take(10).Select(x => x.Key).ToArray());
+            var extra = Math.Max(0, 10 - lotHours.Count());
+            List<uint> topOverall = [.. ordered.Take(10).Select(x => x.Key)];
+            nhood.Neighborhood_TopLotOverall = ImmutableList.Create([
+                ..topOverall,
+                ..top100Archive.Where(x => x.neighborhood_id == nhood.Id && !topOverall.Contains((uint)x.location)).Take(extra).Select(x => (uint)x.location)
+                ]);
 
             //TOP 10 CATEGORIES
             var categories = Enum.GetValues(typeof(LotCategory)).Cast<LotCategory>().Skip(1).Take(10);
-            nhood.Neighborhood_TopLotCategory = ImmutableList.Create(categories.Select(x => ordered.FirstOrDefault(y => cats[y.Key] == x).Key).ToArray());
+            nhood.Neighborhood_TopLotCategory = ImmutableList.Create(categories.Select(x => 
+                FallbackLocation(
+                    ordered.FirstOrDefault(y => cats[y.Key] == x).Key,
+                    (uint)(top100Archive.FirstOrDefault(y => y.category == (int)x && y.neighborhood_id == nhood.Id)?.location ?? 0)
+                )).ToArray());
 
             //avatars activity outwith their neighbourhood still counts - so we need to take another subset.
             var avas = new HashSet<uint>(avatars); //faster if this is a hashset
@@ -240,11 +282,17 @@ namespace FSO.Server.DataService.Providers
             }
             ordered = avaHours.OrderByDescending(x => x.Value);
 
-            nhood.Neighborhood_TopAvatarActivity = ImmutableList.Create(ordered.Take(10).Select(x => x.Key).ToArray());
+            var extraAva = Math.Max(0, 10 - avaHours.Count);
+            List<uint> topActivity = [..ordered.Take(10).Select(x => x.Key)];
+            nhood.Neighborhood_TopAvatarActivity = ImmutableList.Create([
+                ..topActivity,
+                ..top100ArchiveAvatar.Where(x => avas.Contains((uint)x.avatar_id) && !topActivity.Contains((uint)x.avatar_id))
+                    .Take(extraAva)
+                    .Select(x => (uint)x.avatar_id)]);
         }
 
         protected Neighborhood HydrateOne(DbNeighborhood nhood, List<uint> avatars, List<uint> lots, uint townHallLoc, DbElectionCycle cycle,
-             List<DbLotVisitNhood> visits, List<KeyValuePair<uint, double>> order)
+             List<DbLotVisitNhood> visits, List<KeyValuePair<uint, double>> order, List<DbArchiveTop100WithLot> top100Archive, List<DbArchiveTop100Avatar> top100ArchiveAvatar)
         {
             var rand = new Random();
 
@@ -268,7 +316,11 @@ namespace FSO.Server.DataService.Providers
             };
 
             SetElectionCycle(result, cycle);
-            SetTop10s(result, avatars, visits, order);
+
+            if (visits != null)
+            {
+                SetTop10s(result, avatars, visits, order, top100Archive, top100ArchiveAvatar);
+            }
             
             return result;
         }

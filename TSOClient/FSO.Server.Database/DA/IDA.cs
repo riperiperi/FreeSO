@@ -33,6 +33,7 @@ using FSO.Server.Database.DA.GlobalCooldowns;
 using FSO.Server.Database.DA.ArchiveUsers;
 using FSO.Server.Database.DA.ArchiveFeatured;
 using FSO.Server.Database.DA.ArchiveRecents;
+using FSO.Server.Database.DA.ArchiveTop100;
 
 namespace FSO.Server.Database.DA
 {
@@ -74,6 +75,7 @@ namespace FSO.Server.Database.DA
         IArchiveUsers ArchiveUsers { get; }
         IArchiveFeatured ArchiveFeatured { get; }
         IArchiveRecents ArchiveRecents { get; }
+        IArchiveTop100 ArchiveTop100 { get; }
         void Flush();
     }
 }

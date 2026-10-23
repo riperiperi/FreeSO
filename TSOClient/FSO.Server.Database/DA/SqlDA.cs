@@ -32,6 +32,7 @@ using FSO.Server.Database.DA.GlobalCooldowns;
 using FSO.Server.Database.DA.ArchiveUsers;
 using FSO.Server.Database.DA.ArchiveFeatured;
 using FSO.Server.Database.DA.ArchiveRecents;
+using FSO.Server.Database.DA.ArchiveTop100;
 
 namespace FSO.Server.Database.DA
 {
@@ -456,6 +457,16 @@ namespace FSO.Server.Database.DA
             {
                 if (_ArchiveRecents == null) _ArchiveRecents = new SqlArchiveRecents(Context);
                 return _ArchiveRecents;
+            }
+        }
+
+        private IArchiveTop100 _ArchiveTop100;
+        public IArchiveTop100 ArchiveTop100
+        {
+            get
+            {
+                if (_ArchiveTop100 == null) _ArchiveTop100 = new SqlArchiveTop100(Context);
+                return _ArchiveTop100;
             }
         }
 
