@@ -860,6 +860,7 @@ namespace FSO.Client.UI.Controls
                 txt = CurrentTextParsed;
             }
 
+            // Not quite right (right margin is "width"), but a lot of archive content is relying on this now...
             var lineWidth = m_Width - (TextMargin.Left + TextMargin.Height);
             m_LineHeight = TextStyle.MeasureString("W").Y + TextStyle.LineHeightModifier;
 
@@ -882,7 +883,9 @@ namespace FSO.Client.UI.Controls
             var position = topLeft;
             var txtScale = TextStyle.Scale * _Scale;
 
-            m_NumVisibleLines = Math.Max(1, (int)Math.Floor(m_Height / m_LineHeight));
+            // Sort of bug - we never considered the bottom margin for a while, so right now it's just ignored.
+            var margin = TextMargin.Top;
+            m_NumVisibleLines = Math.Max(1, (int)Math.Floor((m_Height - margin) / m_LineHeight));
             /** Make sure the current vscroll is valid **/
             VerticalScrollPosition = m_VScroll;
 
