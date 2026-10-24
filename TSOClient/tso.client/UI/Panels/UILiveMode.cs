@@ -600,6 +600,18 @@ namespace FSO.Client.UI.Panels
                 StatusBarTimerTextEntry.Position += offset;
             }
 
+            if (IsoToggleButton != null)
+            {
+                if (eodPresent)
+                {
+                    IsoToggleButton.Position = new Vector2(126, 108);
+                }
+                else
+                {
+                    IsoToggleButton.Position = new Vector2(108, 126);
+                }
+            }
+
             UpdateThumbPosition();
             Common.Utils.GameThread.NextUpdate(x =>
             {
@@ -701,6 +713,11 @@ namespace FSO.Client.UI.Panels
             if (LotController.FirstPerson != DirectControlButton.Selected)
             {
                 DirectControlButton.Selected = LotController.FirstPerson;
+            }
+
+            if (IsoToggleButton != null && IsoToggleButton.Visible != !EODButton.Selected)
+            {
+                IsoToggleButton.Visible = !EODButton.Selected;
             }
         }
 
