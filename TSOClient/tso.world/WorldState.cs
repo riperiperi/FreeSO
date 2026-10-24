@@ -485,7 +485,16 @@ namespace FSO.LotView
             {
                 effect.AdvancedLight = adv;
                 effect.AdvancedDirection = advDir;
+
+
+                if (Light?.Blueprint != null)
+                {
+                    Color minOut = Light.Blueprint.MinOut;
+                    minOut.A = 255;
+                    Blueprint.SetLightColor(effect, OutsideColor, minOut);
+                }
             }
+
             WorldContent._2DWorldBatchEffect.ambientLight = amb;
             //var frontDir = WorldCamera.FrontDirection();
             Vector2 lightOffset;
