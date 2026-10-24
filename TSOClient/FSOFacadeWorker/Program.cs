@@ -140,7 +140,7 @@ namespace FSOFacadeWorker
         public static void Login()
         {
             api = new ApiClient(Config.Api_Url);
-            _ = api.AdminLoginAsync(Config.User, Config.Password, (result) =>
+            _ = Task.Run(() => api.AdminLoginAsync(Config.User, Config.Password, (result) =>
             {
                 if (!result)
                 {
@@ -155,7 +155,7 @@ namespace FSOFacadeWorker
                     }
                     else
                     {
-                        _ = api.GetLotList(1, (lots) =>
+                        _ = Task.Run(() => api.GetLotList(1, (lots) =>
                         {
                             Console.WriteLine("Got a lot list for full thumbnail rebake.");
                             //LotQueue.AddRange(lots);
@@ -165,11 +165,11 @@ namespace FSOFacadeWorker
                             //    LotQueue.RemoveAt(0);
                             //}
                             RenderLot();
-                        });
+                        }));
                     }
                 }
 
-            });
+            }));
         }
 
         private static void SaveRawImage(byte[] data, int width, int height, string path)
@@ -193,7 +193,7 @@ namespace FSOFacadeWorker
             GD.Present();
 
             Console.WriteLine("===== Trying standalone render for " + location + "! =====");
-            api.GetFSOV((uint)shard, location, (bt) =>
+            _ = Task.Run(() => api.GetFSOV((uint)shard, location, (bt) =>
             {
                 try
                 {
@@ -229,7 +229,7 @@ namespace FSOFacadeWorker
                     Console.WriteLine("===== Could not render lot " + location + "! =====");
                     Console.WriteLine(e.ToString());
                 }
-            });
+            }));
         }
 
         private static void RenderLot()
@@ -237,7 +237,7 @@ namespace FSOFacadeWorker
             GD.Present();
             Console.WriteLine($"Requesting work... ({Done} so far)");
 
-            api.GetWork((shard, location) =>
+            _ = Task.Run(() => api.GetWork((shard, location) =>
             {
                 if (shard == -1)
                 {
@@ -265,7 +265,7 @@ namespace FSOFacadeWorker
                     }
                 }
 
-                api.GetFSOV((uint)shard, location, (bt) =>
+                Task.Run(() => api.GetFSOV((uint)shard, location, (bt) =>
                 {
                     try
                     {
@@ -286,7 +286,7 @@ namespace FSOFacadeWorker
 
                                 //File.WriteAllBytes("C:/fsof/" + lot + ".fsof", mem.ToArray());
                                 //RenderLot();
-                                api.UploadFSOF(1, location, mem.ToArray(), (success) =>
+                                Task.Run(() => api.UploadFSOF(1, location, mem.ToArray(), (success) =>
                                 {
                                     if (!success)
                                     {
@@ -300,15 +300,15 @@ namespace FSOFacadeWorker
                                         return;
                                     }
                                     RenderLot();
-                                });
+                                }));
 
-                                api.UploadThumb(1, location, thumbData, (success) =>
+                                Task.Run(() => api.UploadThumb(1, location, thumbData, (success) =>
                                 {
                                     if (!success)
                                     {
                                         Console.WriteLine("Uploading thumb for " + location + " did not succeed.");
                                     }
-                                });
+                                }));
                             }
                         }
                     }
@@ -318,8 +318,8 @@ namespace FSOFacadeWorker
                         Console.WriteLine(e.ToString());
                         RenderLot();
                     }
-                });
-            });
+                }));
+            }));
         }
 
         public static void WorkerLoop()
