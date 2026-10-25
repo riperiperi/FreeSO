@@ -4,6 +4,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Screens;
 using FSO.Common;
+using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Rendering;
 using FSO.Common.Rendering.Framework;
@@ -1242,6 +1243,11 @@ namespace FSO.Client.Rendering.City
             return(MapData.ElevationData[(y * 512 + x)] + MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] +
                         MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] +
                         MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)]) / 4f; //elevation of sprite is the average elevation of the 4 vertices of the tile
+        }
+
+        public float GetElevationAtWithOOB(int x, int y)
+        {
+            return MapCoordinates.InBounds((ushort)x, (ushort)y) ? GetElevationAt(x, y) : 0; 
         }
 
         public float InterpElevationAt(Vector2 Position)

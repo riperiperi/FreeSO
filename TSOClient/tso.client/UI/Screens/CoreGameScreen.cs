@@ -866,8 +866,8 @@ namespace FSO.Client.UI.Screens
                 if (info.Type != LotTransitionType.Teleport)
                 {
                     var position = MapCoordinates.Unpack(vm.TSOState.LotID);
-                    var previousElevation = CityRenderer.GetElevationAt(position.X + info.RelativeChangeY, position.Y - info.RelativeChangeX);
-                    var currentElevation = CityRenderer.GetElevationAt(position.X, position.Y);
+                    var previousElevation = CityRenderer.GetElevationAtWithOOB(position.X + info.RelativeChangeY, position.Y - info.RelativeChangeX);
+                    var currentElevation = CityRenderer.GetElevationAtWithOOB(position.X, position.Y);
 
                     var baseAltDiff = (currentElevation - previousElevation) * 100;
                     heightDiff = baseAltDiff * World.Architecture.Blueprint.TerrainFactor * 3;

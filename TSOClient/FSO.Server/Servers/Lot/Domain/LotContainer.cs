@@ -111,6 +111,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private bool IsSpectatorMode;
 
         public bool AllowSurroundMessages => ArchiveFreeRoam; // Archive free roam ignores permissions limits, so no need to worry about broadcasting chat messages.
+        private uint VisualLocation => LotPersist.fake_location == 0 ? LotPersist.location : LotPersist.fake_location;
 
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {
@@ -264,7 +265,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 using (var db = DAFactory.Get())
                 {
                     LotPersist = db.Lots.Get(context.DbId);
-                    LotAdj = skipAdj ? [] : db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
+                    LotAdj = skipAdj ? [] : db.Lots.GetAdjToLocation(context.ShardId, VisualLocation);
                     LotRoommates = db.Roommates.GetLotRoommates(context.DbId);
                     Tuning = new DynamicTuning(db.Tuning.All());
                 }
@@ -277,12 +278,13 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             Terrain = new VMTSOSurroundingTerrain();
 
-            var coords = MapCoordinates.Unpack(LotPersist.location);
+            var location = VisualLocation;
+            var coords = MapCoordinates.Unpack(location);
             var map = Realestate.GetMap();
 
             OutOfBounds = !map.IsInBounds(coords.X, coords.Y);
 
-            if (LotPersist.location >= 0x10200 && LotPersist.location < 0x20000)
+            if (location >= 0x10200 && location < 0x20000)
             {
                 // Special off-world property. Currently these are all islands.
                 for (int y = 0; y < 3; y++)
@@ -376,7 +378,7 @@ namespace FSO.Server.Servers.Lot.Domain
             }
 
             LOG.Info("Loading adj lots for lot with dbid = " + Context.DbId);
-            var myPos = MapCoordinates.Unpack(LotPersist.location);
+            var myPos = MapCoordinates.Unpack(VisualLocation);
             foreach (var lot in LotAdj)
             {
                 try
@@ -844,7 +846,7 @@ namespace FSO.Server.Servers.Lot.Domain
             VMGlobalLink = Kernel.Get<LotServerGlobalLink>();
             VMGlobalLink.Readonly = IsSpectatorMode;
 
-            if (AllowGuestOpening && !OutOfBounds)
+            if (AllowGuestOpening && !OutOfBounds && LotPersist.fake_location == 0)
             {
                 var host = Kernel.Get<LiveSurroundHost>();
                 SurroundConnection = host.Connect(LotPersist.location, this, Host);
@@ -918,12 +920,12 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.Terrain = Terrain;
             Lot.TSOState.Name = LotPersist.name;
             Lot.TSOState.NhoodID = LotPersist.neighborhood_id;
-            Lot.TSOState.LotID = LotPersist.location & (uint)(LotIdFlags.NormalMask);
+            Lot.TSOState.LotID = VisualLocation & (uint)(LotIdFlags.NormalMask);
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
             Lot.TSOState.Flags =
                 (LotPersist.ArchiveFlags != 0 ? VMTSOLotStateFlags.Archived : 0) | 
-                (AllowGuestOpening && !JobLot ? VMTSOLotStateFlags.AllowFreeRoam : 0);
+                (AllowGuestOpening && !JobLot && LotPersist.fake_location == 0 ? VMTSOLotStateFlags.AllowFreeRoam : 0);
 
             var isCommunity = LotPersist.category == LotCategory.community;
 
