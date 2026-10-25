@@ -76,6 +76,7 @@ namespace FSO.Server.Database.DA.Lots
 
         // Added for archive
         public byte archive_flags { get; set; }
+        public uint fake_location { get; set; }
 
         public LotMoveFlags MoveFlags
         {
