@@ -231,5 +231,6 @@
   "skillSpeed": 5.0,
   "payoutScale": 5.0,
   "singleplayerPenalty": 0.0,
-  "speedyJobProgression": 1
+  "speedyJobProgression": 1,
+  "maxObjectLimit": true
 }
