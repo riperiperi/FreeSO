@@ -391,6 +391,7 @@ namespace FSO.IDE.EditorComponent.UI
                 }
                 Placement.Position = GlobalPoint(desiredPos);
                 Placement.Style = PGroupStyles.ByType[PrimitiveGroup.Placement];
+                Placement.UpdateColors();
                 state.SharedData["ExternalDraw"] = true;
                 Placement.Update(state);
 

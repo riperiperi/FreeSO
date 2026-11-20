@@ -346,6 +346,16 @@ namespace FSO.IDE.EditorComponent.UI
             Title.Size = new Vector2(Width, 27);
         }
 
+        public void UpdateColors()
+        {
+            if (Type == TREEBoxType.Primitive)
+            {
+                Title.CaptionStyle.Color = Style.Title;
+                Index.CaptionStyle.Color = Style.Title;
+                BodyTextStyle.Color = Style.Body;
+            }
+        }
+
         public void UpdateDisplay()
         {
             Descriptor.Operand = Operand;
@@ -354,12 +364,11 @@ namespace FSO.IDE.EditorComponent.UI
             TitleText = Descriptor.GetTitle(Master.Scope);
             var titleWidth = Title.CaptionStyle.MeasureString(TitleText).X;
             Title.Caption = TitleText;
-            Title.CaptionStyle.Color = Style.Title;
             Index.Caption = InstPtr.ToString();
-            Index.CaptionStyle.Color = Style.Title;
 
             BodyText = Descriptor.GetBody(Master.Scope);
-            BodyTextStyle.Color = Style.Body;
+
+            UpdateColors();
 
             BodyTextLabels = Client.UI.Framework.TextRenderer.ComputeText(BodyText, new TextRendererOptions
             {

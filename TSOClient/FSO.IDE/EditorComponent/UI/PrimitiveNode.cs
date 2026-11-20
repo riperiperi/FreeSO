@@ -92,9 +92,9 @@ namespace FSO.IDE.EditorComponent.UI
             if (Destination != null && Destination.Dead) Destination = null;
 
             var res = EditorResource.Get();
-            DrawLocalTexture(batch, res.NodeOutline, null, new Vector2(res.NodeOutline.Width / -2 + 5, res.NodeOutline.Height / -2 + 5), new Vector2(1f, 1f), ShadCol);
-
+            
             if (!MouseDrag && Destination == null) return;
+            DrawLocalTexture(batch, res.NodeOutline, null, new Vector2(res.NodeOutline.Width / -2 + 5, res.NodeOutline.Height / -2 + 5), new Vector2(1f, 1f), ShadCol);
 
             var contextPos = Parent.Position + Position;
             ArrowVec = (MouseDrag)?DragVec:(Destination.NearestDestPt(contextPos) - contextPos);
